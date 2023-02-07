@@ -25,8 +25,8 @@
         "/coverage/**"
     ],
     "rules": {
-        "simple-import-sort/imports": "error",
-        "simple-import-sort/exports": "error",
+        "simple-import-sort/imports": "off", // this would enforce poor organisation of the defs
+        "simple-import-sort/exports": "off", // this would enforce poor organisation of the defs
 
         "@typescript-eslint/adjacent-overload-signatures": "error",
         "@typescript-eslint/array-type": "error",
