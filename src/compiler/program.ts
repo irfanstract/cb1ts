@@ -366,37 +366,8 @@ export function createGetSourceFile(
 }
 
 /** @internal */
-export function createWriteFileMeasuringIO(
-    actualWriteFile: (path: string, data: string, writeByteOrderMark: boolean) => void,
-    createDirectory: (path: string) => void,
-    directoryExists: (path: string) => boolean
-): CompilerHost["writeFile"] {
-    return (fileName, data, writeByteOrderMark, onError) => {
-        try {
-            performance.mark("beforeIOWrite");
-
-            // NOTE: If patchWriteFileEnsuringDirectory has been called,
-            // the system.writeFile will do its own directory creation and
-            // the ensureDirectoriesExist call will always be redundant.
-            writeFileEnsuringDirectories(
-                fileName,
-                data,
-                writeByteOrderMark,
-                actualWriteFile,
-                createDirectory,
-                directoryExists
-            );
-
-            performance.mark("afterIOWrite");
-            performance.measure("I/O Write", "beforeIOWrite", "afterIOWrite");
-        }
-        catch (e) {
-            if (onError) {
-                onError(e.message);
-            }
-        }
-    };
-}
+import { createWriteFileMeasuringIO, } from "./createWriteFileMeasuringIO";
+export { createWriteFileMeasuringIO, } ;
 
 /** @internal */
 export function createCompilerHostWorker(options: CompilerOptions, setParentNodes?: boolean, system = sys): CompilerHost {
