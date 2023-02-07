@@ -54,6 +54,7 @@ import {
     createSymlinkCache,
     createTypeChecker,
     createTypeReferenceDirectiveResolutionCache,
+    createWriteFileMeasuringIO ,
     CustomTransformers,
     Debug,
     DeclarationWithTypeParameterChildren,
