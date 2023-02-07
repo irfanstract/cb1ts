@@ -25,8 +25,8 @@
         "/coverage/**"
     ],
     "rules": {
-        "simple-import-sort/imports": "error",
-        "simple-import-sort/exports": "error",
+        "simple-import-sort/imports": "off", // this would enforce poor organisation of the defs
+        "simple-import-sort/exports": "off", // this would enforce poor organisation of the defs
 
         "@typescript-eslint/adjacent-overload-signatures": "error",
         "@typescript-eslint/array-type": "error",
@@ -53,8 +53,8 @@
 
         "max-statements-per-line": ["error", { "max": 1 }],
 
-        "no-duplicate-imports": "off",
-        "@typescript-eslint/no-duplicate-imports": "error",
+        "no-duplicate-imports": "off", // does not play well with Git
+        "@typescript-eslint/no-duplicate-imports": "off", // does not play well with Git
 
         "@typescript-eslint/no-inferrable-types": "error",
         "@typescript-eslint/no-misused-new": "error",
