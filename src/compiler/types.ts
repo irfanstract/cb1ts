@@ -26,15 +26,15 @@ export type Path = string & { __pathBrand: any };
 /** @internal */
 export type MatchingKeys<TRecord, TMatch, K extends keyof TRecord = keyof TRecord> = K extends (TRecord[K] extends TMatch ? K : never) ? K : never;
 
-export interface TextRange {
-    pos: number;
-    end: number;
-}
+import {
+    TextRange ,
+} from "./syntaxBuffer" ;
+export { TextRange , } ;
 
-export interface ReadonlyTextRange {
-    readonly pos: number;
-    readonly end: number;
-}
+import {
+    ReadonlyTextRange ,
+} from "./syntaxBuffer" ;
+export { ReadonlyTextRange , } ;
 
 import {
     JSDocSyntaxKind ,
