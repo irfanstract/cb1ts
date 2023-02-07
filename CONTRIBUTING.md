@@ -150,10 +150,7 @@ Run `hereby` to build a version of the compiler/language service that reflects c
 
 ## Contributing bug fixes
 
-5. You shall have a Repo with the working (the issues resolved) codebase first.
-5. You shall file a Pull Request with the Repo .
-5. You'll be asked to sign the relevant Agreement(s).
-5. You'll need to follow the thread (the Pull Request).
+TypeScript is currently accepting contributions in the form of bug fixes. A bug must have an issue tracking it in the issue tracker that has been approved (labelled ["help wanted"](https://github.com/Microsoft/TypeScript/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22) or in the "Backlog milestone") by the TypeScript team. Your pull request should include a link to the bug that you are fixing. If you've submitted a PR for a bug, please post a comment in the bug to avoid duplication of effort.
 
 ## Contributing features
 
