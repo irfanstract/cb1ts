@@ -53,8 +53,8 @@
 
         "max-statements-per-line": ["error", { "max": 1 }],
 
-        "no-duplicate-imports": "off",
-        "@typescript-eslint/no-duplicate-imports": "error",
+        "no-duplicate-imports": "off", // does not play well with Git
+        "@typescript-eslint/no-duplicate-imports": "off", // does not play well with Git
 
         "@typescript-eslint/no-inferrable-types": "error",
         "@typescript-eslint/no-misused-new": "error",
