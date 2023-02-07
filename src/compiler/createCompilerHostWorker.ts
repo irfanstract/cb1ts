@@ -337,12 +337,6 @@ import * as performance from "./_namespaces/ts.performance";
 
 
 
-/*
- * importing directly, not via `program.ts` ; to avoid bundler-related issues
- */
-import { createWriteFileMeasuringIO, } from "./createWriteFileMeasuringIO";
-
-
 
 
 
