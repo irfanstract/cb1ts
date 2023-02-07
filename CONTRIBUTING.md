@@ -63,7 +63,7 @@ In general, things we find useful when reviewing suggestions are:
 3. Make a fork&mdash;your own copy&mdash;of TypeScript on your GitHub account, then make a clone&mdash;a local copy&mdash;on your computer. ([Here are some step-by-step instructions](https://github.com/anitab-org/mentorship-android/wiki/Fork%2C-Clone-%26-Remote)). Add `--depth=1` to the end of the `git clone` command to save time.
 4. Install the hereby command line tool: `npm install -g hereby`
 5. Change to the TypeScript folder you made: `cd TypeScript`
-6. Install dependencies: `npm ci`
+6. Install dependencies: `npm ci` (or, if you're lucky, plain `npm install` )
 7. Make sure everything builds and tests pass: `hereby runtests-parallel`
 8. Open the TypeScript folder in your editor.
 9. Follow the directions below to add and debug a test.
