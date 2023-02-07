@@ -145,6 +145,13 @@ export const enum NodeFlags {
 
 
 
+import {
+    ModifierFlags,
+} from "./symbolModifiers";
+export {
+    ModifierFlags ,
+} ;
+
 /** @internal */
 export const enum TransformFlags {
     None = 0,
