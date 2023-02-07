@@ -324,12 +324,8 @@ import {
 } from "./_namespaces/ts";
 import * as performance from "./_namespaces/ts.performance";
 
-export function findConfigFile(searchPath: string, fileExists: (fileName: string) => boolean, configName = "tsconfig.json"): string | undefined {
-    return forEachAncestorDirectory(searchPath, ancestor => {
-        const fileName = combinePaths(ancestor, configName);
-        return fileExists(fileName) ? fileName : undefined;
-    });
-}
+import { findConfigFile, } from "./tsConfigFinder" ;
+export { findConfigFile, } ;
 
 export function resolveTripleslashReference(moduleName: string, containingFile: string): string {
     const basePath = getDirectoryPath(containingFile);
