@@ -342,28 +342,8 @@ export function createCompilerHost(options: CompilerOptions, setParentNodes?: bo
 }
 
 /** @internal */
-export function createGetSourceFile(
-    readFile: ProgramHost<any>["readFile"],
-    getCompilerOptions: () => CompilerOptions,
-    setParentNodes: boolean | undefined
-): CompilerHost["getSourceFile"] {
-    return (fileName, languageVersionOrOptions, onError) => {
-        let text: string | undefined;
-        try {
-            performance.mark("beforeIORead");
-            text = readFile(fileName, getCompilerOptions().charset);
-            performance.mark("afterIORead");
-            performance.measure("I/O Read", "beforeIORead", "afterIORead");
-        }
-        catch (e) {
-            if (onError) {
-                onError(e.message);
-            }
-            text = "";
-        }
-        return text !== undefined ? createSourceFile(fileName, text, languageVersionOrOptions, setParentNodes) : undefined;
-    };
-}
+import { createGetSourceFile, } from "./createWriteFileMeasuringIO";
+export { createGetSourceFile, } ;
 
 /** @internal */
 import { createWriteFileMeasuringIO, } from "./createWriteFileMeasuringIO";
