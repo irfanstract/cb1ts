@@ -61,35 +61,70 @@ In general, things we find useful when reviewing suggestions are:
 1. Install node using the version you downloaded from [nodejs.org](https://nodejs.org).
 2. Open a terminal.
 3. Make a fork&mdash;your own copy&mdash;of TypeScript on your GitHub account, then make a clone&mdash;a local copy&mdash;on your computer. ([Here are some step-by-step instructions](https://github.com/anitab-org/mentorship-android/wiki/Fork%2C-Clone-%26-Remote)). Add `--depth=1` to the end of the `git clone` command to save time.
-4. Install the hereby command line tool: `npm install -g hereby`
+4. Ensure that `package.json` declares dependency `hereby`
 5. Change to the TypeScript folder you made: `cd TypeScript`
-6. Install dependencies: `npm ci`
-7. Make sure everything builds and tests pass: `hereby runtests-parallel`
+6. Install dependencies: `npm ci` (or, if you're lucky, plain `npm install` )
+7. Make sure everything builds and tests pass: `npx hereby runtests-parallel`
 8. Open the TypeScript folder in your editor.
 9. Follow the directions below to add and debug a test.
 
-## Helpful tasks
-
-Running `hereby --tasks` provides the full listing, but here are a few common tasks you might use.
+to sum them up:
 
 ```
-hereby local             # Build the compiler into built/local.
-hereby clean             # Delete the built compiler.
-hereby LKG               # Replace the last known good with the built one.
-                         # Bootstrapping step to be executed when the built compiler reaches a stable state.
-hereby tests             # Build the test infrastructure using the built compiler.
-hereby runtests          # Run tests using the built compiler and test infrastructure.
-                         # You can override the specific suite runner used or specify a test for this command.
-                         # Use --tests=<testPath> for a specific test and/or --runner=<runnerName> for a specific suite.
-                         # Valid runners include conformance, compiler, fourslash, project, user, and docker
-                         # The user and docker runners are extended test suite runners - the user runner
-                         # works on disk in the tests/cases/user directory, while the docker runner works in containers.
-                         # You'll need to have the docker executable in your system path for the docker runner to work.
-hereby runtests-parallel # Like runtests, but split across multiple threads. Uses a number of threads equal to the system
-                         # core count by default. Use --workers=<number> to adjust this.
-hereby baseline-accept   # This replaces the baseline test results with the results obtained from hereby runtests.
-hereby lint              # Runs eslint on the TypeScript source.
-hereby help              # List the above commands.
+$ cd <the desired, newly-created directory>
+moved to ...
+
+$ git clone --depth=1 https://github.com/irfanstract/cb1ts.git "."
+Cloning into '.'...
+remote: Enumerating objects: 63919, done.
+remote: Counting objects: 100% (63919/63919), done.
+remote: Compressing objects: 100% (47057/47057), done.
+remote: Total 63919 (delta 15441), reused 60689 (delta 15140), pack-reused 0
+Receiving objects: 100% (63919/63919), 31.17 MiB | 1.84 MiB/s, done.
+Resolving deltas: 100% (15441/15441), done.
+Updating files: 100% (66550/66550), done.
+
+$ git status
+On branch main
+Your branch is up to date with 'origin/main'.
+
+nothing to commit, working tree clean
+
+$ node -h
+$USERPROFILE/AppData/Node/node
+Usage :
+  node -h
+  node
+  node -i
+  node [<options>] <main.mjs> [<arguments>]
+...
+...
+
+$
+```
+
+## Helpful tasks
+
+Running `npx hereby --tasks` provides the full listing, but here are a few common tasks you might use.
+
+```
+npx hereby local             # Build the compiler into built/local.
+npx hereby clean             # Delete the built compiler.
+npx hereby LKG               # Replace the last known good with the built one.
+                             # Bootstrapping step to be executed when the built compiler reaches a stable state.
+npx hereby tests             # Build the test infrastructure using the built compiler.
+npx hereby runtests          # Run tests using the built compiler and test infrastructure.
+                             # You can override the specific suite runner used or specify a test for this command.
+                             # Use --tests=<testPath> for a specific test and/or --runner=<runnerName> for a specific suite.
+                             # Valid runners include conformance, compiler, fourslash, project, user, and docker
+                             # The user and docker runners are extended test suite runners - the user runner
+                             # works on disk in the tests/cases/user directory, while the docker runner works in containers.
+                             # You'll need to have the docker executable in your system path for the docker runner to work.
+npx hereby runtests-parallel # Like runtests, but split across multiple threads. Uses a number of threads equal to the system
+                             # core count by default. Use --workers=<number> to adjust this.
+npx hereby baseline-accept   # This replaces the baseline test results with the results obtained from hereby runtests.
+npx hereby lint              # Runs eslint on the TypeScript source.
+npx hereby help              # List the above commands.
 ```
 
 ## Tips
