@@ -157,10 +157,7 @@ Run `hereby` to build a version of the compiler/language service that reflects c
 
 ## Contributing features
 
-5. You shall have a Repo with the working (the issues resolved) codebase first.
-5. You shall file a Pull Request with the Repo .
-5. You'll be asked to sign the relevant Agreement(s).
-5. You'll need to follow the thread (the Pull Request).
+Features (things that add new or improved functionality to TypeScript) may be accepted, but will need to first be approved (labelled ["help wanted"](https://github.com/Microsoft/TypeScript/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22) or in the "Backlog" milestone) by a TypeScript project maintainer in the suggestion issue. Features with language design impact, or that are adequately satisfied with external tools, will not be accepted.
 
 ## Issue claiming
 
