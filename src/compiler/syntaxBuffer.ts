@@ -45,6 +45,38 @@ export interface ReadonlyTextRange {
 
 
 
+import {
+    JSDocSyntaxKind ,
+    JsxTokenSyntaxKind ,
+    KeywordSyntaxKind ,
+    KeywordTypeSyntaxKind ,
+    LiteralSyntaxKind ,
+    ModifierSyntaxKind ,
+    PseudoLiteralSyntaxKind ,
+    PunctuationSyntaxKind ,
+    SyntaxKind ,
+    TokenSyntaxKind ,
+    TriviaSyntaxKind ,
+    TypeNodeSyntaxKind ,
+} from "./syntaxKinds" ;
+export {
+    JSDocSyntaxKind ,
+    JsxTokenSyntaxKind ,
+    KeywordSyntaxKind ,
+    KeywordTypeSyntaxKind ,
+    LiteralSyntaxKind ,
+    ModifierSyntaxKind ,
+    PseudoLiteralSyntaxKind ,
+    PunctuationSyntaxKind ,
+    SyntaxKind ,
+    TokenSyntaxKind ,
+    TriviaSyntaxKind ,
+    TypeNodeSyntaxKind ,
+} ;
+
+
+
+
 export const enum NodeFlags {
     None               = 0,
     Let                = 1 << 0,  // Variable declaration
