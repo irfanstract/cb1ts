@@ -350,52 +350,8 @@ import { createWriteFileMeasuringIO, } from "./createWriteFileMeasuringIO";
 export { createWriteFileMeasuringIO, } ;
 
 /** @internal */
-export function createCompilerHostWorker(options: CompilerOptions, setParentNodes?: boolean, system = sys): CompilerHost {
-    const existingDirectories = new Map<string, boolean>();
-    const getCanonicalFileName = createGetCanonicalFileName(system.useCaseSensitiveFileNames);
-    function directoryExists(directoryPath: string): boolean {
-        if (existingDirectories.has(directoryPath)) {
-            return true;
-        }
-        if ((compilerHost.directoryExists || system.directoryExists)(directoryPath)) {
-            existingDirectories.set(directoryPath, true);
-            return true;
-        }
-        return false;
-    }
-
-    function getDefaultLibLocation(): string {
-        return getDirectoryPath(normalizePath(system.getExecutingFilePath()));
-    }
-
-    const newLine = getNewLineCharacter(options);
-    const realpath = system.realpath && ((path: string) => system.realpath!(path));
-    const compilerHost: CompilerHost = {
-        getSourceFile: createGetSourceFile(fileName => compilerHost.readFile(fileName), () => options, setParentNodes),
-        getDefaultLibLocation,
-        getDefaultLibFileName: options => combinePaths(getDefaultLibLocation(), getDefaultLibFileName(options)),
-        writeFile: createWriteFileMeasuringIO(
-            (path, data, writeByteOrderMark) => system.writeFile(path, data, writeByteOrderMark),
-            path => (compilerHost.createDirectory || system.createDirectory)(path),
-            path => directoryExists(path),
-        ),
-        getCurrentDirectory: memoize(() => system.getCurrentDirectory()),
-        useCaseSensitiveFileNames: () => system.useCaseSensitiveFileNames,
-        getCanonicalFileName,
-        getNewLine: () => newLine,
-        fileExists: fileName => system.fileExists(fileName),
-        readFile: fileName => system.readFile(fileName),
-        trace: (s: string) => system.write(s + newLine),
-        directoryExists: directoryName => system.directoryExists(directoryName),
-        getEnvironmentVariable: name => system.getEnvironmentVariable ? system.getEnvironmentVariable(name) : "",
-        getDirectories: (path: string) => system.getDirectories(path),
-        realpath,
-        readDirectory: (path, extensions, include, exclude, depth) => system.readDirectory(path, extensions, include, exclude, depth),
-        createDirectory: d => system.createDirectory(d),
-        createHash: maybeBind(system, system.createHash)
-    };
-    return compilerHost;
-}
+import { createCompilerHostWorker, } from "./createCompilerHostWorker";
+export { createCompilerHostWorker, } ;
 
 /** @internal */
 export interface CompilerHostLikeForCache {
