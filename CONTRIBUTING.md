@@ -68,6 +68,41 @@ In general, things we find useful when reviewing suggestions are:
 8. Open the TypeScript folder in your editor.
 9. Follow the directions below to add and debug a test.
 
+to sum them up:
+
+```
+$ cd <the desired, newly-created directory>
+moved to ...
+
+$ git clone --depth=1 https://github.com/irfanstract/cb1ts.git "."
+Cloning into '.'...
+remote: Enumerating objects: 63919, done.
+remote: Counting objects: 100% (63919/63919), done.
+remote: Compressing objects: 100% (47057/47057), done.
+remote: Total 63919 (delta 15441), reused 60689 (delta 15140), pack-reused 0
+Receiving objects: 100% (63919/63919), 31.17 MiB | 1.84 MiB/s, done.
+Resolving deltas: 100% (15441/15441), done.
+Updating files: 100% (66550/66550), done.
+
+$ git status
+On branch main
+Your branch is up to date with 'origin/main'.
+
+nothing to commit, working tree clean
+
+$ node -h
+$USERPROFILE/AppData/Node/node
+Usage :
+  node -h
+  node
+  node -i
+  node [<options>] <main.mjs> [<arguments>]
+...
+...
+
+$
+```
+
 ## Helpful tasks
 
 Running `hereby --tasks` provides the full listing, but here are a few common tasks you might use.
