@@ -961,14 +961,14 @@ export function createModuleResolutionLoader(
 ): ResolutionLoader<StringLiteralLike, ResolvedModuleWithFailedLookupLocations, SourceFile> {
     return {
         nameAndMode: moduleResolutionNameAndModeGetter,
-        resolve: (moduleName, resolutionMode) => resolveModuleName(
+        resolve: (moduleName, resoluionMode) => resolveModuleName(
             moduleName,
             containingFile,
             options,
             host,
             cache,
             redirectedReference,
-            resolutionMode,
+            resoluionMode,
         ),
     };
 }

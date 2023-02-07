@@ -38,7 +38,6 @@ import {
     Debug,
     Declaration,
     Decorator,
-    DefaultClause,
     defaultMaximumTruncationLength,
     DeleteExpression,
     Diagnostic,
@@ -54,7 +53,6 @@ import {
     EmitHint,
     emptyArray,
     EndOfFileToken,
-    endsWith,
     ensureScriptKind,
     EqualityOperator,
     escapeString,
@@ -140,12 +138,10 @@ import {
     isDeclaration,
     isDeclarationName,
     isDecorator,
-    isDefaultClause,
     isDeleteExpression,
     isElementAccessExpression,
     isEntityName,
     isEnumDeclaration,
-    isEnumMember,
     isExportAssignment,
     isExportDeclaration,
     isExportSpecifier,
@@ -192,7 +188,6 @@ import {
     isKeyword,
     isLabeledStatement,
     isLet,
-    isLiteralExpression,
     isLiteralTypeNode,
     isMappedTypeNode,
     isModifier,
@@ -286,7 +281,6 @@ import {
     or,
     OrganizeImports,
     PackageJsonDependencyGroup,
-    parseBigInt,
     pathIsRelative,
     PrefixUnaryExpression,
     Program,
@@ -294,8 +288,6 @@ import {
     PropertyAccessExpression,
     PropertyAssignment,
     PropertyName,
-    PseudoBigInt,
-    pseudoBigIntToString,
     QualifiedName,
     RefactorContext,
     Scanner,
@@ -3685,13 +3677,7 @@ export function createPackageJsonImportFilter(fromFile: SourceFile, preferences:
       ).filter(p => p.parseable);
 
     let usesNodeCoreModules: boolean | undefined;
-    let ambientModuleCache: Map<Symbol, boolean> | undefined;
-    let sourceFileCache: Map<SourceFile, boolean> | undefined;
-    return {
-        allowsImportingAmbientModule,
-        allowsImportingSourceFile,
-        allowsImportingSpecifier,
-    };
+    return { allowsImportingAmbientModule, allowsImportingSourceFile, allowsImportingSpecifier };
 
     function moduleSpecifierIsCoveredByPackageJson(specifier: string) {
         const packageName = getNodeModuleRootSpecifier(specifier);
@@ -3708,34 +3694,19 @@ export function createPackageJsonImportFilter(fromFile: SourceFile, preferences:
             return true;
         }
 
-        if (!ambientModuleCache) {
-            ambientModuleCache = new Map();
-        }
-        else {
-            const cached = ambientModuleCache.get(moduleSymbol);
-            if (cached !== undefined) {
-                return cached;
-            }
+        const declaringSourceFile = moduleSymbol.valueDeclaration.getSourceFile();
+        const declaringNodeModuleName = getNodeModulesPackageNameFromFileName(declaringSourceFile.fileName, moduleSpecifierResolutionHost);
+        if (typeof declaringNodeModuleName === "undefined") {
+            return true;
         }
 
         const declaredModuleSpecifier = stripQuotes(moduleSymbol.getName());
         if (isAllowedCoreNodeModulesImport(declaredModuleSpecifier)) {
-            ambientModuleCache.set(moduleSymbol, true);
             return true;
         }
 
-        const declaringSourceFile = moduleSymbol.valueDeclaration.getSourceFile();
-        const declaringNodeModuleName = getNodeModulesPackageNameFromFileName(declaringSourceFile.fileName, moduleSpecifierResolutionHost);
-        if (typeof declaringNodeModuleName === "undefined") {
-            ambientModuleCache.set(moduleSymbol, true);
-            return true;
-        }
-
-        const result =
-            moduleSpecifierIsCoveredByPackageJson(declaringNodeModuleName) ||
-            moduleSpecifierIsCoveredByPackageJson(declaredModuleSpecifier);
-        ambientModuleCache.set(moduleSymbol, result);
-        return result;
+        return moduleSpecifierIsCoveredByPackageJson(declaringNodeModuleName)
+            || moduleSpecifierIsCoveredByPackageJson(declaredModuleSpecifier);
     }
 
     function allowsImportingSourceFile(sourceFile: SourceFile, moduleSpecifierResolutionHost: ModuleSpecifierResolutionHost): boolean {
@@ -3743,25 +3714,12 @@ export function createPackageJsonImportFilter(fromFile: SourceFile, preferences:
             return true;
         }
 
-        if (!sourceFileCache) {
-            sourceFileCache = new Map();
-        }
-        else {
-            const cached = sourceFileCache.get(sourceFile);
-            if (cached !== undefined) {
-                return cached;
-            }
-        }
-
         const moduleSpecifier = getNodeModulesPackageNameFromFileName(sourceFile.fileName, moduleSpecifierResolutionHost);
         if (!moduleSpecifier) {
-            sourceFileCache.set(sourceFile, true);
             return true;
         }
 
-        const result = moduleSpecifierIsCoveredByPackageJson(moduleSpecifier);
-        sourceFileCache.set(sourceFile, result);
-        return result;
+        return moduleSpecifierIsCoveredByPackageJson(moduleSpecifier);
     }
 
     function allowsImportingSpecifier(moduleSpecifier: string) {
@@ -4078,75 +4036,4 @@ export function jsxModeNeedsExplicitImport(jsx: JsxEmit | undefined) {
 /** @internal */
 export function isSourceFileFromLibrary(program: Program, node: SourceFile) {
     return program.isSourceFileFromExternalLibrary(node) || program.isSourceFileDefaultLibrary(node);
-}
-
-/** @internal */
-export interface CaseClauseTracker {
-    addValue(value: string | number): void;
-    hasValue(value: string | number | PseudoBigInt): boolean;
-}
-
-/** @internal */
-export function newCaseClauseTracker(checker: TypeChecker, clauses: readonly (CaseClause | DefaultClause)[]): CaseClauseTracker {
-    const existingStrings = new Set<string>();
-    const existingNumbers = new Set<number>();
-    const existingBigInts = new Set<string>();
-
-    for (const clause of clauses) {
-        if (!isDefaultClause(clause)) {
-            if (isLiteralExpression(clause.expression)) {
-                const expression = clause.expression;
-                switch (expression.kind) {
-                    case SyntaxKind.NoSubstitutionTemplateLiteral:
-                    case SyntaxKind.StringLiteral:
-                        existingStrings.add(expression.text);
-                        break;
-                    case SyntaxKind.NumericLiteral:
-                        existingNumbers.add(parseInt(expression.text));
-                        break;
-                    case SyntaxKind.BigIntLiteral:
-                        const parsedBigInt = parseBigInt(endsWith(expression.text, "n") ? expression.text.slice(0, -1) : expression.text);
-                        if (parsedBigInt) {
-                            existingBigInts.add(pseudoBigIntToString(parsedBigInt));
-                        }
-                        break;
-                }
-            }
-            else {
-                const symbol = checker.getSymbolAtLocation(clause.expression);
-                if (symbol && symbol.valueDeclaration && isEnumMember(symbol.valueDeclaration)) {
-                    const enumValue = checker.getConstantValue(symbol.valueDeclaration);
-                    if (enumValue !== undefined) {
-                        addValue(enumValue);
-                    }
-                }
-            }
-        }
-    }
-
-    return {
-        addValue,
-        hasValue,
-    };
-
-    function addValue(value: string | number) {
-        switch (typeof value) {
-            case "string":
-                existingStrings.add(value);
-                break;
-            case "number":
-                existingNumbers.add(value);
-        }
-    }
-
-    function hasValue(value: string | number | PseudoBigInt): boolean {
-        switch (typeof value) {
-            case "string":
-                return existingStrings.has(value);
-            case "number":
-                return existingNumbers.has(value);
-            case "object":
-                return existingBigInts.has(pseudoBigIntToString(value));
-        }
-    }
 }
