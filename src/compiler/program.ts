@@ -324,12 +324,8 @@ import {
 } from "./_namespaces/ts";
 import * as performance from "./_namespaces/ts.performance";
 
-export function findConfigFile(searchPath: string, fileExists: (fileName: string) => boolean, configName = "tsconfig.json"): string | undefined {
-    return forEachAncestorDirectory(searchPath, ancestor => {
-        const fileName = combinePaths(ancestor, configName);
-        return fileExists(fileName) ? fileName : undefined;
-    });
-}
+import { findConfigFile, } from "./tsConfigFinder" ;
+export { findConfigFile, } ;
 
 export function resolveTripleslashReference(moduleName: string, containingFile: string): string {
     const basePath = getDirectoryPath(containingFile);
@@ -337,160 +333,25 @@ export function resolveTripleslashReference(moduleName: string, containingFile: 
     return normalizePath(referencedFileName);
 }
 
+import { computeCommonSourceDirectoryOfFilenames, } from "./computeCommonSourceDirectoryOfFilenames" ;
 /** @internal */
-export function computeCommonSourceDirectoryOfFilenames(fileNames: readonly string[], currentDirectory: string, getCanonicalFileName: GetCanonicalFileName): string {
-    let commonPathComponents: string[] | undefined;
-    const failed = forEach(fileNames, sourceFile => {
-        // Each file contributes into common source file path
-        const sourcePathComponents = getNormalizedPathComponents(sourceFile, currentDirectory);
-        sourcePathComponents.pop(); // The base file name is not part of the common directory path
-
-        if (!commonPathComponents) {
-            // first file
-            commonPathComponents = sourcePathComponents;
-            return;
-        }
-
-        const n = Math.min(commonPathComponents.length, sourcePathComponents.length);
-        for (let i = 0; i < n; i++) {
-            if (getCanonicalFileName(commonPathComponents[i]) !== getCanonicalFileName(sourcePathComponents[i])) {
-                if (i === 0) {
-                    // Failed to find any common path component
-                    return true;
-                }
-
-                // New common path found that is 0 -> i-1
-                commonPathComponents.length = i;
-                break;
-            }
-        }
-
-        // If the sourcePathComponents was shorter than the commonPathComponents, truncate to the sourcePathComponents
-        if (sourcePathComponents.length < commonPathComponents.length) {
-            commonPathComponents.length = sourcePathComponents.length;
-        }
-    });
-
-    // A common path can not be found when paths span multiple drives on windows, for example
-    if (failed) {
-        return "";
-    }
-
-    if (!commonPathComponents) { // Can happen when all input files are .d.ts files
-        return currentDirectory;
-    }
-
-    return getPathFromPathComponents(commonPathComponents);
-}
+export { computeCommonSourceDirectoryOfFilenames, } ;
 
 export function createCompilerHost(options: CompilerOptions, setParentNodes?: boolean): CompilerHost {
     return createCompilerHostWorker(options, setParentNodes);
 }
 
 /** @internal */
-export function createGetSourceFile(
-    readFile: ProgramHost<any>["readFile"],
-    getCompilerOptions: () => CompilerOptions,
-    setParentNodes: boolean | undefined
-): CompilerHost["getSourceFile"] {
-    return (fileName, languageVersionOrOptions, onError) => {
-        let text: string | undefined;
-        try {
-            performance.mark("beforeIORead");
-            text = readFile(fileName, getCompilerOptions().charset);
-            performance.mark("afterIORead");
-            performance.measure("I/O Read", "beforeIORead", "afterIORead");
-        }
-        catch (e) {
-            if (onError) {
-                onError(e.message);
-            }
-            text = "";
-        }
-        return text !== undefined ? createSourceFile(fileName, text, languageVersionOrOptions, setParentNodes) : undefined;
-    };
-}
+import { createGetSourceFile, } from "./createCompilerHostWorker";
+export { createGetSourceFile, } ;
 
 /** @internal */
-export function createWriteFileMeasuringIO(
-    actualWriteFile: (path: string, data: string, writeByteOrderMark: boolean) => void,
-    createDirectory: (path: string) => void,
-    directoryExists: (path: string) => boolean
-): CompilerHost["writeFile"] {
-    return (fileName, data, writeByteOrderMark, onError) => {
-        try {
-            performance.mark("beforeIOWrite");
-
-            // NOTE: If patchWriteFileEnsuringDirectory has been called,
-            // the system.writeFile will do its own directory creation and
-            // the ensureDirectoriesExist call will always be redundant.
-            writeFileEnsuringDirectories(
-                fileName,
-                data,
-                writeByteOrderMark,
-                actualWriteFile,
-                createDirectory,
-                directoryExists
-            );
-
-            performance.mark("afterIOWrite");
-            performance.measure("I/O Write", "beforeIOWrite", "afterIOWrite");
-        }
-        catch (e) {
-            if (onError) {
-                onError(e.message);
-            }
-        }
-    };
-}
+import { createWriteFileMeasuringIO, } from "./createWriteFileMeasuringIO";
+export { createWriteFileMeasuringIO, } ;
 
 /** @internal */
-export function createCompilerHostWorker(options: CompilerOptions, setParentNodes?: boolean, system = sys): CompilerHost {
-    const existingDirectories = new Map<string, boolean>();
-    const getCanonicalFileName = createGetCanonicalFileName(system.useCaseSensitiveFileNames);
-    function directoryExists(directoryPath: string): boolean {
-        if (existingDirectories.has(directoryPath)) {
-            return true;
-        }
-        if ((compilerHost.directoryExists || system.directoryExists)(directoryPath)) {
-            existingDirectories.set(directoryPath, true);
-            return true;
-        }
-        return false;
-    }
-
-    function getDefaultLibLocation(): string {
-        return getDirectoryPath(normalizePath(system.getExecutingFilePath()));
-    }
-
-    const newLine = getNewLineCharacter(options);
-    const realpath = system.realpath && ((path: string) => system.realpath!(path));
-    const compilerHost: CompilerHost = {
-        getSourceFile: createGetSourceFile(fileName => compilerHost.readFile(fileName), () => options, setParentNodes),
-        getDefaultLibLocation,
-        getDefaultLibFileName: options => combinePaths(getDefaultLibLocation(), getDefaultLibFileName(options)),
-        writeFile: createWriteFileMeasuringIO(
-            (path, data, writeByteOrderMark) => system.writeFile(path, data, writeByteOrderMark),
-            path => (compilerHost.createDirectory || system.createDirectory)(path),
-            path => directoryExists(path),
-        ),
-        getCurrentDirectory: memoize(() => system.getCurrentDirectory()),
-        useCaseSensitiveFileNames: () => system.useCaseSensitiveFileNames,
-        getCanonicalFileName,
-        getNewLine: () => newLine,
-        fileExists: fileName => system.fileExists(fileName),
-        readFile: fileName => system.readFile(fileName),
-        trace: (s: string) => system.write(s + newLine),
-        directoryExists: directoryName => system.directoryExists(directoryName),
-        getEnvironmentVariable: name => system.getEnvironmentVariable ? system.getEnvironmentVariable(name) : "",
-        getDirectories: (path: string) => system.getDirectories(path),
-        realpath,
-        readDirectory: (path, extensions, include, exclude, depth) => system.readDirectory(path, extensions, include, exclude, depth),
-        createDirectory: d => system.createDirectory(d),
-        createHash: maybeBind(system, system.createHash)
-    };
-    return compilerHost;
-}
+import { createCompilerHostWorker, } from "./createCompilerHostWorker";
+export { createCompilerHostWorker, } ;
 
 /** @internal */
 export interface CompilerHostLikeForCache {

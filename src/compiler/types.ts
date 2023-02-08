@@ -6112,73 +6112,31 @@ export function diagnosticCategoryName(d: { category: DiagnosticCategory }, lowe
     return lowerCase ? name.toLowerCase() : name;
 }
 
-export enum ModuleResolutionKind {
-    Classic  = 1,
-    Node10   = 2,
-    // Starting with node12, node's module resolver has significant departures from traditional cjs resolution
-    // to better support ecmascript modules and their use within node - however more features are still being added.
-    // TypeScript's Node ESM support was introduced after Node 12 went end-of-life, and Node 14 is the earliest stable
-    // version that supports both pattern trailers - *but*, Node 16 is the first version that also supports ECMASCript 2022.
-    // In turn, we offer both a `NodeNext` moving resolution target, and a `Node16` version-anchored resolution target
-    Node16   = 3,
-    NodeNext = 99, // Not simply `Node16` so that compiled code linked against TS can use the `Next` value reliably (same as with `ModuleKind`)
-    Bundler   = 100,
-}
+import {
+    ModuleDetectionKind ,
+    ModuleResolutionKind ,
+    PluginImport ,
+    ProjectReference ,
+} from "./programOptions" ;
+export {
+    ModuleDetectionKind ,
+    ModuleResolutionKind ,
+    PluginImport ,
+    ProjectReference ,
+} ;
 
-export enum ModuleDetectionKind {
-    /**
-     * Files with imports, exports and/or import.meta are considered modules
-     */
-    Legacy = 1,
-    /**
-     * Legacy, but also files with jsx under react-jsx or react-jsxdev and esm mode files under moduleResolution: node16+
-     */
-    Auto = 2,
-    /**
-     * Consider all non-declaration files modules, regardless of present syntax
-     */
-    Force = 3,
-}
+import {
+    PollingWatchKind ,
+    WatchDirectoryKind ,
+    WatchFileKind ,
+} from "./programOptions" ;
+export {
+    PollingWatchKind ,
+    WatchDirectoryKind ,
+    WatchFileKind ,
+} ;
 
-export interface PluginImport {
-    name: string;
-}
-
-export interface ProjectReference {
-    /** A normalized path on disk */
-    path: string;
-    /** The path as the user originally wrote it */
-    originalPath?: string;
-    /** True if the output of this reference should be prepended to the output of this project. Only valid for --outFile compilations */
-    prepend?: boolean;
-    /** True if it is intended that this reference form a circularity */
-    circular?: boolean;
-}
-
-export enum WatchFileKind {
-    FixedPollingInterval,
-    PriorityPollingInterval,
-    DynamicPriorityPolling,
-    FixedChunkSizePolling,
-    UseFsEvents,
-    UseFsEventsOnParentDirectory,
-}
-
-export enum WatchDirectoryKind {
-    UseFsEvents,
-    FixedPollingInterval,
-    DynamicPriorityPolling,
-    FixedChunkSizePolling,
-}
-
-export enum PollingWatchKind {
-    FixedInterval,
-    PriorityInterval,
-    DynamicPriority,
-    FixedChunkSize,
-}
-
-export type CompilerOptionsValue = string | number | boolean | (string | number)[] | string[] | MapLike<string[]> | PluginImport[] | ProjectReference[] | null | undefined;
+export type CompilerOptionsValue = import("./programOptions").CompilerOptionsValue;
 
 export interface CompilerOptions {
     /** @internal */ all?: boolean;
@@ -6329,109 +6287,40 @@ export interface CompilerOptions {
     [option: string]: CompilerOptionsValue | TsConfigSourceFile | undefined;
 }
 
-export interface WatchOptions {
-    watchFile?: WatchFileKind;
-    watchDirectory?: WatchDirectoryKind;
-    fallbackPolling?: PollingWatchKind;
-    synchronousWatchDirectory?: boolean;
-    excludeDirectories?: string[];
-    excludeFiles?: string[];
+export type WatchOptions = import("./programOptions").WatchOptions ;
 
-    [option: string]: CompilerOptionsValue | undefined;
-}
+export type TypeAcquisition = import("./programOptions").TypeAcquisition ;
 
-export interface TypeAcquisition {
-    enable?: boolean;
-    include?: string[];
-    exclude?: string[];
-    disableFilenameBasedTypeAcquisition?: boolean;
-    [option: string]: CompilerOptionsValue | undefined;
-}
+import {
+    ModuleKind ,
+    JsxEmit ,
+    ImportsNotUsedAsValues ,
+} from "./programOptions" ;
+export {
+    ModuleKind ,
+    JsxEmit ,
+    ImportsNotUsedAsValues ,
+} ;
 
-export enum ModuleKind {
-    None = 0,
-    CommonJS = 1,
-    AMD = 2,
-    UMD = 3,
-    System = 4,
+import {
+    NewLineKind ,
+    LineAndCharacter ,
+} from "./programOptions" ;
+export {
+    NewLineKind ,
+    LineAndCharacter ,
+} ;
 
-    // NOTE: ES module kinds should be contiguous to more easily check whether a module kind is *any* ES module kind.
-    //       Non-ES module kinds should not come between ES2015 (the earliest ES module kind) and ESNext (the last ES
-    //       module kind).
-    ES2015 = 5,
-    ES2020 = 6,
-    ES2022 = 7,
-    ESNext = 99,
-
-    // Node16+ is an amalgam of commonjs (albeit updated) and es2022+, and represents a distinct module system from es2020/esnext
-    Node16 = 100,
-    NodeNext = 199,
-}
-
-export const enum JsxEmit {
-    None = 0,
-    Preserve = 1,
-    React = 2,
-    ReactNative = 3,
-    ReactJSX = 4,
-    ReactJSXDev = 5,
-}
-
-export const enum ImportsNotUsedAsValues {
-    Remove,
-    Preserve,
-    Error,
-}
-
-export const enum NewLineKind {
-    CarriageReturnLineFeed = 0,
-    LineFeed = 1
-}
-
-export interface LineAndCharacter {
-    /** 0-based. */
-    line: number;
-    /*
-     * 0-based. This value denotes the character position in line and is different from the 'column' because of tab characters.
-     */
-    character: number;
-}
-
-export const enum ScriptKind {
-    Unknown = 0,
-    JS = 1,
-    JSX = 2,
-    TS = 3,
-    TSX = 4,
-    External = 5,
-    JSON = 6,
-    /**
-     * Used on extensions that doesn't define the ScriptKind but the content defines it.
-     * Deferred extensions are going to be included in all project contexts.
-     */
-    Deferred = 7
-}
-
-export const enum ScriptTarget {
-    ES3 = 0,
-    ES5 = 1,
-    ES2015 = 2,
-    ES2016 = 3,
-    ES2017 = 4,
-    ES2018 = 5,
-    ES2019 = 6,
-    ES2020 = 7,
-    ES2021 = 8,
-    ES2022 = 9,
-    ESNext = 99,
-    JSON = 100,
-    Latest = ESNext,
-}
-
-export const enum LanguageVariant {
-    Standard,
-    JSX
-}
+import {
+    LanguageVariant ,
+    ScriptKind ,
+    ScriptTarget ,
+} from "./programOptions" ;
+export {
+    LanguageVariant ,
+    ScriptKind ,
+    ScriptTarget ,
+} ;
 
 /** Either a parsed command line or a parsed tsconfig.json */
 export interface ParsedCommandLine {
@@ -6568,141 +6457,8 @@ export interface CommandLineOptionOfListType extends CommandLineOptionBase {
 export type CommandLineOption = CommandLineOptionOfCustomType | CommandLineOptionOfStringType | CommandLineOptionOfNumberType | CommandLineOptionOfBooleanType | TsConfigOnlyOption | CommandLineOptionOfListType;
 
 /** @internal */
-export const enum CharacterCodes {
-    nullCharacter = 0,
-    maxAsciiCharacter = 0x7F,
-
-    lineFeed = 0x0A,              // \n
-    carriageReturn = 0x0D,        // \r
-    lineSeparator = 0x2028,
-    paragraphSeparator = 0x2029,
-    nextLine = 0x0085,
-
-    // Unicode 3.0 space characters
-    space = 0x0020,   // " "
-    nonBreakingSpace = 0x00A0,   //
-    enQuad = 0x2000,
-    emQuad = 0x2001,
-    enSpace = 0x2002,
-    emSpace = 0x2003,
-    threePerEmSpace = 0x2004,
-    fourPerEmSpace = 0x2005,
-    sixPerEmSpace = 0x2006,
-    figureSpace = 0x2007,
-    punctuationSpace = 0x2008,
-    thinSpace = 0x2009,
-    hairSpace = 0x200A,
-    zeroWidthSpace = 0x200B,
-    narrowNoBreakSpace = 0x202F,
-    ideographicSpace = 0x3000,
-    mathematicalSpace = 0x205F,
-    ogham = 0x1680,
-
-    _ = 0x5F,
-    $ = 0x24,
-
-    _0 = 0x30,
-    _1 = 0x31,
-    _2 = 0x32,
-    _3 = 0x33,
-    _4 = 0x34,
-    _5 = 0x35,
-    _6 = 0x36,
-    _7 = 0x37,
-    _8 = 0x38,
-    _9 = 0x39,
-
-    a = 0x61,
-    b = 0x62,
-    c = 0x63,
-    d = 0x64,
-    e = 0x65,
-    f = 0x66,
-    g = 0x67,
-    h = 0x68,
-    i = 0x69,
-    j = 0x6A,
-    k = 0x6B,
-    l = 0x6C,
-    m = 0x6D,
-    n = 0x6E,
-    o = 0x6F,
-    p = 0x70,
-    q = 0x71,
-    r = 0x72,
-    s = 0x73,
-    t = 0x74,
-    u = 0x75,
-    v = 0x76,
-    w = 0x77,
-    x = 0x78,
-    y = 0x79,
-    z = 0x7A,
-
-    A = 0x41,
-    B = 0x42,
-    C = 0x43,
-    D = 0x44,
-    E = 0x45,
-    F = 0x46,
-    G = 0x47,
-    H = 0x48,
-    I = 0x49,
-    J = 0x4A,
-    K = 0x4B,
-    L = 0x4C,
-    M = 0x4D,
-    N = 0x4E,
-    O = 0x4F,
-    P = 0x50,
-    Q = 0x51,
-    R = 0x52,
-    S = 0x53,
-    T = 0x54,
-    U = 0x55,
-    V = 0x56,
-    W = 0x57,
-    X = 0x58,
-    Y = 0x59,
-    Z = 0x5a,
-
-    ampersand = 0x26,             // &
-    asterisk = 0x2A,              // *
-    at = 0x40,                    // @
-    backslash = 0x5C,             // \
-    backtick = 0x60,              // `
-    bar = 0x7C,                   // |
-    caret = 0x5E,                 // ^
-    closeBrace = 0x7D,            // }
-    closeBracket = 0x5D,          // ]
-    closeParen = 0x29,            // )
-    colon = 0x3A,                 // :
-    comma = 0x2C,                 // ,
-    dot = 0x2E,                   // .
-    doubleQuote = 0x22,           // "
-    equals = 0x3D,                // =
-    exclamation = 0x21,           // !
-    greaterThan = 0x3E,           // >
-    hash = 0x23,                  // #
-    lessThan = 0x3C,              // <
-    minus = 0x2D,                 // -
-    openBrace = 0x7B,             // {
-    openBracket = 0x5B,           // [
-    openParen = 0x28,             // (
-    percent = 0x25,               // %
-    plus = 0x2B,                  // +
-    question = 0x3F,              // ?
-    semicolon = 0x3B,             // ;
-    singleQuote = 0x27,           // '
-    slash = 0x2F,                 // /
-    tilde = 0x7E,                 // ~
-
-    backspace = 0x08,             // \b
-    formFeed = 0x0C,              // \f
-    byteOrderMark = 0xFEFF,
-    tab = 0x09,                   // \t
-    verticalTab = 0x0B,           // \v
-}
+import { CharacterCodes, } from "./characterCodes";
+export { CharacterCodes, } ;
 
 export interface ModuleResolutionHost {
     // TODO: GH#18217 Optional methods frequently used as non-optional
