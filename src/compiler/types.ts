@@ -6311,41 +6311,16 @@ export {
     LineAndCharacter ,
 } ;
 
-export const enum ScriptKind {
-    Unknown = 0,
-    JS = 1,
-    JSX = 2,
-    TS = 3,
-    TSX = 4,
-    External = 5,
-    JSON = 6,
-    /**
-     * Used on extensions that doesn't define the ScriptKind but the content defines it.
-     * Deferred extensions are going to be included in all project contexts.
-     */
-    Deferred = 7
-}
-
-export const enum ScriptTarget {
-    ES3 = 0,
-    ES5 = 1,
-    ES2015 = 2,
-    ES2016 = 3,
-    ES2017 = 4,
-    ES2018 = 5,
-    ES2019 = 6,
-    ES2020 = 7,
-    ES2021 = 8,
-    ES2022 = 9,
-    ESNext = 99,
-    JSON = 100,
-    Latest = ESNext,
-}
-
-export const enum LanguageVariant {
-    Standard,
-    JSX
-}
+import {
+    LanguageVariant ,
+    ScriptKind ,
+    ScriptTarget ,
+} from "./programOptions" ;
+export {
+    LanguageVariant ,
+    ScriptKind ,
+    ScriptTarget ,
+} ;
 
 /** Either a parsed command line or a parsed tsconfig.json */
 export interface ParsedCommandLine {
