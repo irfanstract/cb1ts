@@ -6125,28 +6125,16 @@ export {
     ProjectReference ,
 } ;
 
-export enum WatchFileKind {
-    FixedPollingInterval,
-    PriorityPollingInterval,
-    DynamicPriorityPolling,
-    FixedChunkSizePolling,
-    UseFsEvents,
-    UseFsEventsOnParentDirectory,
-}
-
-export enum WatchDirectoryKind {
-    UseFsEvents,
-    FixedPollingInterval,
-    DynamicPriorityPolling,
-    FixedChunkSizePolling,
-}
-
-export enum PollingWatchKind {
-    FixedInterval,
-    PriorityInterval,
-    DynamicPriority,
-    FixedChunkSize,
-}
+import {
+    PollingWatchKind ,
+    WatchDirectoryKind ,
+    WatchFileKind ,
+} from "./programOptions" ;
+export {
+    PollingWatchKind ,
+    WatchDirectoryKind ,
+    WatchFileKind ,
+} ;
 
 export type CompilerOptionsValue = string | number | boolean | (string | number)[] | string[] | MapLike<string[]> | PluginImport[] | ProjectReference[] | null | undefined;
 

@@ -90,6 +90,32 @@ export interface ProjectReference {
 
 
 
+export enum WatchFileKind {
+    FixedPollingInterval,
+    PriorityPollingInterval,
+    DynamicPriorityPolling,
+    FixedChunkSizePolling,
+    UseFsEvents,
+    UseFsEventsOnParentDirectory,
+}
+
+export enum WatchDirectoryKind {
+    UseFsEvents,
+    FixedPollingInterval,
+    DynamicPriorityPolling,
+    FixedChunkSizePolling,
+}
+
+export enum PollingWatchKind {
+    FixedInterval,
+    PriorityInterval,
+    DynamicPriority,
+    FixedChunkSize,
+}
+
+
+
+
 
 
 
