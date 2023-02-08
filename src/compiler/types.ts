@@ -4445,28 +4445,16 @@ export interface TypeChecker {
     /** @internal */ isTypeParameterPossiblyReferenced(tp: TypeParameter, node: Node): boolean;
 }
 
-/** @internal */
-export const enum MemberOverrideStatus {
-    Ok,
-    NeedsOverride,
-    HasInvalidOverride
-}
-
-/** @internal */
-export const enum UnionReduction {
-    None = 0,
-    Literal,
-    Subtype,
-}
-
-/** @internal */
-export const enum ContextFlags {
-    None           = 0,
-    Signature      = 1 << 0, // Obtaining contextual signature
-    NoConstraints  = 1 << 1, // Don't obtain type variable constraints
-    Completions    = 1 << 2, // Ignore inference to current node and parent nodes out to the containing call for completions
-    SkipBindingPatterns = 1 << 3, // Ignore contextual types applied by binding patterns
-}
+import {
+    MemberOverrideStatus ,
+    UnionReduction ,
+    ContextFlags ,
+} from "./typeCheckingFlags" ;
+export {
+    MemberOverrideStatus ,
+    UnionReduction ,
+    ContextFlags ,
+} ;
 
 // NOTE: If modifying this enum, must modify `TypeFormatFlags` too!
 export const enum NodeBuilderFlags {
@@ -4513,74 +4501,14 @@ export const enum NodeBuilderFlags {
     InInitialEntityName                     = 1 << 24,    // Set when writing the LHS of an entity name or entity name expression
 }
 
-// Ensure the shared flags between this and `NodeBuilderFlags` stay in alignment
-export const enum TypeFormatFlags {
-    None                                    = 0,
-    NoTruncation                            = 1 << 0,  // Don't truncate typeToString result
-    WriteArrayAsGenericType                 = 1 << 1,  // Write Array<T> instead T[]
-    // hole because there's a hole in node builder flags
-    UseStructuralFallback                   = 1 << 3,   // When an alias cannot be named by its symbol, rather than report an error, fallback to a structural printout if possible
-    // hole because there's a hole in node builder flags
-    WriteTypeArgumentsOfSignature           = 1 << 5,  // Write the type arguments instead of type parameters of the signature
-    UseFullyQualifiedType                   = 1 << 6,  // Write out the fully qualified type name (eg. Module.Type, instead of Type)
-    // hole because `UseOnlyExternalAliasing` is here in node builder flags, but functions which take old flags use `SymbolFormatFlags` instead
-    SuppressAnyReturnType                   = 1 << 8,  // If the return type is any-like, don't offer a return type.
-    // hole because `WriteTypeParametersInQualifiedName` is here in node builder flags, but functions which take old flags use `SymbolFormatFlags` for this instead
-    MultilineObjectLiterals                 = 1 << 10, // Always print object literals across multiple lines (only used to map into node builder flags)
-    WriteClassExpressionAsTypeLiteral       = 1 << 11, // Write a type literal instead of (Anonymous class)
-    UseTypeOfFunction                       = 1 << 12, // Write typeof instead of function type literal
-    OmitParameterModifiers                  = 1 << 13, // Omit modifiers on parameters
-
-    UseAliasDefinedOutsideCurrentScope      = 1 << 14, // For a `type T = ... ` defined in a different file, write `T` instead of its value, even though `T` can't be accessed in the current scope.
-    UseSingleQuotesForStringLiteralType     = 1 << 28, // Use single quotes for string literal type
-    NoTypeReduction                         = 1 << 29, // Don't call getReducedType
-    OmitThisParameter                       = 1 << 25,
-
-    // Error Handling
-    AllowUniqueESSymbolType                 = 1 << 20, // This is bit 20 to align with the same bit in `NodeBuilderFlags`
-
-    // TypeFormatFlags exclusive
-    AddUndefined                            = 1 << 17, // Add undefined to types of initialized, non-optional parameters
-    WriteArrowStyleSignature                = 1 << 18, // Write arrow style signature
-
-    // State
-    InArrayType                             = 1 << 19, // Writing an array element type
-    InElementType                           = 1 << 21, // Writing an array or union element type
-    InFirstTypeArgument                     = 1 << 22, // Writing first type argument of the instantiated type
-    InTypeAlias                             = 1 << 23, // Writing type in type alias declaration
-
-    NodeBuilderFlagsMask = NoTruncation | WriteArrayAsGenericType | UseStructuralFallback | WriteTypeArgumentsOfSignature |
-        UseFullyQualifiedType | SuppressAnyReturnType | MultilineObjectLiterals | WriteClassExpressionAsTypeLiteral |
-        UseTypeOfFunction | OmitParameterModifiers | UseAliasDefinedOutsideCurrentScope | AllowUniqueESSymbolType | InTypeAlias |
-        UseSingleQuotesForStringLiteralType | NoTypeReduction | OmitThisParameter
-}
-
-export const enum SymbolFormatFlags {
-    None                                    = 0,
-
-    // Write symbols's type argument if it is instantiated symbol
-    // eg. class C<T> { p: T }   <-- Show p as C<T>.p here
-    //     var a: C<number>;
-    //     var p = a.p; <--- Here p is property of C<number> so show it as C<number>.p instead of just C.p
-    WriteTypeParametersOrArguments          = 1 << 0,
-
-    // Use only external alias information to get the symbol name in the given context
-    // eg.  module m { export class c { } } import x = m.c;
-    // When this flag is specified m.c will be used to refer to the class instead of alias symbol x
-    UseOnlyExternalAliasing                 = 1 << 1,
-
-    // Build symbol name using any nodes needed, instead of just components of an entity name
-    AllowAnyNodeKind                        = 1 << 2,
-
-    // Prefer aliases which are not directly visible
-    UseAliasDefinedOutsideCurrentScope      = 1 << 3,
-
-    // { [E.A]: 1 }
-    /** @internal */ WriteComputedProps      = 1 << 4,
-
-    // Skip building an accessible symbol chain
-    /** @internal */ DoNotIncludeSymbolChain = 1 << 5,
-}
+import {
+    SymbolFormatFlags ,
+    TypeFormatFlags ,
+} from "./typeRefPrintout" ;
+export {
+    SymbolFormatFlags ,
+    TypeFormatFlags ,
+} ;
 
 /** @internal */
 export interface SymbolWalker {
@@ -4854,98 +4782,8 @@ export interface EmitResolver {
     isImportRequiredByAugmentation(decl: ImportDeclaration): boolean;
 }
 
-export const enum SymbolFlags {
-    None                    = 0,
-    FunctionScopedVariable  = 1 << 0,   // Variable (var) or parameter
-    BlockScopedVariable     = 1 << 1,   // A block-scoped variable (let or const)
-    Property                = 1 << 2,   // Property or enum member
-    EnumMember              = 1 << 3,   // Enum member
-    Function                = 1 << 4,   // Function
-    Class                   = 1 << 5,   // Class
-    Interface               = 1 << 6,   // Interface
-    ConstEnum               = 1 << 7,   // Const enum
-    RegularEnum             = 1 << 8,   // Enum
-    ValueModule             = 1 << 9,   // Instantiated module
-    NamespaceModule         = 1 << 10,  // Uninstantiated module
-    TypeLiteral             = 1 << 11,  // Type Literal or mapped type
-    ObjectLiteral           = 1 << 12,  // Object Literal
-    Method                  = 1 << 13,  // Method
-    Constructor             = 1 << 14,  // Constructor
-    GetAccessor             = 1 << 15,  // Get accessor
-    SetAccessor             = 1 << 16,  // Set accessor
-    Signature               = 1 << 17,  // Call, construct, or index signature
-    TypeParameter           = 1 << 18,  // Type parameter
-    TypeAlias               = 1 << 19,  // Type alias
-    ExportValue             = 1 << 20,  // Exported value marker (see comment in declareModuleMember in binder)
-    Alias                   = 1 << 21,  // An alias for another symbol (see comment in isAliasSymbolDeclaration in checker)
-    Prototype               = 1 << 22,  // Prototype property (no source representation)
-    ExportStar              = 1 << 23,  // Export * declaration
-    Optional                = 1 << 24,  // Optional property
-    Transient               = 1 << 25,  // Transient symbol (created during type check)
-    Assignment              = 1 << 26,  // Assignment treated as declaration (eg `this.prop = 1`)
-    ModuleExports           = 1 << 27,  // Symbol for CommonJS `module` of `module.exports`
-    /** @internal */
-    All = FunctionScopedVariable | BlockScopedVariable | Property | EnumMember | Function | Class | Interface | ConstEnum | RegularEnum | ValueModule | NamespaceModule | TypeLiteral
-        | ObjectLiteral | Method | Constructor | GetAccessor | SetAccessor | Signature | TypeParameter | TypeAlias | ExportValue | Alias | Prototype | ExportStar | Optional | Transient,
-
-    Enum = RegularEnum | ConstEnum,
-    Variable = FunctionScopedVariable | BlockScopedVariable,
-    Value = Variable | Property | EnumMember | ObjectLiteral | Function | Class | Enum | ValueModule | Method | GetAccessor | SetAccessor,
-    Type = Class | Interface | Enum | EnumMember | TypeLiteral | TypeParameter | TypeAlias,
-    Namespace = ValueModule | NamespaceModule | Enum,
-    Module = ValueModule | NamespaceModule,
-    Accessor = GetAccessor | SetAccessor,
-
-    // Variables can be redeclared, but can not redeclare a block-scoped declaration with the
-    // same name, or any other value that is not a variable, e.g. ValueModule or Class
-    FunctionScopedVariableExcludes = Value & ~FunctionScopedVariable,
-
-    // Block-scoped declarations are not allowed to be re-declared
-    // they can not merge with anything in the value space
-    BlockScopedVariableExcludes = Value,
-
-    ParameterExcludes = Value,
-    PropertyExcludes = None,
-    EnumMemberExcludes = Value | Type,
-    FunctionExcludes = Value & ~(Function | ValueModule | Class),
-    ClassExcludes = (Value | Type) & ~(ValueModule | Interface | Function), // class-interface mergability done in checker.ts
-    InterfaceExcludes = Type & ~(Interface | Class),
-    RegularEnumExcludes = (Value | Type) & ~(RegularEnum | ValueModule), // regular enums merge only with regular enums and modules
-    ConstEnumExcludes = (Value | Type) & ~ConstEnum, // const enums merge only with const enums
-    ValueModuleExcludes = Value & ~(Function | Class | RegularEnum | ValueModule),
-    NamespaceModuleExcludes = 0,
-    MethodExcludes = Value & ~Method,
-    GetAccessorExcludes = Value & ~SetAccessor,
-    SetAccessorExcludes = Value & ~GetAccessor,
-    AccessorExcludes = Value & ~Accessor,
-    TypeParameterExcludes = Type & ~TypeParameter,
-    TypeAliasExcludes = Type,
-    AliasExcludes = Alias,
-
-    ModuleMember = Variable | Function | Class | Interface | Enum | Module | TypeAlias | Alias,
-
-    ExportHasLocal = Function | Class | Enum | ValueModule,
-
-    BlockScoped = BlockScopedVariable | Class | Enum,
-
-    PropertyOrAccessor = Property | Accessor,
-
-    ClassMember = Method | Accessor | Property,
-
-    /** @internal */
-    ExportSupportsDefaultModifier = Class | Function | Interface,
-
-    /** @internal */
-    ExportDoesNotSupportDefaultModifier = ~ExportSupportsDefaultModifier,
-
-    /** @internal */
-    // The set of things we consider semantically classifiable.  Used to speed up the LS during
-    // classification.
-    Classifiable = Class | Enum | TypeAlias | Interface | TypeParameter | Module | Alias,
-
-    /** @internal */
-    LateBindingContainer = Class | Interface | TypeLiteral | ObjectLiteral | Function,
-}
+import { SymbolFlags, } from "./symbolModifiers";
+export { SymbolFlags, } ;
 
 /** @internal */
 export type SymbolId = number;
@@ -5208,97 +5046,8 @@ export interface SerializedTypeEntry {
     addedLength: number;
 }
 
-export const enum TypeFlags {
-    Any             = 1 << 0,
-    Unknown         = 1 << 1,
-    String          = 1 << 2,
-    Number          = 1 << 3,
-    Boolean         = 1 << 4,
-    Enum            = 1 << 5,   // Numeric computed enum member value
-    BigInt          = 1 << 6,
-    StringLiteral   = 1 << 7,
-    NumberLiteral   = 1 << 8,
-    BooleanLiteral  = 1 << 9,
-    EnumLiteral     = 1 << 10,  // Always combined with StringLiteral, NumberLiteral, or Union
-    BigIntLiteral   = 1 << 11,
-    ESSymbol        = 1 << 12,  // Type of symbol primitive introduced in ES6
-    UniqueESSymbol  = 1 << 13,  // unique symbol
-    Void            = 1 << 14,
-    Undefined       = 1 << 15,
-    Null            = 1 << 16,
-    Never           = 1 << 17,  // Never type
-    TypeParameter   = 1 << 18,  // Type parameter
-    Object          = 1 << 19,  // Object type
-    Union           = 1 << 20,  // Union (T | U)
-    Intersection    = 1 << 21,  // Intersection (T & U)
-    Index           = 1 << 22,  // keyof T
-    IndexedAccess   = 1 << 23,  // T[K]
-    Conditional     = 1 << 24,  // T extends U ? X : Y
-    Substitution    = 1 << 25,  // Type parameter substitution
-    NonPrimitive    = 1 << 26,  // intrinsic object type
-    TemplateLiteral = 1 << 27,  // Template literal type
-    StringMapping   = 1 << 28,  // Uppercase/Lowercase type
-
-    /** @internal */
-    AnyOrUnknown = Any | Unknown,
-    /** @internal */
-    Nullable = Undefined | Null,
-    Literal = StringLiteral | NumberLiteral | BigIntLiteral | BooleanLiteral,
-    Unit = Literal | UniqueESSymbol | Nullable,
-    StringOrNumberLiteral = StringLiteral | NumberLiteral,
-    /** @internal */
-    StringOrNumberLiteralOrUnique = StringLiteral | NumberLiteral | UniqueESSymbol,
-    /** @internal */
-    DefinitelyFalsy = StringLiteral | NumberLiteral | BigIntLiteral | BooleanLiteral | Void | Undefined | Null,
-    PossiblyFalsy = DefinitelyFalsy | String | Number | BigInt | Boolean,
-    /** @internal */
-    Intrinsic = Any | Unknown | String | Number | BigInt | Boolean | BooleanLiteral | ESSymbol | Void | Undefined | Null | Never | NonPrimitive,
-    /** @internal */
-    Primitive = String | Number | BigInt | Boolean | Enum | EnumLiteral | ESSymbol | Void | Undefined | Null | Literal | UniqueESSymbol,
-    StringLike = String | StringLiteral | TemplateLiteral | StringMapping,
-    NumberLike = Number | NumberLiteral | Enum,
-    BigIntLike = BigInt | BigIntLiteral,
-    BooleanLike = Boolean | BooleanLiteral,
-    EnumLike = Enum | EnumLiteral,
-    ESSymbolLike = ESSymbol | UniqueESSymbol,
-    VoidLike = Void | Undefined,
-    /** @internal */
-    DefinitelyNonNullable = StringLike | NumberLike | BigIntLike | BooleanLike | EnumLike | ESSymbolLike | Object | NonPrimitive,
-    /** @internal */
-    DisjointDomains = NonPrimitive | StringLike | NumberLike | BigIntLike | BooleanLike | ESSymbolLike | VoidLike | Null,
-    UnionOrIntersection = Union | Intersection,
-    StructuredType = Object | Union | Intersection,
-    TypeVariable = TypeParameter | IndexedAccess,
-    InstantiableNonPrimitive = TypeVariable | Conditional | Substitution,
-    InstantiablePrimitive = Index | TemplateLiteral | StringMapping,
-    Instantiable = InstantiableNonPrimitive | InstantiablePrimitive,
-    StructuredOrInstantiable = StructuredType | Instantiable,
-    /** @internal */
-    ObjectFlagsType = Any | Nullable | Never | Object | Union | Intersection,
-    /** @internal */
-    Simplifiable = IndexedAccess | Conditional,
-    /** @internal */
-    Singleton = Any | Unknown | String | Number | Boolean | BigInt | ESSymbol | Void | Undefined | Null | Never | NonPrimitive,
-    // 'Narrowable' types are types where narrowing actually narrows.
-    // This *should* be every type other than null, undefined, void, and never
-    Narrowable = Any | Unknown | StructuredOrInstantiable | StringLike | NumberLike | BigIntLike | BooleanLike | ESSymbol | UniqueESSymbol | NonPrimitive,
-    // The following flags are aggregated during union and intersection type construction
-    /** @internal */
-    IncludesMask = Any | Unknown | Primitive | Never | Object | Union | Intersection | NonPrimitive | TemplateLiteral,
-    // The following flags are used for different purposes during union and intersection type construction
-    /** @internal */
-    IncludesMissingType = TypeParameter,
-    /** @internal */
-    IncludesNonWideningType = Index,
-    /** @internal */
-    IncludesWildcard = IndexedAccess,
-    /** @internal */
-    IncludesEmptyObject = Conditional,
-    /** @internal */
-    IncludesInstantiable = Substitution,
-    /** @internal */
-    NotPrimitiveUnion = Any | Unknown | Enum | Void | Never | Object | Intersection | IncludesInstantiable,
-}
+import { TypeFlags, } from "./typeCheckingFlags";
+export { TypeFlags, } ;
 
 export type DestructuringPattern = BindingPattern | ObjectLiteralExpression | ArrayLiteralExpression;
 
@@ -5378,85 +5127,8 @@ export interface BigIntLiteralType extends LiteralType {
 export interface EnumType extends Type {
 }
 
-// Types included in TypeFlags.ObjectFlagsType have an objectFlags property. Some ObjectFlags
-// are specific to certain types and reuse the same bit position. Those ObjectFlags require a check
-// for a certain TypeFlags value to determine their meaning.
-export const enum ObjectFlags {
-    None             = 0,
-    Class            = 1 << 0,  // Class
-    Interface        = 1 << 1,  // Interface
-    Reference        = 1 << 2,  // Generic type reference
-    Tuple            = 1 << 3,  // Synthesized generic tuple type
-    Anonymous        = 1 << 4,  // Anonymous
-    Mapped           = 1 << 5,  // Mapped
-    Instantiated     = 1 << 6,  // Instantiated anonymous or mapped type
-    ObjectLiteral    = 1 << 7,  // Originates in an object literal
-    EvolvingArray    = 1 << 8,  // Evolving array type
-    ObjectLiteralPatternWithComputedProperties = 1 << 9,  // Object literal pattern with computed properties
-    ReverseMapped    = 1 << 10, // Object contains a property from a reverse-mapped type
-    JsxAttributes    = 1 << 11, // Jsx attributes type
-    JSLiteral        = 1 << 12, // Object type declared in JS - disables errors on read/write of nonexisting members
-    FreshLiteral     = 1 << 13, // Fresh object literal
-    ArrayLiteral     = 1 << 14, // Originates in an array literal
-    /** @internal */
-    PrimitiveUnion   = 1 << 15, // Union of only primitive types
-    /** @internal */
-    ContainsWideningType = 1 << 16, // Type is or contains undefined or null widening type
-    /** @internal */
-    ContainsObjectOrArrayLiteral = 1 << 17, // Type is or contains object literal type
-    /** @internal */
-    NonInferrableType = 1 << 18, // Type is or contains anyFunctionType or silentNeverType
-    /** @internal */
-    CouldContainTypeVariablesComputed = 1 << 19, // CouldContainTypeVariables flag has been computed
-    /** @internal */
-    CouldContainTypeVariables = 1 << 20, // Type could contain a type variable
-
-    ClassOrInterface = Class | Interface,
-    /** @internal */
-    RequiresWidening = ContainsWideningType | ContainsObjectOrArrayLiteral,
-    /** @internal */
-    PropagatingFlags = ContainsWideningType | ContainsObjectOrArrayLiteral | NonInferrableType,
-    // Object flags that uniquely identify the kind of ObjectType
-    /** @internal */
-    ObjectTypeKindMask = ClassOrInterface | Reference | Tuple | Anonymous | Mapped | ReverseMapped | EvolvingArray,
-
-    // Flags that require TypeFlags.Object
-    ContainsSpread   = 1 << 21,  // Object literal contains spread operation
-    ObjectRestType   = 1 << 22,  // Originates in object rest declaration
-    InstantiationExpressionType = 1 << 23,  // Originates in instantiation expression
-    /** @internal */
-    IsClassInstanceClone = 1 << 24, // Type is a clone of a class instance type
-    // Flags that require TypeFlags.Object and ObjectFlags.Reference
-    /** @internal */
-    IdenticalBaseTypeCalculated = 1 << 25, // has had `getSingleBaseForNonAugmentingSubtype` invoked on it already
-    /** @internal */
-    IdenticalBaseTypeExists = 1 << 26, // has a defined cachedEquivalentBaseType member
-
-    // Flags that require TypeFlags.UnionOrIntersection or TypeFlags.Substitution
-    /** @internal */
-    IsGenericTypeComputed = 1 << 21, // IsGenericObjectType flag has been computed
-    /** @internal */
-    IsGenericObjectType = 1 << 22, // Union or intersection contains generic object type
-    /** @internal */
-    IsGenericIndexType = 1 << 23, // Union or intersection contains generic index type
-    /** @internal */
-    IsGenericType = IsGenericObjectType | IsGenericIndexType,
-
-    // Flags that require TypeFlags.Union
-    /** @internal */
-    ContainsIntersections = 1 << 24, // Union contains intersections
-    /** @internal */
-    IsUnknownLikeUnionComputed = 1 << 25, // IsUnknownLikeUnion flag has been computed
-    /** @internal */
-    IsUnknownLikeUnion = 1 << 26, // Union of null, undefined, and empty object type
-    /** @internal */
-
-    // Flags that require TypeFlags.Intersection
-    /** @internal */
-    IsNeverIntersectionComputed = 1 << 24, // IsNeverLike flag has been computed
-    /** @internal */
-    IsNeverIntersection = 1 << 25, // Intersection reduces to never
-}
+import { ObjectFlags, } from "./typeCheckingFlags";
+export { ObjectFlags, } ;
 
 /** @internal */
 export type ObjectFlagsType = NullableType | ObjectType | UnionType | IntersectionType;
@@ -5528,18 +5200,8 @@ export interface DeferredTypeReference extends TypeReference {
     instantiations?: Map<string, Type>; // Instantiations of generic type alias (undefined if non-generic)
 }
 
-/** @internal */
-export const enum VarianceFlags {
-    Invariant     =      0,  // Neither covariant nor contravariant
-    Covariant     = 1 << 0,  // Covariant
-    Contravariant = 1 << 1,  // Contravariant
-    Bivariant     = Covariant | Contravariant,  // Both covariant and contravariant
-    Independent   = 1 << 2,  // Unwitnessed type parameter
-    VarianceMask  = Invariant | Covariant | Contravariant | Independent, // Mask containing all measured variances without the unmeasurable flag
-    Unmeasurable  = 1 << 3,  // Variance result is unusable - relationship relies on structural comparisons which are not reflected in generic relationships
-    Unreliable    = 1 << 4,  // Variance result is unreliable - checking may produce false negatives, but not false positives
-    AllowsStructuralFallback = Unmeasurable | Unreliable,
-}
+import { VarianceFlags, } from "./typeCheckingFlags";
+export { VarianceFlags , } ;
 
 // Generic class and interface types
 export interface GenericType extends InterfaceType, TypeReference {
@@ -5549,16 +5211,8 @@ export interface GenericType extends InterfaceType, TypeReference {
     variances?: VarianceFlags[];  // Variance of each type parameter
 }
 
-export const enum ElementFlags {
-    Required    = 1 << 0,  // T
-    Optional    = 1 << 1,  // T?
-    Rest        = 1 << 2,  // ...T[]
-    Variadic    = 1 << 3,  // ...T
-    Fixed       = Required | Optional,
-    Variable    = Rest | Variadic,
-    NonRequired = Optional | Rest | Variadic,
-    NonRest     = Required | Optional | Variadic,
-}
+import { ElementFlags, } from "./typeCheckingFlags";
+export { ElementFlags, } ;
 
 export interface TupleType extends GenericType {
     elementFlags: readonly ElementFlags[];
@@ -5731,20 +5385,8 @@ export interface TypeParameter extends InstantiableType {
     resolvedDefaultType?: Type;
 }
 
-/** @internal */
-export const enum AccessFlags {
-    None = 0,
-    IncludeUndefined = 1 << 0,
-    NoIndexSignatures = 1 << 1,
-    Writing = 1 << 2,
-    CacheSymbol = 1 << 3,
-    NoTupleBoundsCheck = 1 << 4,
-    ExpressionPosition = 1 << 5,
-    ReportDeprecated = 1 << 6,
-    SuppressNoImplicitAnyError = 1 << 7,
-    Contextual = 1 << 8,
-    Persistent = IncludeUndefined,
-}
+import { AccessFlags , } from "./typeCheckingFlags";
+export { AccessFlags , } ;
 
 // Indexed access types (TypeFlags.IndexedAccess)
 // Possible forms are T[xxx], xxx[T], or xxx[keyof T], where T is a type variable
