@@ -116,6 +116,21 @@ export enum PollingWatchKind {
 
 
 
+export interface WatchOptions {
+    watchFile?: WatchFileKind;
+    watchDirectory?: WatchDirectoryKind;
+    fallbackPolling?: PollingWatchKind;
+    synchronousWatchDirectory?: boolean;
+    excludeDirectories?: string[];
+    excludeFiles?: string[];
+
+    [option: string]: CompilerOptionsValue | undefined;
+}
+
+
+
+
+
 /* `CompilerOptions` */
 
 export type CompilerOptionsValue = string | number | boolean | (string | number)[] | string[] | MapLike<string[]> | PluginImport[] | ProjectReference[] | null | undefined;
