@@ -6136,7 +6136,7 @@ export {
     WatchFileKind ,
 } ;
 
-export type CompilerOptionsValue = string | number | boolean | (string | number)[] | string[] | MapLike<string[]> | PluginImport[] | ProjectReference[] | null | undefined;
+export type CompilerOptionsValue = import("./programOptions").CompilerOptionsValue;
 
 export interface CompilerOptions {
     /** @internal */ all?: boolean;

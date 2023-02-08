@@ -118,6 +118,8 @@ export enum PollingWatchKind {
 
 /* `CompilerOptions` */
 
+export type CompilerOptionsValue = string | number | boolean | (string | number)[] | string[] | MapLike<string[]> | PluginImport[] | ProjectReference[] | null | undefined;
+
 
 
 
