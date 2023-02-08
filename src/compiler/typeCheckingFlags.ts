@@ -219,6 +219,32 @@ export const enum ObjectFlags {
 
 
 /** @internal */
+export const enum MemberOverrideStatus {
+    Ok,
+    NeedsOverride,
+    HasInvalidOverride
+}
+
+/** @internal */
+export const enum UnionReduction {
+    None = 0,
+    Literal,
+    Subtype,
+}
+
+/** @internal */
+export const enum ContextFlags {
+    None           = 0,
+    Signature      = 1 << 0, // Obtaining contextual signature
+    NoConstraints  = 1 << 1, // Don't obtain type variable constraints
+    Completions    = 1 << 2, // Ignore inference to current node and parent nodes out to the containing call for completions
+    SkipBindingPatterns = 1 << 3, // Ignore contextual types applied by binding patterns
+}
+
+
+
+
+/** @internal */
 export const enum VarianceFlags {
     Invariant     =      0,  // Neither covariant nor contravariant
     Covariant     = 1 << 0,  // Covariant
