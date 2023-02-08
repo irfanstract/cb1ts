@@ -102,6 +102,44 @@ export interface TypeAcquisition {
 
 
 
+export enum ModuleKind {
+    None = 0,
+    CommonJS = 1,
+    AMD = 2,
+    UMD = 3,
+    System = 4,
+
+    // NOTE: ES module kinds should be contiguous to more easily check whether a module kind is *any* ES module kind.
+    //       Non-ES module kinds should not come between ES2015 (the earliest ES module kind) and ESNext (the last ES
+    //       module kind).
+    ES2015 = 5,
+    ES2020 = 6,
+    ES2022 = 7,
+    ESNext = 99,
+
+    // Node16+ is an amalgam of commonjs (albeit updated) and es2022+, and represents a distinct module system from es2020/esnext
+    Node16 = 100,
+    NodeNext = 199,
+}
+
+export const enum JsxEmit {
+    None = 0,
+    Preserve = 1,
+    React = 2,
+    ReactNative = 3,
+    ReactJSX = 4,
+    ReactJSXDev = 5,
+}
+
+export const enum ImportsNotUsedAsValues {
+    Remove,
+    Preserve,
+    Error,
+}
+
+
+
+
 export const enum NewLineKind {
     CarriageReturnLineFeed = 0,
     LineFeed = 1
