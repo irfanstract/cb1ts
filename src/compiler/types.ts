@@ -6289,13 +6289,7 @@ export interface CompilerOptions {
 
 export type WatchOptions = import("./programOptions").WatchOptions ;
 
-export interface TypeAcquisition {
-    enable?: boolean;
-    include?: string[];
-    exclude?: string[];
-    disableFilenameBasedTypeAcquisition?: boolean;
-    [option: string]: CompilerOptionsValue | undefined;
-}
+export type TypeAcquisition = import("./programOptions").TypeAcquisition ;
 
 export enum ModuleKind {
     None = 0,

@@ -90,6 +90,18 @@ export interface ProjectReference {
 
 
 
+export interface TypeAcquisition {
+    enable?: boolean;
+    include?: string[];
+    exclude?: string[];
+    disableFilenameBasedTypeAcquisition?: boolean;
+    [option: string]: CompilerOptionsValue | undefined;
+}
+
+
+
+
+
 export enum WatchFileKind {
     FixedPollingInterval,
     PriorityPollingInterval,
