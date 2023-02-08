@@ -218,6 +218,48 @@ export const enum ObjectFlags {
 
 
 
+/** @internal */
+export const enum VarianceFlags {
+    Invariant     =      0,  // Neither covariant nor contravariant
+    Covariant     = 1 << 0,  // Covariant
+    Contravariant = 1 << 1,  // Contravariant
+    Bivariant     = Covariant | Contravariant,  // Both covariant and contravariant
+    Independent   = 1 << 2,  // Unwitnessed type parameter
+    VarianceMask  = Invariant | Covariant | Contravariant | Independent, // Mask containing all measured variances without the unmeasurable flag
+    Unmeasurable  = 1 << 3,  // Variance result is unusable - relationship relies on structural comparisons which are not reflected in generic relationships
+    Unreliable    = 1 << 4,  // Variance result is unreliable - checking may produce false negatives, but not false positives
+    AllowsStructuralFallback = Unmeasurable | Unreliable,
+}
+
+export const enum ElementFlags {
+    Required    = 1 << 0,  // T
+    Optional    = 1 << 1,  // T?
+    Rest        = 1 << 2,  // ...T[]
+    Variadic    = 1 << 3,  // ...T
+    Fixed       = Required | Optional,
+    Variable    = Rest | Variadic,
+    NonRequired = Optional | Rest | Variadic,
+    NonRest     = Required | Optional | Variadic,
+}
+
+/** @internal */
+export const enum AccessFlags {
+    None = 0,
+    IncludeUndefined = 1 << 0,
+    NoIndexSignatures = 1 << 1,
+    Writing = 1 << 2,
+    CacheSymbol = 1 << 3,
+    NoTupleBoundsCheck = 1 << 4,
+    ExpressionPosition = 1 << 5,
+    ReportDeprecated = 1 << 6,
+    SuppressNoImplicitAnyError = 1 << 7,
+    Contextual = 1 << 8,
+    Persistent = IncludeUndefined,
+}
+
+
+
+
 
 
 
