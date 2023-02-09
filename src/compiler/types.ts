@@ -195,6 +195,7 @@ export const enum SyntaxKind {
     IntrinsicKeyword,
     IsKeyword,
     KeyOfKeyword,
+    MacroKeyword,
     MeanwhileKeyword,
     ModuleKeyword,
     NamespaceKeyword,
@@ -217,6 +218,7 @@ export const enum SyntaxKind {
     UntillKeyword,
     UnderscoreCompareAndSetKeyword,
     ValueOfKeyword,
+    WhereKeyword,
     FromKeyword,
     GlobalKeyword,
     BigIntKeyword,
@@ -628,6 +630,7 @@ export type KeywordSyntaxKind =
     | SyntaxKind.IsKeyword
     | SyntaxKind.KeyOfKeyword
     | SyntaxKind.LetKeyword
+    | SyntaxKind.MacroKeyword
     | SyntaxKind.MeanwhileKeyword
     | SyntaxKind.ModuleKeyword
     | SyntaxKind.NamespaceKeyword
@@ -669,6 +672,7 @@ export type KeywordSyntaxKind =
     | SyntaxKind.UnderscoreCompareAndSetKeyword
     | SyntaxKind.VarKeyword
     | SyntaxKind.VoidKeyword
+    | SyntaxKind.WhereKeyword
     | SyntaxKind.WhileKeyword
     | SyntaxKind.WithKeyword
     | SyntaxKind.YieldKeyword
