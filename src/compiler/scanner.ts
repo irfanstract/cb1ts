@@ -1576,11 +1576,15 @@ export function createScanner(languageVersion: ScriptTarget,
     }
 
     function getIdentifierToken(): SyntaxKind.Identifier | KeywordSyntaxKind {
-        // Reserved words are between 2 and 12 characters long and start with a lowercase letter
+        // Reserved words start with a lowercase letter or underscore
         const len = tokenValue.length;
-        if (len >= 2 && len <= 12) {
+        if (true) {
             const ch = tokenValue.charCodeAt(0);
-            if (ch >= CharacterCodes.a && ch <= CharacterCodes.z) {
+            if ((
+                false
+                || (ch >= CharacterCodes.a && ch <= CharacterCodes.z)
+                || (ch === "_".charCodeAt(0,))
+            )) {
                 const keyword = textToKeyword.get(tokenValue);
                 if (keyword !== undefined) {
                     return token = keyword;
