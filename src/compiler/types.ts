@@ -205,6 +205,7 @@ export const enum SyntaxKind {
     NumberKeyword,
     ObjectKeyword,
     SatisfiesKeyword,
+    SecondsKeyword,
     SetKeyword,
     StringKeyword,
     SymbolKeyword,
@@ -644,6 +645,7 @@ export type KeywordSyntaxKind =
     | SyntaxKind.RequireKeyword
     | SyntaxKind.ReturnKeyword
     | SyntaxKind.SatisfiesKeyword
+    | SyntaxKind.SecondsKeyword
     | SyntaxKind.SetKeyword
     | SyntaxKind.StaticKeyword
     | SyntaxKind.StringKeyword

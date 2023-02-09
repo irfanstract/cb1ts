@@ -168,6 +168,7 @@ export const textToKeywordObj: MapLike<KeywordSyntaxKind> = {
     global: SyntaxKind.GlobalKeyword,
     return: SyntaxKind.ReturnKeyword,
     satisfies: SyntaxKind.SatisfiesKeyword,
+    seconds: SyntaxKind.SecondsKeyword,
     set: SyntaxKind.SetKeyword,
     static: SyntaxKind.StaticKeyword,
     string: SyntaxKind.StringKeyword,
