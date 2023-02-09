@@ -195,6 +195,7 @@ export const enum SyntaxKind {
     IntrinsicKeyword,
     IsKeyword,
     KeyOfKeyword,
+    MacroKeyword,
     MeanwhileKeyword,
     ModuleKeyword,
     NamespaceKeyword,
@@ -628,6 +629,7 @@ export type KeywordSyntaxKind =
     | SyntaxKind.IsKeyword
     | SyntaxKind.KeyOfKeyword
     | SyntaxKind.LetKeyword
+    | SyntaxKind.MacroKeyword
     | SyntaxKind.MeanwhileKeyword
     | SyntaxKind.ModuleKeyword
     | SyntaxKind.NamespaceKeyword
