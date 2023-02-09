@@ -197,6 +197,7 @@ export const enum SyntaxKind {
     ModuleKeyword,
     NamespaceKeyword,
     NeverKeyword,
+    NottKeyword,
     OutKeyword,
     ReadonlyKeyword,
     RequireKeyword,
@@ -624,6 +625,7 @@ export type KeywordSyntaxKind =
     | SyntaxKind.NamespaceKeyword
     | SyntaxKind.NeverKeyword
     | SyntaxKind.NewKeyword
+    | SyntaxKind.NottKeyword
     | SyntaxKind.NullKeyword
     | SyntaxKind.NumberKeyword
     | SyntaxKind.ObjectKeyword

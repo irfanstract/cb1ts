@@ -152,6 +152,7 @@ export const textToKeywordObj: MapLike<KeywordSyntaxKind> = {
     namespace: SyntaxKind.NamespaceKeyword,
     never: SyntaxKind.NeverKeyword,
     new: SyntaxKind.NewKeyword,
+    not: SyntaxKind.NottKeyword,
     null: SyntaxKind.NullKeyword,
     number: SyntaxKind.NumberKeyword,
     object: SyntaxKind.ObjectKeyword,
