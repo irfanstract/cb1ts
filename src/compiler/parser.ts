@@ -6290,6 +6290,35 @@ namespace Parser {
                 continue;
             }
 
+            if (parseOptional(SyntaxKind.UnderscoreCompareAndSetKeyword)) {
+                /**
+                 * the start of the receiver/LHS
+                 * could have been way far from where this operator usage is.
+                 *
+                 */
+                const casOperatorLoc = (
+                    getNodePos()
+                ) ;
+                /**
+                 */
+                const argumentsExpr = (
+                    parseCallExpressionRest(pos, (
+                        /**
+                         * a dummy receiver/LHS as the function requires
+                         */
+                        finishNode((
+                            factory.createIdentifier((
+                                internIdentifier((
+                                    "__compareAndSetCurrentObjAt"
+                                ))
+                            ))
+                        ), casOperatorLoc)
+                    ))
+                ) ;
+                // TODO
+                throw TypeError(`TODO`) ;
+            }
+
             if (isTemplateStartOfTaggedTemplate()) {
                 // Absorb type arguments into TemplateExpression when preceding expression is ExpressionWithTypeArguments
                 expression = !questionDotToken && expression.kind === SyntaxKind.ExpressionWithTypeArguments ?
