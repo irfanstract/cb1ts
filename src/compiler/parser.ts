@@ -6244,6 +6244,7 @@ namespace Parser {
     }
 
     function parseMemberExpressionRest(pos: number, expression: LeftHandSideExpression, allowOptionalChain: boolean): MemberExpression {
+        LOOP1:
         while (true) {
             let questionDotToken: QuestionDotToken | undefined;
             let isPropertyAccess = false;
@@ -6257,13 +6258,13 @@ namespace Parser {
 
             if (isPropertyAccess) {
                 expression = parsePropertyAccessExpressionRest(pos, expression, questionDotToken);
-                continue;
+                continue LOOP1;
             }
 
             // when in the [Decorator] context, we do not parse ElementAccess as it could be part of a ComputedPropertyName
             if ((questionDotToken || !inDecoratorContext()) && parseOptional(SyntaxKind.OpenBracketToken)) {
                 expression = parseElementAccessExpressionRest(pos, expression, questionDotToken);
-                continue;
+                continue LOOP1;
             }
 
             if (isTemplateStartOfTaggedTemplate()) {
@@ -6271,19 +6272,19 @@ namespace Parser {
                 expression = !questionDotToken && expression.kind === SyntaxKind.ExpressionWithTypeArguments ?
                     parseTaggedTemplateRest(pos, (expression as ExpressionWithTypeArguments).expression, questionDotToken, (expression as ExpressionWithTypeArguments).typeArguments) :
                     parseTaggedTemplateRest(pos, expression, questionDotToken, /*typeArguments*/ undefined);
-                continue;
+                continue LOOP1;
             }
 
             if (!questionDotToken) {
                 if (token() === SyntaxKind.ExclamationToken && !scanner.hasPrecedingLineBreak()) {
                     nextToken();
                     expression = finishNode(factory.createNonNullExpression(expression), pos);
-                    continue;
+                    continue LOOP1;
                 }
                 const typeArguments = tryParse(parseTypeArgumentsInExpression);
                 if (typeArguments) {
                     expression = finishNode(factory.createExpressionWithTypeArguments(expression, typeArguments), pos);
-                    continue;
+                    continue LOOP1;
                 }
             }
 
