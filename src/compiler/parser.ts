@@ -1535,6 +1535,15 @@ namespace Parser {
      * TABLE OF CONTENTS
      *
      *
+     * {@link parsePrefixUnaryExpression                    }
+     * {@link parseTypeOfExpression                         }
+     * {@link parseUnaryExpressionOrHigher                  }
+     * {@link parseSimpleUnaryExpression                    }
+     * {@link isUpdateExpression                            }
+     * {@link parseUpdateExpression                         }
+     * {@link parseLeftHandSideExpressionOrHigher           }
+     * {@link parseMemberExpressionOrHigher                 }
+     *
      * (end)
      *
      *
