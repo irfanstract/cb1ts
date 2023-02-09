@@ -1530,6 +1530,21 @@ namespace Parser {
     // attached to the EOF token.
     let parseErrorBeforeNextFinishedNode = false;
 
+    /**
+     *
+     * TABLE OF CONTENTS
+     *
+     *
+     * (end)
+     *
+     *
+     * @deprecated
+     * @internal
+     *
+     */
+    export namespace internalUseFunctionListing {
+    }
+
     export function parseSourceFile(fileName: string, sourceText: string, languageVersion: ScriptTarget, syntaxCursor: IncrementalParser.SyntaxCursor | undefined, setParentNodes = false, scriptKind?: ScriptKind, setExternalModuleIndicatorOverride?: (file: SourceFile) => void): SourceFile {
         scriptKind = ensureScriptKind(fileName, scriptKind);
         if (scriptKind === ScriptKind.JSON) {
