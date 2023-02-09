@@ -187,6 +187,16 @@ export const textToKeywordObj: MapLike<KeywordSyntaxKind> = {
     unique: SyntaxKind.UniqueKeyword,
     unknown: SyntaxKind.UnknownKeyword,
     until: SyntaxKind.UntillKeyword,
+    /**
+     *
+     * `__compareAndSet`.
+     *
+     * two underscore chars, not just one,
+     * for consistency with `__proto__`, `__defineGetter__`, `__lookupGetter__`, etc .
+     * removed the trailing underscore, for usability reasons .
+     *
+     */
+    ["__compareAndSet"]: SyntaxKind.UnderscoreCompareAndSetKeyword,
     var: SyntaxKind.VarKeyword,
     void: SyntaxKind.VoidKeyword,
     while: SyntaxKind.WhileKeyword,

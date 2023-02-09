@@ -215,6 +215,7 @@ export const enum SyntaxKind {
     UniqueKeyword,
     UnknownKeyword,
     UntillKeyword,
+    UnderscoreCompareAndSetKeyword,
     ValueOfKeyword,
     FromKeyword,
     GlobalKeyword,
@@ -665,6 +666,7 @@ export type KeywordSyntaxKind =
     | SyntaxKind.UniqueKeyword
     | SyntaxKind.UnknownKeyword
     | SyntaxKind.UntillKeyword
+    | SyntaxKind.UnderscoreCompareAndSetKeyword
     | SyntaxKind.VarKeyword
     | SyntaxKind.VoidKeyword
     | SyntaxKind.WhileKeyword
