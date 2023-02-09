@@ -113,6 +113,7 @@ export const textToKeywordObj: MapLike<KeywordSyntaxKind> = {
     as: SyntaxKind.AsKeyword,
     asserts: SyntaxKind.AssertsKeyword,
     assert: SyntaxKind.AssertKeyword,
+    assume: SyntaxKind.AssumeKeyword,
     bigint: SyntaxKind.BigIntKeyword,
     boolean: SyntaxKind.BooleanKeyword,
     break: SyntaxKind.BreakKeyword,

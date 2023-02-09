@@ -183,6 +183,7 @@ export const enum SyntaxKind {
     AsKeyword,
     AssertsKeyword,
     AssertKeyword,
+    AssumeKeyword,
     AnyKeyword,
     AsyncKeyword,
     AwaitKeyword,
@@ -587,6 +588,7 @@ export type KeywordSyntaxKind =
     | SyntaxKind.AsKeyword
     | SyntaxKind.AssertsKeyword
     | SyntaxKind.AssertKeyword
+    | SyntaxKind.AssumeKeyword
     | SyntaxKind.AsyncKeyword
     | SyntaxKind.AwaitKeyword
     | SyntaxKind.BigIntKeyword
