@@ -1566,11 +1566,16 @@ export function createScanner(languageVersion: ScriptTarget,
     }
 
     function getIdentifierToken(): SyntaxKind.Identifier | KeywordSyntaxKind {
-        // Reserved words are between 2 and 12 characters long and start with a lowercase letter
+        // we needed to remove these reserved-words restrictions.
+        // there were restrictions that
+        // reserved words be between 2 and 12 characters long and start with a lowercase letter.
+        // that
+        // would effectively
+        // prevent the implemenation of extensions like underscore-prefixed keywords, etc
         const len = tokenValue.length;
-        if (len >= 2 && len <= 12) {
+        if (true) {
             const ch = tokenValue.charCodeAt(0);
-            if (ch >= CharacterCodes.a && ch <= CharacterCodes.z) {
+            if (true) {
                 const keyword = textToKeyword.get(tokenValue);
                 if (keyword !== undefined) {
                     return token = keyword;
