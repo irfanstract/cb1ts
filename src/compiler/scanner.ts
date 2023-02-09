@@ -189,6 +189,7 @@ export const textToKeywordObj: MapLike<KeywordSyntaxKind> = {
     until: SyntaxKind.UntillKeyword,
     var: SyntaxKind.VarKeyword,
     void: SyntaxKind.VoidKeyword,
+    where: SyntaxKind.WhereKeyword,
     while: SyntaxKind.WhileKeyword,
     with: SyntaxKind.WithKeyword,
     yield: SyntaxKind.YieldKeyword,
