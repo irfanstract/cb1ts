@@ -1,0 +1,44 @@
+=== tests/cases/compiler/compareAndSetOperatorMisuse04.ts ===
+const example = (
+>example : Incr
+>(    new (class Incr {        value !: number ;        constructor() {            this.value = 0 ;        }            } )()) : Incr
+
+    new (class Incr {
+>new (class Incr {        value !: number ;        constructor() {            this.value = 0 ;        }            } )() : Incr
+>(class Incr {        value !: number ;        constructor() {            this.value = 0 ;        }            } ) : typeof Incr
+>class Incr {        value !: number ;        constructor() {            this.value = 0 ;        }            } : typeof Incr
+>Incr : typeof Incr
+
+        value !: number ;
+>value : number
+
+        constructor() {
+            this.value = 0 ;
+>this.value = 0 : 0
+>this.value : number
+>this : this
+>value : number
+>0 : 0
+        }
+        
+    } )()
+) ;
+{
+    /**  
+     * shall raise syntax error exactly "__compareAndSet cannot be tailed by anything other than [...]"
+     */
+    {
+        example.value __compareAndSet console.info( ) ;
+> : any
+>console.info( ) : void
+>console.info : (...data: any[]) => void
+>console : Console
+>info : (...data: any[]) => void
+    }
+}
+
+
+
+
+
+

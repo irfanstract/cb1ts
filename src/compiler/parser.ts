@@ -6267,6 +6267,200 @@ namespace Parser {
         return finishNode(indexedAccess, pos);
     }
 
+    /**
+     * try to parse (the non-standard) `__compareAndSet(...)` tail op.
+     *
+     * if it begins with the keyword, but is malformed,
+     * will yield a `Node` which reports *error*.
+     *
+     * will return `false` if it doesn't begin with that keyword, in which case
+     * it's likely to be something else.
+     *
+     */
+    const parseCompareAndReassignOperator = (
+      ((pos1, highLevelActualReceiver) => {
+        const {
+            COMPAREANDSET_IMPL ,
+        } = {
+            COMPAREANDSET_IMPL: (
+                // those leading non-word chars is intentional; this is not a valid local variable name.
+                "  % compareAndSet"
+            ) ,
+        } ;
+        for (const { casKeywordStartLoc, } of (
+          (() => {
+            /**
+             * the start of the receiver/LHS could be several lines above, so
+             * it's not quite a good idea to simply make it {@link pos1 }, so
+             * we should just make another call {@link getNodePos }
+             *
+             */
+            const keywStartLoc = (
+              getNodePos()
+            ) ;
+            return (
+              (
+                parseOptional(SyntaxKind.UnderscoreCompareAndSetKeyword) ?
+                [{
+                  casKeywordStartLoc: keywStartLoc ,
+                }] : []
+              ) satisfies ([{}] | [])
+            ) ;
+          })()
+        )) {
+            /**
+             * the start of the receiver/LHS could be several lines above, so
+             * it's not quite a good idea to simply make it {@link pos1 }, so
+             * we should just make another call {@link getNodePos }
+             *
+             */
+            const casKeywordEndLoc = (
+              getNodePos()
+            ) ;
+            {
+              /**
+               * note :
+               * the `_cAS` keyword
+               * can be guaranteed to
+               * have already been
+               * consumed out by the `parseOptional(UnderscoreCompareAndSetKeyword)` call above
+               * !
+               *
+               */
+              if (token() === SyntaxKind.OpenParenToken) {
+                /**
+                 */
+                const casSuffix1 = (
+                  parseCallExpressionRest(pos1, (
+                    /**
+                     *
+                     * a dummy receiver/LHS as the function requires .
+                     *
+                     * see alse
+                     * {@link parsePrimaryExpression},
+                     * {@link parsePrivateIdentifier},
+                     * {@link PrivateIdentifier},
+                     * {@link PrimaryExpression},
+                     * .
+                     *
+                     */
+                    (
+                      finishNode((
+                        factory.createIdentifier((
+                          internIdentifier((
+                              "__compareAndSetCurrentObjField"
+                          ))
+                        ))
+                      ), casKeywordStartLoc)
+                    )
+                  ))
+                ) ;
+                Debug.assert(ts.isCallExpression(casSuffix1), `ts.isCallExpression(casSuffix1)`) ;
+                /**
+                 *
+                 * currently there's no dedicated subclass for CAS ops.
+                 * instead,
+                 * it would be represented as a call `IMPL_COMPAREANDSET(theLeftHandSideVar, expectedPriorVal, newVal)`
+                 *
+                 * see alse
+                 * {@link parsePrimaryExpression},
+                 * {@link parsePrivateIdentifier},
+                 * {@link PrivateIdentifier},
+                 * {@link PrimaryExpression},
+                 * .
+                 *
+                 */
+                const peerRefExpr = (
+                  finishNode((
+                    factory.createIdentifier((
+                      internIdentifier((
+                        COMPAREANDSET_IMPL
+                      ))
+                    ))
+                  ) , casKeywordStartLoc, casKeywordStartLoc)
+                ) ;
+                {
+                  return (
+                    finishNode((
+                      factory.createCallExpression(peerRefExpr , /* typeArguments */ undefined, [
+                        highLevelActualReceiver ,
+                        ...casSuffix1.arguments ,
+                      ])
+                    ) , casKeywordEndLoc)
+                  ) ;
+                }
+              }
+              if ((
+                // "the next token is a delimiter/separator which does not (strictly) form tail of LeftHandSideExpression(s) ?"
+                (
+                  ((o) => (
+                    false
+                    || o === SyntaxKind.SemicolonToken
+                    || o === SyntaxKind.CommaToken
+                    || SyntaxKind.FirstBinaryOperator <= o && o <= SyntaxKind.LastBinaryOperator
+                    || (
+                      true
+                      && (SyntaxKind.FirstPunctuation <= o && o <= SyntaxKind.LastPunctuation)
+                      && (
+                        !
+                        ([
+                          SyntaxKind.OpenParenToken ,
+                          SyntaxKind.OpenBraceToken ,
+                          SyntaxKind.OpenBracketToken ,
+                        ]).includes(o)
+                      )
+                    )
+                  )) satisfies ((tkn: ReturnType<typeof token>) => boolean)
+                )(token())
+              )) {
+                    return (
+                      finishNode((
+                        createMissingNode<Identifier>((
+                          SyntaxKind.Identifier
+                        ), /* reportAtCurrentPosition */ false, (
+                          Diagnostics.compareAndSet_requires_argument_list_containing_two_arguments
+                        ))
+                      ) , casKeywordEndLoc)
+                    ) ;
+              }
+              {
+                // function implGetNodeSourceCode(o: Node): string {
+                //     return (
+                //         sourceText.slice(o.pos, o.end)
+                //     ) ;
+                // }
+                return (
+                  finishNode((
+                    createMissingNode<Identifier>((
+                      SyntaxKind.Identifier
+                    ), /* reportAtCurrentPosition */ false, (
+                      Diagnostics.The_compareAndSet_operator_cannot_be_tailed_by_anything_other_than_a_two_value_argument_list_0
+                    ) , (
+                        ""
+                        + `kind=${token() } ; `
+                    ))
+                  ) , casKeywordEndLoc)
+                ) ;
+              }
+            }
+            // TODO
+            throw TypeError(`TODO`) ;
+        }
+        return false ;
+      }) satisfies {
+        (pos: number, receiver: LeftHandSideExpression,): false | LeftHandSideExpression ;
+        m?: false ; // we can't do what the `.eslintrc` wants since we might add overloads in the future
+      }
+    ) ;
+
+    const {
+      allowExtraSuffixesAfterCompareAndUpdateSuffix ,
+    }: {
+      allowExtraSuffixesAfterCompareAndUpdateSuffix: boolean ;
+    } = {
+      allowExtraSuffixesAfterCompareAndUpdateSuffix: false,
+    } ;
+
     function parseMemberExpressionRest(pos: number, expression: LeftHandSideExpression, allowOptionalChain: boolean): MemberExpression {
         LOOP1:
         while (true) {
@@ -6289,6 +6483,22 @@ namespace Parser {
             if ((questionDotToken || !inDecoratorContext()) && parseOptional(SyntaxKind.OpenBracketToken)) {
                 expression = parseElementAccessExpressionRest(pos, expression, questionDotToken);
                 continue LOOP1;
+            }
+
+            {
+                const compareAndUpdateCallRepr = (
+                  parseCompareAndReassignOperator(pos, expression)
+                ) ;
+                if (compareAndUpdateCallRepr) {
+                  expression = compareAndUpdateCallRepr ;
+                  if (allowExtraSuffixesAfterCompareAndUpdateSuffix) {
+                    //
+                  }
+                  else {
+                    return expression as MemberExpression ;
+                  }
+                  continue LOOP1;
+                }
             }
 
             if (isTemplateStartOfTaggedTemplate()) {

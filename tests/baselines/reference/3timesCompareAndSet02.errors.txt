@@ -1,0 +1,32 @@
+tests/cases/compiler/3timesCompareAndSet02.ts(16,39): error TS555370003: '__compareAndSet' requires argument-list containing two arguments.
+
+
+==== tests/cases/compiler/3timesCompareAndSet02.ts (1 errors) ====
+    const example = (
+        new (class Incr {
+    
+            value !: number ;
+            constructor() {
+                this.value = 0 ;
+            }
+            
+        } )()
+    ) ;
+    {
+        /**  
+         * shall all complain about missing argument-list
+         */
+        {
+            example.value __compareAndSet ;
+                                          ~
+!!! error TS555370003: '__compareAndSet' requires argument-list containing two arguments.
+            // example.value __compareAndSet ;
+            // example.value __compareAndSet ;
+        }
+    }
+    
+    
+    
+    
+    
+    

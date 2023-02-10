@@ -1,0 +1,30 @@
+tests/cases/compiler/compareAndSetOperatorMisuse04.ts(16,39): error TS555370004: The '__compareAndSet' operator cannot be tailed by anything other than a (two-value) argument-list. (kind=79 ; ).
+
+
+==== tests/cases/compiler/compareAndSetOperatorMisuse04.ts (1 errors) ====
+    const example = (
+        new (class Incr {
+    
+            value !: number ;
+            constructor() {
+                this.value = 0 ;
+            }
+            
+        } )()
+    ) ;
+    {
+        /**  
+         * shall raise syntax error exactly "__compareAndSet cannot be tailed by anything other than [...]"
+         */
+        {
+            example.value __compareAndSet console.info( ) ;
+                                          ~~~~~~~
+!!! error TS555370004: The '__compareAndSet' operator cannot be tailed by anything other than a (two-value) argument-list. (kind=79 ; ).
+        }
+    }
+    
+    
+    
+    
+    
+    
