@@ -6371,7 +6371,24 @@ namespace Parser {
                   ) ;
                 }
                 else {
-                  // TODO
+                    function implGetNodeSourceCode(o: Node): string {
+                        return (
+                            sourceText.slice(o.pos, o.end)
+                        ) ;
+                    }
+                    return (
+                      finishNode((
+                        createMissingNode<CallExpression>((
+                          SyntaxKind.CallExpression
+                        ), /* reportAtCurrentPosition */ false, (
+                          Diagnostics.The_compareAndSet_operator_cannot_be_tailed_by_anything_other_than_a_two_value_argument_list_0
+                        ) , (
+                            ""
+                            + `${JSON.stringify(implGetNodeSourceCode(casSuffix1)) } ; `
+                            + `kind=${casSuffix1.kind } ; `
+                        ))
+                      ) , casOperatorLoc)
+                    ) ;
                 }
               }
               return (
