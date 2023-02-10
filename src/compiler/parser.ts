@@ -6375,13 +6375,25 @@ namespace Parser {
                 }
               }
               if ((
+                // "the next token is a delimiter/separator which does not (strictly) form tail of LeftHandSideExpression(s) ?"
                 (
                   ((o) => (
                     false
                     || o === SyntaxKind.SemicolonToken
                     || o === SyntaxKind.CommaToken
                     || SyntaxKind.FirstBinaryOperator <= o && o <= SyntaxKind.LastBinaryOperator
-                    || SyntaxKind.FirstPunctuation <= o && o <= SyntaxKind.LastPunctuation
+                    || (
+                      true
+                      && (SyntaxKind.FirstPunctuation <= o && o <= SyntaxKind.LastPunctuation)
+                      && (
+                        !
+                        ([
+                          SyntaxKind.OpenParenToken ,
+                          SyntaxKind.OpenBraceToken ,
+                          SyntaxKind.OpenBracketToken ,
+                        ]).includes(o)
+                      )
+                    )
                   )) satisfies ((tkn: ReturnType<typeof token>) => boolean)
                 )(token())
               )) {
