@@ -6393,8 +6393,8 @@ namespace Parser {
               }
               return (
                 finishNode((
-                  createMissingNode<CallExpression>((
-                    SyntaxKind.CallExpression
+                  createMissingNode<Identifier>((
+                    SyntaxKind.Identifier
                   ), /* reportAtCurrentPosition */ false, (
                     Diagnostics.compareAndSet_requires_argument_list_containing_two_arguments
                   ))
