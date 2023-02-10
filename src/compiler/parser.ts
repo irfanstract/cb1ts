@@ -6371,35 +6371,49 @@ namespace Parser {
                   ) ;
                 }
                 else {
-                    function implGetNodeSourceCode(o: Node): string {
-                        return (
-                            sourceText.slice(o.pos, o.end)
-                        ) ;
-                    }
+                  throw TypeError(`assertion error ; the 'parseCallExpressionRest(...)' retrun value was not CallExpression `) ;
+                }
+              }
+              if ((
+                (
+                  ((o) => (
+                    false
+                    || o === SyntaxKind.SemicolonToken
+                    || o === SyntaxKind.CommaToken
+                    || SyntaxKind.FirstBinaryOperator <= o && o <= SyntaxKind.LastBinaryOperator
+                    || SyntaxKind.FirstPunctuation <= o && o <= SyntaxKind.LastPunctuation
+                  )) satisfies ((tkn: ReturnType<typeof token>) => boolean)
+                )(token())
+              )) {
                     return (
                       finishNode((
                         createMissingNode<Identifier>((
                           SyntaxKind.Identifier
                         ), /* reportAtCurrentPosition */ false, (
-                          Diagnostics.The_compareAndSet_operator_cannot_be_tailed_by_anything_other_than_a_two_value_argument_list_0
-                        ) , (
-                            ""
-                            + `${JSON.stringify(implGetNodeSourceCode(casSuffix1)) } ; `
-                            + `kind=${casSuffix1.kind } ; `
+                          Diagnostics.compareAndSet_requires_argument_list_containing_two_arguments
                         ))
                       ) , casOperatorLoc)
                     ) ;
-                }
               }
-              return (
-                finishNode((
-                  createMissingNode<Identifier>((
-                    SyntaxKind.Identifier
-                  ), /* reportAtCurrentPosition */ false, (
-                    Diagnostics.compareAndSet_requires_argument_list_containing_two_arguments
-                  ))
-                ) , casOperatorLoc)
-              ) ;
+              {
+                // function implGetNodeSourceCode(o: Node): string {
+                //     return (
+                //         sourceText.slice(o.pos, o.end)
+                //     ) ;
+                // }
+                return (
+                  finishNode((
+                    createMissingNode<Identifier>((
+                      SyntaxKind.Identifier
+                    ), /* reportAtCurrentPosition */ false, (
+                      Diagnostics.The_compareAndSet_operator_cannot_be_tailed_by_anything_other_than_a_two_value_argument_list_0
+                    ) , (
+                        ""
+                        + `kind=${token() } ; `
+                    ))
+                  ) , casOperatorLoc)
+                ) ;
+              }
             }
             // TODO
             throw TypeError(`TODO`) ;
