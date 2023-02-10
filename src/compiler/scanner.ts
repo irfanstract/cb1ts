@@ -1580,7 +1580,7 @@ export function createScanner(languageVersion: ScriptTarget,
         // start with
         //   a) a lowercase letter
         //   b) underscore (eg (the non-standard) `__proto__`, `__defineGetter__`, `__compareAndSet`, etc )
-        const len = tokenValue.length;
+        // const len = tokenValue.length;
         if (true) {
             const ch = tokenValue.charCodeAt(0);
             if ((
