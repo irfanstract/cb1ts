@@ -23,6 +23,9 @@ const example = (
 
     } )()
 ) ;
+/**  
+ * shall compile and run as expected
+ */
 {
     const {
         value: val0,
