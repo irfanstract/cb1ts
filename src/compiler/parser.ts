@@ -6377,7 +6377,7 @@ namespace Parser {
                         COMPAREANDSET_IMPL
                       ))
                     ))
-                  ) , casKeywordStartLoc)
+                  ) , casKeywordStartLoc, casKeywordStartLoc)
                 ) ;
                 {
                   return (
