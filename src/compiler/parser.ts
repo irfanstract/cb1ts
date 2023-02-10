@@ -6355,6 +6355,7 @@ namespace Parser {
                     )
                   ))
                 ) ;
+                Debug.assert(ts.isCallExpression(casSuffix1), `ts.isCallExpression(casSuffix1)`) ;
                 /**
                  *
                  * currently there's no dedicated subclass for CAS ops.
@@ -6378,7 +6379,6 @@ namespace Parser {
                     ))
                   ) , casKeywordStartLoc)
                 ) ;
-                Debug.assert(ts.isCallExpression(casSuffix1), `ts.isCallExpression(casSuffix1)`) ;
                 {
                   return (
                     finishNode((
