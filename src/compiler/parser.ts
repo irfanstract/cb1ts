@@ -6363,12 +6363,10 @@ namespace Parser {
                 if (ts.isCallExpression(casSuffix1)) {
                   return (
                     finishNode((
-                      factory.createCallExpression(peerRefExpr , /* typeArguments */ undefined, (
-                        createNodeArray([
-                          highLevelActualReceiver ,
-                          ...casSuffix1.arguments ,
-                        ], /* pos */ casOperatorLoc, /* end */ undefined, /* hasTrailingComma */ false)
-                      ))
+                      factory.createCallExpression(peerRefExpr , /* typeArguments */ undefined, [
+                        highLevelActualReceiver ,
+                        ...casSuffix1.arguments ,
+                      ])
                     ) , casOperatorLoc)
                   ) ;
                 }
