@@ -6378,8 +6378,8 @@ namespace Parser {
                     }
                     return (
                       finishNode((
-                        createMissingNode<CallExpression>((
-                          SyntaxKind.CallExpression
+                        createMissingNode<Identifier>((
+                          SyntaxKind.Identifier
                         ), /* reportAtCurrentPosition */ false, (
                           Diagnostics.The_compareAndSet_operator_cannot_be_tailed_by_anything_other_than_a_two_value_argument_list_0
                         ) , (
