@@ -6287,8 +6287,26 @@ namespace Parser {
                 "  % compareAndSet"
             ) ,
         } ;
-        if ((
-          parseOptional(SyntaxKind.UnderscoreCompareAndSetKeyword)
+        for (const { casKeywordStartLoc, } of (
+          (() => {
+            /**
+             * the start of the receiver/LHS could be several lines above, so
+             * it's not quite a good idea to simply make it {@link pos1 }, so
+             * we should just make another call {@link getNodePos }
+             *
+             */
+            const keywStartLoc = (
+              getNodePos()
+            ) ;
+            return (
+              (
+                parseOptional(SyntaxKind.UnderscoreCompareAndSetKeyword) ?
+                [{
+                  casKeywordStartLoc: keywStartLoc ,
+                }] : []
+              ) satisfies ([{}] | [])
+            ) ;
+          })()
         )) {
             /**
              * the start of the receiver/LHS could be several lines above, so
@@ -6296,7 +6314,7 @@ namespace Parser {
              * we should just make another call {@link getNodePos }
              *
              */
-            const casOperatorLoc = (
+            const casKeywordEndLoc = (
               getNodePos()
             ) ;
             {
@@ -6333,7 +6351,7 @@ namespace Parser {
                               "__compareAndSetCurrentObjField"
                           ))
                         ))
-                      ), casOperatorLoc)
+                      ), casKeywordStartLoc)
                     )
                   ))
                 ) ;
@@ -6358,20 +6376,18 @@ namespace Parser {
                         COMPAREANDSET_IMPL
                       ))
                     ))
-                  ) , casOperatorLoc)
+                  ) , casKeywordStartLoc)
                 ) ;
-                if (ts.isCallExpression(casSuffix1)) {
+                Debug.assert(ts.isCallExpression(casSuffix1), `ts.isCallExpression(casSuffix1)`) ;
+                {
                   return (
                     finishNode((
                       factory.createCallExpression(peerRefExpr , /* typeArguments */ undefined, [
                         highLevelActualReceiver ,
                         ...casSuffix1.arguments ,
                       ])
-                    ) , casOperatorLoc)
+                    ) , casKeywordEndLoc)
                   ) ;
-                }
-                else {
-                  throw TypeError(`assertion error ; the 'parseCallExpressionRest(...)' retrun value was not CallExpression `) ;
                 }
               }
               if ((
@@ -6404,7 +6420,7 @@ namespace Parser {
                         ), /* reportAtCurrentPosition */ false, (
                           Diagnostics.compareAndSet_requires_argument_list_containing_two_arguments
                         ))
-                      ) , casOperatorLoc)
+                      ) , casKeywordEndLoc)
                     ) ;
               }
               {
@@ -6423,7 +6439,7 @@ namespace Parser {
                         ""
                         + `kind=${token() } ; `
                     ))
-                  ) , casOperatorLoc)
+                  ) , casKeywordEndLoc)
                 ) ;
               }
             }
