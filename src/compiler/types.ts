@@ -292,6 +292,7 @@ export const enum SyntaxKind {
     AwaitExpression,
     PrefixUnaryExpression,
     PostfixUnaryExpression,
+    PostfixUnaryExpression2,
     BinaryExpression,
     ConditionalExpression,
     TemplateExpression,
@@ -2411,13 +2412,36 @@ export interface PrefixUnaryExpression extends UpdateExpression {
     readonly operand: UnaryExpression;
 }
 
+/**
+ *
+ * generalisation of {@link PostfixUnaryExpression } which relaxes `operand` and `operator`.
+ *
+ * @see
+ * we cannot make such change directly in {@link PostfixUnaryExpression };
+ * such a change would break many existing apps.
+ *
+ */
+export interface PostfixUnaryExpression2 extends UpdateExpression {
+    readonly kind: (
+        | SyntaxKind.PostfixUnaryExpression
+        | SyntaxKind.PostfixUnaryExpression2
+    );
+    readonly operand: (
+        | LeftHandSideExpression
+    );
+    readonly operator: (
+        | PostfixUnaryOperator
+        | CallExpression
+    );
+}
+
 // see: https://tc39.github.io/ecma262/#prod-UpdateExpression
 export type PostfixUnaryOperator
     = SyntaxKind.PlusPlusToken
     | SyntaxKind.MinusMinusToken
     ;
 
-export interface PostfixUnaryExpression extends UpdateExpression {
+export interface PostfixUnaryExpression extends PostfixUnaryExpression2 {
     readonly kind: SyntaxKind.PostfixUnaryExpression;
     readonly operand: LeftHandSideExpression;
     readonly operator: PostfixUnaryOperator;
