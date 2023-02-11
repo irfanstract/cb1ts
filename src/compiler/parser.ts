@@ -5747,6 +5747,16 @@ namespace Parser {
             nextToken();
             return finishNode(factory.createPostfixUnaryExpression(expression, operator), expression.pos);
         }
+        /**
+         * restrict to cases which
+         * - without preceding linebreak
+         */
+        if ((
+          true
+          && !scanner.hasPrecedingLineBreak()
+        )) {
+
+        }
 
         return expression;
     }
