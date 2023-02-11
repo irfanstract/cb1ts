@@ -5731,6 +5731,7 @@ namespace Parser {
      *      5) --LeftHandSideExpression[?yield]
      * ```
      * In TypeScript (2), (3) are parsed as PostfixUnaryExpression. (4), (5) are parsed as PrefixUnaryExpression
+     * We (experimentally) support the `__compareAndSet(...)` postfix operator as (non-standard) extension.
      */
     function parseUpdateExpression(): UpdateExpression {
         if (token() === SyntaxKind.PlusPlusToken || token() === SyntaxKind.MinusMinusToken) {
@@ -5759,6 +5760,44 @@ namespace Parser {
           && !scanner.hasPrecedingLineBreak()
         )) {
           
+            if (supportsUnderscoreCompareAndSetOperator) {
+              if (token() === SyntaxKind.UnderscoreCompareAndSetKeyword) {
+                const casKeywStartPos = getNodePos() ;
+                nextToken();
+                const casKeywEndPos = getNodePos() ;
+                if ((
+                  false
+                  || token() === SyntaxKind.OpenParenToken
+                )) {
+                  const casSuffixFullExpr = (
+                    parseCallExpressionRest((
+                      casKeywEndPos
+                    ), (
+                      // the appropriate dummy receiver/operand/LHS
+                      finishNode(factory.createIdentifier("COMPAREANDSET"), casKeywStartPos, casKeywEndPos)
+                    ))
+                  ) ;
+                  Debug.assert((
+                    ts.isCallExpression(casSuffixFullExpr)
+                  ), `ts.isCallExpression(casSuffixFullExpr)`) ;
+                  return (
+                    finishNode((
+                      factory.createPostfixUnaryExpressionCbVer((
+                        expression
+                      ), casSuffixFullExpr)
+                    ), expression.pos, casSuffixFullExpr.end)
+                  ) ;
+                }
+                return (
+                  finishNode((
+                    createMissingNode(SyntaxKind.Identifier, /* reportAtCurrentPosition */ false, (
+                      Diagnostics.The_compareAndSet_operator_cannot_be_tailed_by_anything_other_than_a_two_value_argument_list_0
+                    ) , ``)
+                  ) , casKeywEndPos)
+                ) ;
+              }
+            }
+
         }
 
         return expression;
