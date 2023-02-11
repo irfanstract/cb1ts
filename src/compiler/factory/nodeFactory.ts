@@ -356,6 +356,7 @@ import {
     Path,
     PlusToken,
     PostfixUnaryExpression,
+    PostfixUnaryExpressionCbVer,
     PostfixUnaryOperator,
     PrefixUnaryExpression,
     PrefixUnaryOperator,
@@ -682,6 +683,7 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         updatePrefixUnaryExpression,
         createPostfixUnaryExpression,
         updatePostfixUnaryExpression,
+        createPostfixUnaryExpressionCbVer,
         createBinaryExpression,
         updateBinaryExpression,
         createConditionalExpression,
@@ -3261,6 +3263,22 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
     // @api
     function createPostfixUnaryExpression(operand: Expression, operator: PostfixUnaryOperator) {
         const node = createBaseNode<PostfixUnaryExpression>(SyntaxKind.PostfixUnaryExpression);
+        return initPostfixUnaryExpressionCbVer(node, { operand, operator, }) ;
+    }
+
+    function initPostfixUnaryExpressionCbVer<T extends PostfixUnaryExpressionCbVer>(...[
+        node,
+        {
+            operand,
+            operator,
+        },
+    ]: [
+        initiand: Mutable<T>,
+        properties: {
+            operand: Expression,
+            operator: T["operator"],
+        },
+    ]) {
         node.operator = operator;
         node.operand = parenthesizerRules().parenthesizeOperandOfPostfixUnary(operand);
         node.transformFlags |= propagateChildFlags(node.operand);
@@ -3279,6 +3297,12 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         return node.operand !== operand
             ? update(createPostfixUnaryExpression(operand, node.operator), node)
             : node;
+    }
+
+    // @api
+    function createPostfixUnaryExpressionCbVer(operand: PostfixUnaryExpressionCbVer["operand"], operator: PostfixUnaryExpressionCbVer["operator"]) {
+        const node = createBaseNode<PostfixUnaryExpressionCbVer>(SyntaxKind.PostfixUnaryExpressionCbVer);
+        return initPostfixUnaryExpressionCbVer(node, { operand, operator, }) ;
     }
 
     // @api

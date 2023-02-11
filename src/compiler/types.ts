@@ -293,6 +293,7 @@ export const enum SyntaxKind {
     AwaitExpression,
     PrefixUnaryExpression,
     PostfixUnaryExpression,
+    PostfixUnaryExpressionCbVer,
     BinaryExpression,
     ConditionalExpression,
     TemplateExpression,
@@ -2413,13 +2414,36 @@ export interface PrefixUnaryExpression extends UpdateExpression {
     readonly operand: UnaryExpression;
 }
 
+/**
+ *
+ * generalisation of {@link PostfixUnaryExpression } which relaxes `operand` and `operator`.
+ *
+ * @see
+ * we cannot make such change directly in {@link PostfixUnaryExpression };
+ * such a change would break many existing apps.
+ *
+ */
+export interface PostfixUnaryExpressionCbVer extends UpdateExpression {
+    readonly kind: (
+        | SyntaxKind.PostfixUnaryExpression
+        | SyntaxKind.PostfixUnaryExpressionCbVer
+    );
+    readonly operand: (
+        | LeftHandSideExpression
+    );
+    readonly operator: (
+        | PostfixUnaryOperator
+        | CallExpression
+    );
+}
+
 // see: https://tc39.github.io/ecma262/#prod-UpdateExpression
 export type PostfixUnaryOperator
     = SyntaxKind.PlusPlusToken
     | SyntaxKind.MinusMinusToken
     ;
 
-export interface PostfixUnaryExpression extends UpdateExpression {
+export interface PostfixUnaryExpression extends PostfixUnaryExpressionCbVer {
     readonly kind: SyntaxKind.PostfixUnaryExpression;
     readonly operand: LeftHandSideExpression;
     readonly operator: PostfixUnaryOperator;
@@ -8402,6 +8426,7 @@ export interface NodeFactory {
     updatePrefixUnaryExpression(node: PrefixUnaryExpression, operand: Expression): PrefixUnaryExpression;
     createPostfixUnaryExpression(operand: Expression, operator: PostfixUnaryOperator): PostfixUnaryExpression;
     updatePostfixUnaryExpression(node: PostfixUnaryExpression, operand: Expression): PostfixUnaryExpression;
+    createPostfixUnaryExpressionCbVer(operand: Expression, operator: PostfixUnaryExpressionCbVer["operator"] & {}): PostfixUnaryExpressionCbVer;
     createBinaryExpression(left: Expression, operator: BinaryOperator | BinaryOperatorToken, right: Expression): BinaryExpression;
     updateBinaryExpression(node: BinaryExpression, left: Expression, operator: BinaryOperator | BinaryOperatorToken, right: Expression): BinaryExpression;
     createConditionalExpression(condition: Expression, questionToken: QuestionToken | undefined, whenTrue: Expression, colonToken: ColonToken | undefined, whenFalse: Expression): ConditionalExpression;
