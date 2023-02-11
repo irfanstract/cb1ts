@@ -5788,6 +5788,56 @@ namespace Parser {
                     ), expression.pos, casSuffixFullExpr.end)
                   ) ;
                 }
+                if ((
+                  false
+                  || (SyntaxKind.FirstPunctuation <= token() && token() <= SyntaxKind.LastPunctuation)
+                )) {
+                  const callExprTail = (
+                    false
+                    || token() === SyntaxKind.OpenParenToken
+                    || token() === SyntaxKind.OpenBraceToken
+                    || token() === SyntaxKind.OpenBracketToken
+                    || token() === SyntaxKind.DotToken
+                    || token() === SyntaxKind.QuestionDotToken
+                    // TODO
+                  ) ;
+                  const isAssignmentOperatorEvenIfCompound = (
+                    false
+                    || (SyntaxKind.FirstAssignment <= token() && token() <= SyntaxKind.LastAssignment)
+                    || (SyntaxKind.FirstCompoundAssignment <= token() && token() <= SyntaxKind.LastCompoundAssignment)
+                  ) ;
+                  /**
+                   * if not a start of a CallExpression tail...
+                   *
+                   */
+                  IFWEREPUNCTUATION1: {
+                    if ((
+                      false
+                      || callExprTail
+                    )) {
+                      break IFWEREPUNCTUATION1 ;
+                    }
+                    if ((
+                      false
+                      || isAssignmentOperatorEvenIfCompound
+                    )) {
+                      return (
+                        finishNode((
+                          createMissingNode(SyntaxKind.Identifier, /* reportAtCurrentPosition */ false, (
+                            Diagnostics.compareAndSet_requires_argument_list_containing_two_arguments_and_cannot_be_followed_by_any_other_assignment_operators
+                          ) , ``)
+                        ) , casKeywEndPos)
+                      ) ;
+                    }
+                    return (
+                      finishNode((
+                        createMissingNode(SyntaxKind.Identifier, /* reportAtCurrentPosition */ false, (
+                          Diagnostics.compareAndSet_requires_argument_list_containing_two_arguments
+                        ) , ``)
+                      ) , casKeywEndPos)
+                    ) ;
+                  }
+                }
                 return (
                   finishNode((
                     createMissingNode(SyntaxKind.Identifier, /* reportAtCurrentPosition */ false, (
