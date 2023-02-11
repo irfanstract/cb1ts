@@ -2448,7 +2448,7 @@ export type PostfixUnaryOperator
     | SyntaxKind.MinusMinusToken
     ;
 
-export interface PostfixUnaryExpression extends PostfixUnaryExpressionCbVer {
+export interface PostfixUnaryExpression extends PostfixUnaryExpressionCbVerImpl<1> {
     readonly kind: SyntaxKind.PostfixUnaryExpression;
     readonly operand: LeftHandSideExpression;
     readonly operator: PostfixUnaryOperator;
