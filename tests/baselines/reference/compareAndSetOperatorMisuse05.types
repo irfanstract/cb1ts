@@ -1,0 +1,18 @@
+=== tests/cases/compiler/compareAndSetOperatorMisuse05.ts ===
+{
+    /**  
+     * this shall raise syntax error exactly "__compareAndSet requires two-val args-list and cannot be followed by assignment operators".
+     */
+    {
+        example.value __compareAndSet += "5" ;
+>example.value __compareAndSet += "5" : string
+> : any
+>"5" : "5"
+    }
+}
+
+
+
+
+
+
