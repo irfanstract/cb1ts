@@ -683,6 +683,7 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         updatePrefixUnaryExpression,
         createPostfixUnaryExpression,
         updatePostfixUnaryExpression,
+        createPostfixUnaryExpressionCbVer,
         createBinaryExpression,
         updateBinaryExpression,
         createConditionalExpression,
@@ -3296,6 +3297,12 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         return node.operand !== operand
             ? update(createPostfixUnaryExpression(operand, node.operator), node)
             : node;
+    }
+
+    // @api
+    function createPostfixUnaryExpressionCbVer(operand: PostfixUnaryExpressionCbVer["operand"], operator: PostfixUnaryExpressionCbVer["operator"]) {
+        const node = createBaseNode<PostfixUnaryExpressionCbVer>(SyntaxKind.PostfixUnaryExpressionCbVer);
+        return initPostfixUnaryExpressionCbVer(node, { operand, operator, }) ;
     }
 
     // @api
