@@ -3262,6 +3262,22 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
     // @api
     function createPostfixUnaryExpression(operand: Expression, operator: PostfixUnaryOperator) {
         const node = createBaseNode<PostfixUnaryExpression>(SyntaxKind.PostfixUnaryExpression);
+        return initPostfixUnaryExpressionCbVer(node, { operand, operator, }) ;
+    }
+
+    function initPostfixUnaryExpressionCbVer<T extends PostfixUnaryExpressionCbVer>(...[
+        node,
+        {
+            operand,
+            operator,
+        },
+    ]: [
+        initiand: Mutable<T>,
+        properties: {
+            operand: Expression,
+            operator: T["operator"],
+        },
+    ]) {
         node.operator = operator;
         node.operand = parenthesizerRules().parenthesizeOperandOfPostfixUnary(operand);
         node.transformFlags |= propagateChildFlags(node.operand);
