@@ -5689,12 +5689,7 @@ namespace Parser {
     /**
      * Check if the current token can possibly be an ES7 increment expression.
      *
-     * ES7 UpdateExpression:
-     *      LeftHandSideExpression[?Yield]
-     *      LeftHandSideExpression[?Yield][no LineTerminator here]++
-     *      LeftHandSideExpression[?Yield][no LineTerminator here]--
-     *      ++LeftHandSideExpression[?Yield]
-     *      --LeftHandSideExpression[?Yield]
+     * see {@link parseUpdateExpression } for the grammar listing.
      */
     function isUpdateExpression(): boolean {
         // This function is called inside parseUnaryExpression to decide
@@ -5724,12 +5719,14 @@ namespace Parser {
     /**
      * Parse ES7 UpdateExpression. UpdateExpression is used instead of ES6's PostFixExpression.
      *
+     * ```
      * ES7 UpdateExpression[yield]:
      *      1) LeftHandSideExpression[?yield]
      *      2) LeftHandSideExpression[?yield] [[no LineTerminator here]]++
      *      3) LeftHandSideExpression[?yield] [[no LineTerminator here]]--
      *      4) ++LeftHandSideExpression[?yield]
      *      5) --LeftHandSideExpression[?yield]
+     * ```
      * In TypeScript (2), (3) are parsed as PostfixUnaryExpression. (4), (5) are parsed as PrefixUnaryExpression
      */
     function parseUpdateExpression(): UpdateExpression {
