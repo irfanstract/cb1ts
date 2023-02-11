@@ -2421,7 +2421,7 @@ export interface PrefixUnaryExpression extends UpdateExpression {
  * such a change would break many existing apps.
  *
  */
-export interface PostfixUnaryExpression2 extends UpdateExpression {
+export interface PostfixUnaryExpressionCbVer extends UpdateExpression {
     readonly kind: (
         | SyntaxKind.PostfixUnaryExpression
         | SyntaxKind.PostfixUnaryExpression2
@@ -2441,7 +2441,7 @@ export type PostfixUnaryOperator
     | SyntaxKind.MinusMinusToken
     ;
 
-export interface PostfixUnaryExpression extends PostfixUnaryExpression2 {
+export interface PostfixUnaryExpression extends PostfixUnaryExpressionCbVer {
     readonly kind: SyntaxKind.PostfixUnaryExpression;
     readonly operand: LeftHandSideExpression;
     readonly operator: PostfixUnaryOperator;
