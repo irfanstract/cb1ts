@@ -1,0 +1,33 @@
+=== tests/cases/compiler/compareAndSetOperatorMisuse03.ts ===
+const example = (
+>example : Symbol(example, Decl(compareAndSetOperatorMisuse03.ts, 0, 5))
+
+    new (class Incr {
+>Incr : Symbol(Incr, Decl(compareAndSetOperatorMisuse03.ts, 1, 9))
+
+        value !: number ;
+>value : Symbol(Incr.value, Decl(compareAndSetOperatorMisuse03.ts, 1, 21))
+
+        constructor() {
+            this.value = 0 ;
+>this.value : Symbol(Incr.value, Decl(compareAndSetOperatorMisuse03.ts, 1, 21))
+>this : Symbol(Incr, Decl(compareAndSetOperatorMisuse03.ts, 1, 9))
+>value : Symbol(Incr.value, Decl(compareAndSetOperatorMisuse03.ts, 1, 21))
+        }
+        
+    } )()
+) ;
+{
+    /**  
+     * shall raise syntax error exactly "__compareAndSet cannot be tailed by anything other than [...]"
+     */
+    {
+        example.value __compareAndSet[9 ] ;
+    }
+}
+
+
+
+
+
+
