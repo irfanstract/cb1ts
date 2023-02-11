@@ -423,6 +423,7 @@ import {
     pathIsRelative,
     Pattern,
     PostfixUnaryExpression,
+    PostfixUnaryExpressionCbVer,
     PrefixUnaryExpression,
     PrinterOptions,
     PrintHandlers,
