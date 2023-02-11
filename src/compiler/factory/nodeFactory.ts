@@ -356,6 +356,7 @@ import {
     Path,
     PlusToken,
     PostfixUnaryExpression,
+    PostfixUnaryExpressionCbVer,
     PostfixUnaryOperator,
     PrefixUnaryExpression,
     PrefixUnaryOperator,
