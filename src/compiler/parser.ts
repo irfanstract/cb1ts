@@ -5689,12 +5689,14 @@ namespace Parser {
     /**
      * Check if the current token can possibly be an ES7 increment expression.
      *
+     * ```
      * ES7 UpdateExpression:
      *      LeftHandSideExpression[?Yield]
      *      LeftHandSideExpression[?Yield][no LineTerminator here]++
      *      LeftHandSideExpression[?Yield][no LineTerminator here]--
      *      ++LeftHandSideExpression[?Yield]
      *      --LeftHandSideExpression[?Yield]
+     * ```
      */
     function isUpdateExpression(): boolean {
         // This function is called inside parseUnaryExpression to decide
