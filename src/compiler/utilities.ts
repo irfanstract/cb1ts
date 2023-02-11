@@ -2914,6 +2914,7 @@ export function isExpressionNode(node: Node): boolean {
         case SyntaxKind.TypeOfExpression:
         case SyntaxKind.PrefixUnaryExpression:
         case SyntaxKind.PostfixUnaryExpression:
+        case SyntaxKind.PostfixUnaryExpressionCbVer:
         case SyntaxKind.BinaryExpression:
         case SyntaxKind.ConditionalExpression:
         case SyntaxKind.SpreadElement:
@@ -4027,6 +4028,8 @@ export function getAssignmentTargetKind(node: Node): AssignmentKind {
             case SyntaxKind.PostfixUnaryExpression:
                 const unaryOperator = (parent as PrefixUnaryExpression | PostfixUnaryExpression).operator;
                 return unaryOperator === SyntaxKind.PlusPlusToken || unaryOperator === SyntaxKind.MinusMinusToken ? AssignmentKind.Compound : AssignmentKind.None;
+            case SyntaxKind.PostfixUnaryExpressionCbVer:
+                return AssignmentKind.Compound ; // in general
             case SyntaxKind.ForInStatement:
             case SyntaxKind.ForOfStatement:
                 return (parent as ForInOrOfStatement).initializer === node ? AssignmentKind.Definite : AssignmentKind.None;
@@ -5136,6 +5139,8 @@ export function getOperatorPrecedence(nodeKind: SyntaxKind, operatorKind: Syntax
 
         case SyntaxKind.PostfixUnaryExpression:
             return OperatorPrecedence.Update;
+        case SyntaxKind.PostfixUnaryExpressionCbVer:
+            return OperatorPrecedence.Update; // in general
 
         case SyntaxKind.CallExpression:
             return OperatorPrecedence.LeftHandSide;
@@ -7167,6 +7172,8 @@ function accessKind(node: Node): AccessKind {
         case SyntaxKind.PrefixUnaryExpression:
             const { operator } = parent as PrefixUnaryExpression | PostfixUnaryExpression;
             return operator === SyntaxKind.PlusPlusToken || operator === SyntaxKind.MinusMinusToken ? writeOrReadWrite() : AccessKind.Read;
+        case SyntaxKind.PostfixUnaryExpressionCbVer:
+            return AccessKind.ReadWrite ; // in general
         case SyntaxKind.BinaryExpression:
             const { left, operatorToken } = parent as BinaryExpression;
             return left === node && isAssignmentOperator(operatorToken.kind) ?
@@ -7488,8 +7495,8 @@ export function forEachNameInAccessChainWalkingLeft<T>(name: MemberName | String
 export function getLeftmostExpression(node: Expression, stopAtCallExpressions: boolean) {
     while (true) {
         switch (node.kind) {
-            case SyntaxKind.PostfixUnaryExpression:
-                node = (node as PostfixUnaryExpression).operand;
+            case SyntaxKind.PostfixUnaryExpressionCbVer:
+                node = (node as PostfixUnaryExpressionCbVer).operand;
                 continue;
 
             case SyntaxKind.BinaryExpression:

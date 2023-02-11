@@ -1981,6 +1981,7 @@ function isUnaryExpressionKind(kind: SyntaxKind): boolean {
     switch (kind) {
         case SyntaxKind.PrefixUnaryExpression:
         case SyntaxKind.PostfixUnaryExpression:
+        case SyntaxKind.PostfixUnaryExpressionCbVer:
         case SyntaxKind.DeleteExpression:
         case SyntaxKind.TypeOfExpression:
         case SyntaxKind.VoidExpression:
@@ -1996,6 +1997,8 @@ function isUnaryExpressionKind(kind: SyntaxKind): boolean {
 export function isUnaryExpressionWithWrite(expr: Node): expr is PrefixUnaryExpression | PostfixUnaryExpression {
     switch (expr.kind) {
         case SyntaxKind.PostfixUnaryExpression:
+            return true;
+        case SyntaxKind.PostfixUnaryExpressionCbVer: // in general, yet not necessarily
             return true;
         case SyntaxKind.PrefixUnaryExpression:
             return (expr as PrefixUnaryExpression).operator === SyntaxKind.PlusPlusToken ||
