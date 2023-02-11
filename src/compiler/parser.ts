@@ -1530,6 +1530,9 @@ namespace Parser {
     // attached to the EOF token.
     let parseErrorBeforeNextFinishedNode = false;
 
+    // eslint-disable-next-line prefer-const
+    let supportsUnderscoreCompareAndSetOperator = true ;
+
     /**
      *
      * TABLE OF CONTENTS
