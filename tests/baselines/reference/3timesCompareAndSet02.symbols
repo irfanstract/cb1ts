@@ -1,0 +1,35 @@
+=== tests/cases/compiler/3timesCompareAndSet02.ts ===
+const example = (
+>example : Symbol(example, Decl(3timesCompareAndSet02.ts, 0, 5))
+
+    new (class Incr {
+>Incr : Symbol(Incr, Decl(3timesCompareAndSet02.ts, 1, 9))
+
+        value !: number ;
+>value : Symbol(Incr.value, Decl(3timesCompareAndSet02.ts, 1, 21))
+
+        constructor() {
+            this.value = 0 ;
+>this.value : Symbol(Incr.value, Decl(3timesCompareAndSet02.ts, 1, 21))
+>this : Symbol(Incr, Decl(3timesCompareAndSet02.ts, 1, 9))
+>value : Symbol(Incr.value, Decl(3timesCompareAndSet02.ts, 1, 21))
+        }
+        
+    } )()
+) ;
+{
+    /**  
+     * shall all complain about missing argument-list
+     */
+    {
+        example.value __compareAndSet ;
+        // example.value __compareAndSet ;
+        // example.value __compareAndSet ;
+    }
+}
+
+
+
+
+
+
