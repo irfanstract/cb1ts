@@ -351,6 +351,7 @@ import {
     positionIsSynthesized,
     positionsAreOnSameLine,
     PostfixUnaryExpression,
+    PostfixUnaryExpressionCbVer,
     PrefixUnaryExpression,
     Printer,
     PrinterOptions,
