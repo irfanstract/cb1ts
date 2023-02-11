@@ -1,0 +1,37 @@
+tests/cases/compiler/compareAndSetOperatorMisuse08.ts(22,13): error TS2304: Cannot find name '__compareAndSet'.
+
+
+==== tests/cases/compiler/compareAndSetOperatorMisuse08.ts (1 errors) ====
+    const example = {
+        bar: (
+            new (class Incr {
+        
+                value !: number ;
+                constructor() {
+                    this.value = 0 ;
+                }
+                
+            } )()
+        ) ,
+    } ;
+    {
+        {
+            /** 
+             * ambiguous, in face of ASI (Automatic Semicolon Insertion).
+             * 
+             */
+            example
+                .bar
+                .value 
+                __compareAndSet(...[0, 1] ) // ill-formed
+                ~~~~~~~~~~~~~~~
+!!! error TS2304: Cannot find name '__compareAndSet'.
+            ;
+        }
+    }
+    
+    
+    
+    
+    
+    

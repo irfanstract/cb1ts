@@ -1,0 +1,50 @@
+=== tests/cases/compiler/compareAndSetOperatorMisuse08.ts ===
+const example = {
+>example : Symbol(example, Decl(compareAndSetOperatorMisuse08.ts, 0, 5))
+
+    bar: (
+>bar : Symbol(bar, Decl(compareAndSetOperatorMisuse08.ts, 0, 17))
+
+        new (class Incr {
+>Incr : Symbol(Incr, Decl(compareAndSetOperatorMisuse08.ts, 2, 13))
+    
+            value !: number ;
+>value : Symbol(Incr.value, Decl(compareAndSetOperatorMisuse08.ts, 2, 25))
+
+            constructor() {
+                this.value = 0 ;
+>this.value : Symbol(Incr.value, Decl(compareAndSetOperatorMisuse08.ts, 2, 25))
+>this : Symbol(Incr, Decl(compareAndSetOperatorMisuse08.ts, 2, 13))
+>value : Symbol(Incr.value, Decl(compareAndSetOperatorMisuse08.ts, 2, 25))
+            }
+            
+        } )()
+    ) ,
+} ;
+{
+    {
+        /** 
+         * ambiguous, in face of ASI (Automatic Semicolon Insertion).
+         * 
+         */
+        example
+>example            .bar            .value : Symbol(Incr.value, Decl(compareAndSetOperatorMisuse08.ts, 2, 25))
+>example            .bar : Symbol(bar, Decl(compareAndSetOperatorMisuse08.ts, 0, 17))
+>example : Symbol(example, Decl(compareAndSetOperatorMisuse08.ts, 0, 5))
+
+            .bar
+>bar : Symbol(bar, Decl(compareAndSetOperatorMisuse08.ts, 0, 17))
+
+            .value 
+>value : Symbol(Incr.value, Decl(compareAndSetOperatorMisuse08.ts, 2, 25))
+
+            __compareAndSet(...[0, 1] ) // ill-formed
+        ;
+    }
+}
+
+
+
+
+
+

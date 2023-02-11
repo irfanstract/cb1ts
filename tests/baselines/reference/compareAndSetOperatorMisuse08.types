@@ -1,0 +1,64 @@
+=== tests/cases/compiler/compareAndSetOperatorMisuse08.ts ===
+const example = {
+>example : { bar: Incr; }
+>{    bar: (        new (class Incr {                value !: number ;            constructor() {                this.value = 0 ;            }                    } )()    ) ,} : { bar: Incr; }
+
+    bar: (
+>bar : Incr
+>(        new (class Incr {                value !: number ;            constructor() {                this.value = 0 ;            }                    } )()    ) : Incr
+
+        new (class Incr {
+>new (class Incr {                value !: number ;            constructor() {                this.value = 0 ;            }                    } )() : Incr
+>(class Incr {                value !: number ;            constructor() {                this.value = 0 ;            }                    } ) : typeof Incr
+>class Incr {                value !: number ;            constructor() {                this.value = 0 ;            }                    } : typeof Incr
+>Incr : typeof Incr
+    
+            value !: number ;
+>value : number
+
+            constructor() {
+                this.value = 0 ;
+>this.value = 0 : 0
+>this.value : number
+>this : this
+>value : number
+>0 : 0
+            }
+            
+        } )()
+    ) ,
+} ;
+{
+    {
+        /** 
+         * ambiguous, in face of ASI (Automatic Semicolon Insertion).
+         * 
+         */
+        example
+>example            .bar            .value : number
+>example            .bar : Incr
+>example : { bar: Incr; }
+
+            .bar
+>bar : Incr
+
+            .value 
+>value : number
+
+            __compareAndSet(...[0, 1] ) // ill-formed
+>__compareAndSet(...[0, 1] ) : any
+>__compareAndSet : any
+>...[0, 1] : number
+>[0, 1] : number[]
+>0 : 0
+>1 : 1
+
+        ;
+    }
+}
+
+
+
+
+
+
