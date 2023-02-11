@@ -292,7 +292,7 @@ export const enum SyntaxKind {
     AwaitExpression,
     PrefixUnaryExpression,
     PostfixUnaryExpression,
-    PostfixUnaryExpression2,
+    PostfixUnaryExpressionCbVer,
     BinaryExpression,
     ConditionalExpression,
     TemplateExpression,
@@ -2424,7 +2424,7 @@ export interface PrefixUnaryExpression extends UpdateExpression {
 export interface PostfixUnaryExpressionCbVer extends UpdateExpression {
     readonly kind: (
         | SyntaxKind.PostfixUnaryExpression
-        | SyntaxKind.PostfixUnaryExpression2
+        | SyntaxKind.PostfixUnaryExpressionCbVer
     );
     readonly operand: (
         | LeftHandSideExpression
