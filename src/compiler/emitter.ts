@@ -2276,9 +2276,6 @@ export function createPrinter(printerOptions: PrinterOptions = {}, handlers: Pri
                         Debug.assert((
                             node.kind === SyntaxKind.PostfixUnaryExpressionCbVer
                         ), `node.kind === SyntaxKind.PostfixUnaryExpressionCbVer`) ;
-                        const nodeOperator1 = (
-                            node.operator
-                        ) ;
                         { // add code for each different forms here
 
                         }
