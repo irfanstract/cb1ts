@@ -2250,14 +2250,6 @@ export function createPrinter(printerOptions: PrinterOptions = {}, handlers: Pri
                      *
                      */
                     {
-                        function getSourceCode(node: Node) {
-                            const srcFile = (
-                                ts.getSourceFileOfNode(node)
-                            ) ;
-                            return (
-                                ts.getSourceTextOfNodeFromSourceFile(srcFile, node)
-                            ) ;
-                        }
                         /**
                          * {@link PostfixUnaryExpressionCbVer }
                          * is a union of
@@ -2270,14 +2262,11 @@ export function createPrinter(printerOptions: PrinterOptions = {}, handlers: Pri
                         Debug.assert((
                             node.kind === SyntaxKind.PostfixUnaryExpressionCbVer
                         ), `node.kind === SyntaxKind.PostfixUnaryExpressionCbVer`) ;
-                        const nodeOperator1 = (
-                            node.operator
-                        ) ;
                         { // add code for each different forms here
 
                         }
                         return (
-                            Debug.fail(`Unsupported Postfix Unary Expression. (postfix=${getSourceCode(nodeOperator1) })`)
+                            Debug.fail(`Unsupported Postfix Unary Expression. (postfix=${"(???)" })`)
                         );
                     }
                 case SyntaxKind.BinaryExpression:
