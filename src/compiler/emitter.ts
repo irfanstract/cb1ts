@@ -2250,6 +2250,12 @@ export function createPrinter(printerOptions: PrinterOptions = {}, handlers: Pri
                      *
                      */
                     {
+                        /**
+                         *
+                         * @deprecated
+                         * `TypeError: Cannot read properties of undefined (reading 'text')`.
+                         *
+                         */
                         function getSourceCode(node: Node) {
                             const srcFile = (
                                 ts.getSourceFileOfNode(node)
