@@ -2283,7 +2283,7 @@ export function createPrinter(printerOptions: PrinterOptions = {}, handlers: Pri
 
                         }
                         return (
-                            Debug.fail(`Unsupported Postfix Unary Expression. (postfix=${getSourceCode(nodeOperator1) })`)
+                            Debug.fail(`Unsupported Postfix Unary Expression. (postfix=${"(???)" })`)
                         );
                     }
                 case SyntaxKind.BinaryExpression:
