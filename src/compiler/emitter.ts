@@ -2238,6 +2238,48 @@ export function createPrinter(printerOptions: PrinterOptions = {}, handlers: Pri
                     return emitPrefixUnaryExpression(node as PrefixUnaryExpression);
                 case SyntaxKind.PostfixUnaryExpression:
                     return emitPostfixUnaryExpression(node as PostfixUnaryExpression);
+                case SyntaxKind.PostfixUnaryExpressionCbVer:
+                    {
+                        function PUECBV(e: typeof node, /* error TS6133 */ _?: typeof e): asserts e is PostfixUnaryExpressionCbVer {}
+                        PUECBV(node);
+                    }
+                    /**
+                     * sophisticated "postfix"es are non-standard, and
+                     * there are standardised constructs like "instanceof", "as",
+                     * thus making PMC(s) (Postfix Function Call(s)) prone to ambiguity with that
+                     *
+                     */
+                    {
+                        function getSourceCode(node: Node) {
+                            const srcFile = (
+                                ts.getSourceFileOfNode(node)
+                            ) ;
+                            return (
+                                ts.getSourceTextOfNodeFromSourceFile(srcFile, node)
+                            ) ;
+                        }
+                        /**
+                         * {@link PostfixUnaryExpressionCbVer }
+                         * is a union of
+                         * two sibling interface(s)
+                         * each which defines its own `kind` and narrows `operator` to different types.
+                         * therefore,
+                         * `assert(node1.kind)`
+                         *
+                         */
+                        Debug.assert((
+                            node.kind === SyntaxKind.PostfixUnaryExpressionCbVer
+                        ), `node.kind === SyntaxKind.PostfixUnaryExpressionCbVer`) ;
+                        const nodeOperator1 = (
+                            node.operator
+                        ) ;
+                        { // add code for each different forms here
+
+                        }
+                        return (
+                            Debug.fail(`Unsupported Postfix Unary Expression. (postfix=${getSourceCode(nodeOperator1) })`)
+                        );
+                    }
                 case SyntaxKind.BinaryExpression:
                     return emitBinaryExpression(node as BinaryExpression);
                 case SyntaxKind.ConditionalExpression:
