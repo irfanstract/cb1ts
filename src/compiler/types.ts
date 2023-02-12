@@ -2423,17 +2423,24 @@ export interface PrefixUnaryExpression extends UpdateExpression {
  * such a change would break many existing apps.
  *
  */
-export interface PostfixUnaryExpressionCbVer extends UpdateExpression {
+export type PostfixUnaryExpressionCbVer = (
+    | PostfixUnaryExpressionCbVerImpl<1>
+    | PostfixUnaryExpressionCbVerImpl<2>
+) ;
+interface PostfixUnaryExpressionCbVerImpl<Version extends (
+    | 1
+    | 2
+)> extends UpdateExpression {
     readonly kind: (
-        | SyntaxKind.PostfixUnaryExpression
-        | SyntaxKind.PostfixUnaryExpressionCbVer
+        | (Version extends   1 ? SyntaxKind.PostfixUnaryExpression         : never)
+        | (Version extends   2 ? SyntaxKind.PostfixUnaryExpressionCbVer    : never)
     );
     readonly operand: (
         | LeftHandSideExpression
     );
     readonly operator: (
-        | PostfixUnaryOperator
-        | CallExpression
+        | (Version extends   1 ? PostfixUnaryOperator       : never)
+        | (Version extends   2 ? LeftHandSideExpression     : never)
     );
 }
 
@@ -2443,7 +2450,7 @@ export type PostfixUnaryOperator
     | SyntaxKind.MinusMinusToken
     ;
 
-export interface PostfixUnaryExpression extends PostfixUnaryExpressionCbVer {
+export interface PostfixUnaryExpression extends PostfixUnaryExpressionCbVerImpl<1> {
     readonly kind: SyntaxKind.PostfixUnaryExpression;
     readonly operand: LeftHandSideExpression;
     readonly operator: PostfixUnaryOperator;
