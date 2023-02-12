@@ -2251,20 +2251,6 @@ export function createPrinter(printerOptions: PrinterOptions = {}, handlers: Pri
                      */
                     {
                         /**
-                         *
-                         * @deprecated
-                         * `TypeError: Cannot read properties of undefined (reading 'text')`.
-                         *
-                         */
-                        function getSourceCode(node: Node) {
-                            const srcFile = (
-                                ts.getSourceFileOfNode(node)
-                            ) ;
-                            return (
-                                ts.getSourceTextOfNodeFromSourceFile(srcFile, node)
-                            ) ;
-                        }
-                        /**
                          * {@link PostfixUnaryExpressionCbVer }
                          * is a union of
                          * two sibling interface(s)
