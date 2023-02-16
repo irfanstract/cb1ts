@@ -9296,9 +9296,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 else {
                     // serialize as an anonymous property declaration
                     const varName = getUnusedName(name, symbol);
-                    // We have to use `getWidenedType` here since the object within a json file is unwidened within the file
+                    // We have to use `conditionallyWidenTypeBasedOnConfig` (`getWidenedType`) here since the object within a json file is unwidened within the file
                     // (Unwidened types can only exist in expression contexts and should never be serialized)
-                    const typeToSerialize = getWidenedType(getTypeOfSymbol(getMergedSymbol(symbol)));
+                    const typeToSerialize = getConfigDefinedlyWidenedType(getTypeOfSymbol(getMergedSymbol(symbol)));
                     if (isTypeRepresentableAsFunctionNamespaceMerge(typeToSerialize, symbol)) {
                         // If there are no index signatures and `typeToSerialize` is an object type, emit as a namespace instead of a const
                         serializeAsFunctionNamespaceMerge(typeToSerialize, symbol, varName, isExportAssignmentCompatibleSymbolName ? ModifierFlags.None : ModifierFlags.Export);
@@ -10620,7 +10620,14 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 type = getUnionType(sourceTypes!);
             }
         }
-        const widened = getWidenedType(addOptionality(type, /*isProperty*/ false, definedInMethod && !definedInConstructor));
+        const widened = ((...[type]: [Type]): Type => {
+            const tpAfterOptionality = (
+                addOptionality(type, /*isProperty*/ false, definedInMethod && !definedInConstructor)
+            ) ;
+            return (
+                getWidenedType(tpAfterOptionality)
+            ) ;
+        })(type) ;
         if (symbol.valueDeclaration && filterType(widened, t => !!(t.flags & ~TypeFlags.Nullable)) === neverType) {
             reportImplicitAny(symbol.valueDeclaration, anyType);
             return anyType;
@@ -10935,7 +10942,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 type = esSymbolType;
             }
 
-            return getWidenedType(type);
+            return getConfigDefinedlyWidenedType(type);
         }
 
         // Rest parameters default to type any[], other parameters default to type any
@@ -23010,6 +23017,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     }
 
     function getWidenedLiteralType(type: Type): Type {
+        if (isContextOrConfigTellingAgainstWidening(/* context */ undefined)) {
+            return type ;
+        }
         return type.flags & TypeFlags.EnumLiteral && isFreshLiteralType(type) ? getBaseTypeOfEnumLiteralType(type as LiteralType) :
             type.flags & TypeFlags.StringLiteral && isFreshLiteralType(type) ? stringType :
             type.flags & TypeFlags.NumberLiteral && isFreshLiteralType(type) ? numberType :
@@ -23275,7 +23285,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     }
 
     function createWideningContext(parent: WideningContext | undefined, propertyName: __String | undefined, siblings: Type[] | undefined): WideningContext {
-        return { parent, propertyName, siblings, resolvedProperties: undefined };
+        return { parent, wideningRequired: isContextOrConfigTellingAgainstWidening(parent) ? 0 : 1, propertyName, siblings, resolvedProperties: undefined };
     }
 
     function getSiblingsOfContext(context: WideningContext): Type[] {
@@ -23335,6 +23345,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     }
 
     function getWidenedTypeOfObjectLiteral(type: Type, context: WideningContext | undefined): Type {
+        if (isContextOrConfigTellingAgainstWidening(context)) {
+            return type ;
+        }
         const members = createSymbolTable();
         for (const prop of getPropertiesOfObjectType(type)) {
             members.set(prop.escapedName, getWidenedProperty(prop, context));
@@ -23357,6 +23370,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     }
 
     function getWidenedTypeWithContext(type: Type, context: WideningContext | undefined): Type {
+        if (isContextOrConfigTellingAgainstWidening(context)) {
+            return type ;
+        }
         if (getObjectFlags(type) & ObjectFlags.RequiresWidening) {
             if (context === undefined && type.widened) {
                 return type.widened;
@@ -29576,7 +29592,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         if (inDestructuringPattern) {
             return createTupleType(elementTypes, elementFlags);
         }
-        if (forceTuple || inConstContext || inTupleContext) {
+        if (forceTuple || inConstContext || inTupleContext || isContextOrConfigTellingAgainstWidening(/* context */ undefined)) {
             return createArrayLiteralType(createTupleType(elementTypes, elementFlags, /*readonly*/ inConstContext));
         }
         return createArrayLiteralType(createArrayType(elementTypes.length ?
