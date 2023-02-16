@@ -148,7 +148,7 @@ const cbTsTypeInferenceModes1 = (
 export const cbTsTypeInferenceModeMap = (
     new Map((
         cbTsTypeInferenceModes1
-        .map(v => ([v, v] as const))
+        .map((v, i) => ([v, i] as const))
     ))
 ) ;
 
