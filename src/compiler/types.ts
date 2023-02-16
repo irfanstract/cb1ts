@@ -6978,6 +6978,12 @@ export enum PollingWatchKind {
 
 export type CompilerOptionsValue = string | number | boolean | (string | number)[] | string[] | MapLike<string[]> | PluginImport[] | ProjectReference[] | null | undefined;
 
+import { cbTsTypeInferenceConfigKey, } from "./_namespaces/ts";
+import { cbTsTypeInferenceModeMap, } from "./_namespaces/ts";
+export type CbTsTypeInferenceModePresent = (
+    ReturnType<typeof cbTsTypeInferenceModeMap.get> & {}
+) ;
+
 export interface CompilerOptions {
     /** @internal */ all?: boolean;
     allowImportingTsExtensions?: boolean;
@@ -7067,6 +7073,7 @@ export interface CompilerOptions {
     /** @internal */
     noDtsResolution?: boolean;
     noUncheckedIndexedAccess?: boolean;
+    [cbTsTypeInferenceConfigKey]?: CbTsTypeInferenceModePresent ;
     out?: string;
     outDir?: string;
     outFile?: string;
