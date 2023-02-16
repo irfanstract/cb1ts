@@ -121,7 +121,36 @@ import {
     WatchOptions,
 } from "./_namespaces/ts";
 
+// possible values :
+// - restricted     - always infer simple types, never advanced types, even for loaded values
+// - lazy2          - roughly that of Scala 3
+// - lazy           - roughly that of Scala 2
+// - easy           - the existing behv
+// - medium-ez      - preserve literals, except for interpolated strings or numbers or function impl
+// - medium         - preserve literals and interpolations, excluding function impl
+// - medium-flw     - preserve literals, interpolations and 'noexcept's, excluding function impl
+// - medium-flw1    - preserve literals, interpolations, 'noexcept's and 'sleep's, excluding function impl
+// - much           - preserve literals, interpolations, 'noexcept's and 'sleep's, no matter how
 export const cbTsTypeInferenceConfigKey = "inferredTypeSpecificity" ;
+const cbTsTypeInferenceModes1 = (
+    ([
+        "restricted"     ,
+        "lazy2"          ,
+        "lazy"           ,
+        "easy"           ,
+        "medium-ez"      ,
+        "medium"         ,
+        "medium-flw"     ,
+        "medium-flw-1"   ,
+        "much"           ,
+    ] as const)
+) ;
+export const cbTsTypeInferenceModeMap = (
+    new Map((
+        cbTsTypeInferenceModes1
+        .map(v => ([v, v] as const))
+    ))
+) ;
 
 /** @internal */
 export const compileOnSaveCommandLineOption: CommandLineOption = {
@@ -972,17 +1001,7 @@ const commandOptionsWithoutBuild: CommandLineOption[] = [
     },
     {
         name: cbTsTypeInferenceConfigKey,
-        // possible values :
-        // - restricted     - always infer simple types, never advanced types, even for loaded values
-        // - lazy2          - roughly that of Scala 3
-        // - lazy           - roughly that of Scala 2
-        // - easy           - the existing behv
-        // - medium-ez      - preserve literals, except for interpolated strings or numbers or function impl
-        // - medium         - preserve literals and interpolations, excluding function impl
-        // - medium-flw     - preserve literals, interpolations and 'noexcept's, excluding function impl
-        // - medium-flw1    - preserve literals, interpolations, 'noexcept's and 'sleep's, excluding function impl
-        // - much           - preserve literals, interpolations, 'noexcept's and 'sleep's, no matter how
-        type: "string",
+        type: cbTsTypeInferenceModeMap,
         affectsSemanticDiagnostics: true,
         affectsBuildInfo: true,
         category: Diagnostics.Type_Checking,
