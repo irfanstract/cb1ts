@@ -23412,7 +23412,8 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return (
             ([
                 ts.cbTsTypeInferenceModeMap.get("restricted")! ,
-                // ts.cbTsTypeInferenceModeMap.get("lazy2")! ,
+                ts.cbTsTypeInferenceModeMap.get("lazy2")! ,
+                ts.cbTsTypeInferenceModeMap.get("lazy")! ,
             ] satisfies ts.CbTsTypeInferenceModePresent[])
             .includes(compilerOptions.inferredTypeSpecificity ?? ts.cbTsTypeInferenceModeMap.get("easy")!)
         ) ;
