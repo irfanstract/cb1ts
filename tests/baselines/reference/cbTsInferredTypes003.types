@@ -1,0 +1,132 @@
+=== tests/cases/compiler/cbTsInferredTypes003.ts ===
+const string1 = "hello" ;
+>string1 : string
+>"hello" : string
+
+const stringPlex1A = ("hello" ) ;
+>stringPlex1A : string
+>("hello" ) : string
+>"hello" : string
+
+const stringPlex1B = (("hello") ) ;
+>stringPlex1B : string
+>(("hello") ) : string
+>("hello") : string
+>"hello" : string
+
+const stringPlex1C = ((("hello") ) ) ;
+>stringPlex1C : string
+>((("hello") ) ) : string
+>(("hello") ) : string
+>("hello") : string
+>"hello" : string
+    
+
+
+const stringStrong1: "hello" = "hello" ;
+>stringStrong1 : "hello"
+>"hello" : "hello"
+
+const stringStrongPlex1B: "hello" = ( ("hello" ) ) ;
+>stringStrongPlex1B : "hello"
+>( ("hello" ) ) : "hello"
+>("hello" ) : "hello"
+>"hello" : "hello"
+
+const stringStrongPlex1C: "hello" = ((("hello" ) ) ) ;
+>stringStrongPlex1C : "hello"
+>((("hello" ) ) ) : "hello"
+>(("hello" ) ) : "hello"
+>("hello" ) : "hello"
+>"hello" : "hello"
+
+const stringStrong11: "hello" | "hi" = "hi" ;
+>stringStrong11 : "hello" | "hi"
+>"hi" : "hello" | "hi"
+
+const stringStrongPlex1D: "hello" | "hi" = ("hi" ) ;
+>stringStrongPlex1D : "hello" | "hi"
+>("hi" ) : "hello" | "hi"
+>"hi" : "hello" | "hi"
+
+const stringStrongPlex1E: "hello" | "hi" = (("hi" ) ) ;
+>stringStrongPlex1E : "hello" | "hi"
+>(("hi" ) ) : "hello" | "hi"
+>("hi" ) : "hello" | "hi"
+>"hi" : "hello" | "hi"
+
+const stringStrongPlex1F: "hello" | "hi" = ((("hi" ) ) ) ;
+>stringStrongPlex1F : "hello" | "hi"
+>((("hi" ) ) ) : "hello" | "hi"
+>(("hi" ) ) : "hello" | "hi"
+>("hi" ) : "hello" | "hi"
+>"hi" : "hello" | "hi"
+    
+// const stringMeIn11A = stringStrong11 ;
+
+
+
+
+
+const majorVersionExplicit: 3 | 4 | 5 = 3 ;
+>majorVersionExplicit : 3 | 4 | 5
+>3 : 3 | 4 | 5
+
+const majorVersion = 3 ;
+>majorVersion : number
+>3 : number
+
+
+
+
+
+// const minorVersionsWeak = [0, 1, 2, 3, ] ;
+
+// const minorVersions: [0, 1, 2, 3, ] = [0, 1, 2, 3, ] ;
+
+// const minorVersionsAgainAgain = minorVersions ;
+
+// const minorVersionsAgain2 = [0, 1, 2, 3, ] satisfies [unknown, ...unknown[] ] ;
+
+// const minorVersionsAgain3 = [0, 1, 2, 3, ] satisfies [0, unknown, 2, ...unknown[] ] ;
+
+
+
+
+
+
+// const desc = {
+//     type: "color",
+//     value: "blue",
+//     specificity: 3,
+// } ;
+
+
+
+
+
+
+const value11 = 5 + majorVersion ;
+>value11 : number
+>5 + majorVersion : number
+>5 : number
+>majorVersion : number
+
+const string12 = `version ${ majorVersion }` ;
+>string12 : string
+>`version ${ majorVersion }` : string
+>majorVersion : number
+
+
+
+
+
+
+// // type-mismatch
+// const mf1 : 3 | 4 | 5 = 6 ;
+
+
+
+
+
+
