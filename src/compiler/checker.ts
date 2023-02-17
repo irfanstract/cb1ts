@@ -10520,7 +10520,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         PreservePrimitiveOrObjectOrArrayLiteralsReturnValue ,
         PreserveOriginalArithmeticExpressionOrInterpolation ,
         PreserveAbnormalReturnsInfo ,
-        PreserveReferentialTransparency ,
+        PreserveReturnValueDeterminism ,
         PreserveThreadSleepDurationsInfo ,
         PreserveFullFunctionBodyInfo ,
     }
@@ -10543,7 +10543,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                             yield ts.cbTsTypeInferenceModeMap.get("medium-flw-1") ;
                             if (type === WideningMode1.PreserveThreadSleepDurationsInfo) return ;
                             yield ts.cbTsTypeInferenceModeMap.get("medium-flw") ;
-                            if (type === WideningMode1.PreserveReferentialTransparency) return ;
+                            if (type === WideningMode1.PreserveReturnValueDeterminism) return ;
                             if (type === WideningMode1.PreserveAbnormalReturnsInfo) return ;
                             yield ts.cbTsTypeInferenceModeMap.get("medium") ;
                             if (type === WideningMode1.PreserveOriginalArithmeticExpressionOrInterpolation) return ;
