@@ -37403,6 +37403,13 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                  */
                 if (isInExpressionContext(node)) {
                     for (const { actualTypeWidened, } of ((): [] | [{ actualTypeWidened: Type ; }] => {
+                        if (doesTheConfigRequiresWideningForPrimitiveLiteralValuedInitialisers()) {
+                            return [{
+                                actualTypeWidened: (
+                                    getNecessarilyWidenedLiteralType(actualType)
+                                ) ,
+                            }] ;
+                        }
                         return [] ;
                     })()) {
                         const expectedType = (
