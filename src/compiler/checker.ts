@@ -37393,6 +37393,54 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     cancellationToken.throwIfCancellationRequested();
             }
         }
+        const getCbTsWidenedType1 = (
+            (...[actualType]: [Type]) => {
+                /**
+                 * note that
+                 * automatic widening, if any, shall be restricted to statement ctxs and
+                 * automatic widening, if any, shall never occur in type ctxs
+                 *
+                 */
+                if (isInExpressionContext(node)) {
+                    for (const { actualTypeWidened, } of ((): [] | [{ actualTypeWidened: Type ; }] => {
+                        return [] ;
+                    })()) {
+                        const expectedType = (
+                            getContextualType(node as Expression, /* contextFlags */ undefined)
+                            ||
+                            (() => {
+                                const { parent, } = node ;
+                                if (isVariableDeclaration(parent)) {
+                                    const { type: typeNode, } = parent ;
+                                    return typeNode && getTypeFromTypeNode(typeNode) ;
+                                }
+                                return undefined ;
+                            })()
+                        ) ;
+                        if (expectedType) {
+                            /** {@link checkTypeAssignableToAndOptionallyElaborate} */
+                            if (isTypeAssignableTo(actualType, expectedType)) {
+                                if (isTypeAssignableTo(actualTypeWidened, expectedType)) {
+                                    // // TODO DISABLE THIS BLOCK
+                                    // if (1) {
+                                    //     return createTupleType([actualType, expectedType, expectedType,]) ;
+                                    // }
+                                    return actualTypeWidened ;
+                                }
+                                return expectedType ;
+                            }
+                            else {
+                                return errorType ;
+                            }
+                        }
+                        else {
+                            return actualTypeWidened ;
+                        }
+                    }
+                }
+                return actualType;
+            }
+        ) ;
         switch (kind) {
             case SyntaxKind.Identifier:
                 return checkIdentifier(node as Identifier, checkMode);
