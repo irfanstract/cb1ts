@@ -23412,19 +23412,6 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         if (isContextOrConfigTellingAgainstPrimitiveOrLiteralTypeWidening(context)) {
             return type ;
         }
-        if ((
-            ([
-                ts.cbTsTypeInferenceModeMap.get("restricted")! ,
-                // ts.cbTsTypeInferenceModeMap.get("lazy2")! ,
-            ] satisfies ts.CbTsTypeInferenceModePresent[])
-            .includes(compilerOptions.inferredTypeSpecificity ?? ts.cbTsTypeInferenceModeMap.get("easy")!)
-        )) {
-            if (isLiteralType(type)) {
-                return (
-                    getNecessarilyWidenedLiteralType(type)
-                ) ;
-            }
-        }
         if (getObjectFlags(type) & ObjectFlags.RequiresWidening) {
             if (context === undefined && type.widened) {
                 return type.widened;
