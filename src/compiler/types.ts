@@ -6806,7 +6806,7 @@ export interface WideningContext {
     propertyName?: __String;        // Name of property in parent
     siblings?: Type[];              // Types of siblings
     resolvedProperties?: Symbol[];  // Properties occurring in sibling object literals
-    returnValueTypeWideningRequired: 0 | 1;
+    primitiveOrObjectOrArrayLiteralTypeWideningRequired: 0 | 1;
 }
 
 /** @internal */
