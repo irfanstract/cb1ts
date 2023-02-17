@@ -23418,6 +23418,15 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             .includes(compilerOptions.inferredTypeSpecificity ?? ts.cbTsTypeInferenceModeMap.get("easy")!)
         ) ;
     }
+    function doesTheConfigRequiresWideningForPrimitiveValuedExtrnQueryInitialisers() {
+        return (
+            ([
+                ts.cbTsTypeInferenceModeMap.get("restricted")! ,
+                // ts.cbTsTypeInferenceModeMap.get("lazy2")! ,
+            ] satisfies ts.CbTsTypeInferenceModePresent[])
+            .includes(compilerOptions.inferredTypeSpecificity ?? ts.cbTsTypeInferenceModeMap.get("easy")!)
+        ) ;
+    }
 
     function getWidenedTypeWithContext(type: Type, context: WideningContext | undefined): Type {
         if (isContextOrConfigTellingAgainstPrimitiveOrLiteralTypeWidening(context)) {
