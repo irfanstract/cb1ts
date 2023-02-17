@@ -37644,14 +37644,24 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             case SyntaxKind.StringLiteral:
                 return getFreshTypeOfLiteralType(getStringLiteralType((node as StringLiteralLike).text));
             case SyntaxKind.NumericLiteral:
-                checkGrammarNumericLiteral(node as NumericLiteral);
-                return getFreshTypeOfLiteralType(getNumberLiteralType(+(node as NumericLiteral).text));
+                {
+                    checkGrammarNumericLiteral(node as NumericLiteral);
+                    const actualType = getFreshTypeOfLiteralType(getNumberLiteralType(+(node as NumericLiteral).text));
+                    return (
+                        getCbTsWidenedType1(actualType)
+                    ) ;
+                }
             case SyntaxKind.BigIntLiteral:
-                checkGrammarBigIntLiteral(node as BigIntLiteral);
-                return getFreshTypeOfLiteralType(getBigIntLiteralType({
-                    negative: false,
-                    base10Value: parsePseudoBigInt((node as BigIntLiteral).text)
-                }));
+                {
+                    checkGrammarBigIntLiteral(node as BigIntLiteral);
+                    const actualType = getFreshTypeOfLiteralType(getBigIntLiteralType({
+                        negative: false,
+                        base10Value: parsePseudoBigInt((node as BigIntLiteral).text)
+                    }));
+                    return (
+                        getCbTsWidenedType1(actualType)
+                    ) ;
+                }
             case SyntaxKind.TrueKeyword:
                 return trueType;
             case SyntaxKind.FalseKeyword:
