@@ -37477,7 +37477,14 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return nullWideningType;
             case SyntaxKind.NoSubstitutionTemplateLiteral:
             case SyntaxKind.StringLiteral:
-                return getFreshTypeOfLiteralType(getStringLiteralType((node as StringLiteralLike).text));
+                {
+                    const actualType = (
+                        getFreshTypeOfLiteralType(getStringLiteralType((node as StringLiteralLike).text))
+                    ) ;
+                    return (
+                        getCbTsWidenedType1(actualType)
+                    ) ;
+                }
             case SyntaxKind.NumericLiteral:
                 {
                     checkGrammarNumericLiteral(node as NumericLiteral);
