@@ -10515,28 +10515,57 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return getFlowTypeOfReference(reference, autoType, initialType);
     }
 
-    function isConfigTellingAgainstWidening(): boolean {
+    enum WideningMode1 {
+        PreservePrimitiveLiteralValue ,
+        PreservePrimitiveOrObjectOrArrayLiteralsReturnValue ,
+        PreserveOriginalArithmeticExpressionOrInterpolation ,
+        PreserveAbnormalReturnsInfo ,
+        PreserveReferentialTransparency ,
+        PreserveThreadSleepDurationsInfo ,
+        PreserveFullFunctionBodyInfo ,
+    }
+
+    function isConfigTellingAgainstWidening(...[type,]: [WideningMode1,]): boolean {
+        /**
+         * see the comments around the definition of {@link ts.cbTsTypeInferenceConfigKey}.
+         */
         return (
             false
             || (
                 true
                 && (
-                    ([
-                        ts.cbTsTypeInferenceModeMap.get("medium-ez")! ,
-                        ts.cbTsTypeInferenceModeMap.get("medium")! ,
-                        ts.cbTsTypeInferenceModeMap.get("medium-flw")! ,
-                        ts.cbTsTypeInferenceModeMap.get("medium-flw-1")! ,
-                        ts.cbTsTypeInferenceModeMap.get("much")! ,
-                    ] satisfies ts.CbTsTypeInferenceModePresent[])
+                    Array.from({
+                        // note: this can take advantage of conditional early returns
+                        // note: the standard, general-purpose `Symbol` namespace is shadowed by the local `Symbol` namespace
+                        *[globalThis.Symbol.iterator](): globalThis.Generator<ts.CbTsTypeInferenceModePresent | undefined, void> {
+                            yield ts.cbTsTypeInferenceModeMap.get("much") ;
+                            if (type === WideningMode1.PreserveFullFunctionBodyInfo) return ;
+                            yield ts.cbTsTypeInferenceModeMap.get("medium-flw-1") ;
+                            if (type === WideningMode1.PreserveThreadSleepDurationsInfo) return ;
+                            yield ts.cbTsTypeInferenceModeMap.get("medium-flw") ;
+                            if (type === WideningMode1.PreserveReferentialTransparency) return ;
+                            if (type === WideningMode1.PreserveAbnormalReturnsInfo) return ;
+                            yield ts.cbTsTypeInferenceModeMap.get("medium") ;
+                            if (type === WideningMode1.PreserveOriginalArithmeticExpressionOrInterpolation) return ;
+                            yield ts.cbTsTypeInferenceModeMap.get("medium-ez") ;
+                            if (type === WideningMode1.PreservePrimitiveOrObjectOrArrayLiteralsReturnValue) return ;
+                            yield ts.cbTsTypeInferenceModeMap.get("easy") ;
+                            if (type === WideningMode1.PreservePrimitiveLiteralValue) return ;
+                        }
+                    }, e => e!)
                     .includes(compilerOptions.inferredTypeSpecificity ?? 0)
                 )
             )
         ) ;
     }
-    // context ? !context.wideningRequired : isConfigTellingAgainstWidening()
-    function isContextOrConfigTellingAgainstWidening(context: WideningContext | undefined): boolean {
+    function isConfigTellingAgainstPrimitiveOrLiteralTypeWidening(): boolean {
         return (
-            (context ? !context.wideningRequired : false) || isConfigTellingAgainstWidening()
+            isConfigTellingAgainstWidening(WideningMode1.PreservePrimitiveOrObjectOrArrayLiteralsReturnValue)
+        ) ;
+    }
+    function isContextOrConfigTellingAgainstPrimitiveOrLiteralTypeWidening(context: WideningContext | undefined): boolean {
+        return (
+            (context ? !context.primitiveOrObjectOrArrayLiteralTypeWideningRequired : false) || isConfigTellingAgainstPrimitiveOrLiteralTypeWidening()
         ) ;
     }
 
@@ -10545,7 +10574,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
      *
      * @deprecated
      * semantically,
-     * {@link getWidenedType} and its variants are all no different in being respectful to {@link isContextOrConfigTellingAgainstWidening}.
+     * {@link getWidenedType} and its variants are all no different in being respectful to {@link isContextOrConfigTellingAgainstPrimitiveOrLiteralTypeWidening}.
      *
      */
     function getConfigDefinedlyWidenedType(...[tpAfterOptionality]: [Type]): Type {
@@ -23017,7 +23046,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     }
 
     function getWidenedLiteralType(type: Type): Type {
-        if (isContextOrConfigTellingAgainstWidening(/* context */ undefined)) {
+        if (isContextOrConfigTellingAgainstPrimitiveOrLiteralTypeWidening(/* context */ undefined)) {
             return type ;
         }
         return type.flags & TypeFlags.EnumLiteral && isFreshLiteralType(type) ? getBaseTypeOfEnumLiteralType(type as LiteralType) :
@@ -23285,7 +23314,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     }
 
     function createWideningContext(parent: WideningContext | undefined, propertyName: __String | undefined, siblings: Type[] | undefined): WideningContext {
-        return { parent, wideningRequired: isContextOrConfigTellingAgainstWidening(parent) ? 0 : 1, propertyName, siblings, resolvedProperties: undefined };
+        return { parent, primitiveOrObjectOrArrayLiteralTypeWideningRequired: isContextOrConfigTellingAgainstPrimitiveOrLiteralTypeWidening(parent) ? 0 : 1, propertyName, siblings, resolvedProperties: undefined };
     }
 
     function getSiblingsOfContext(context: WideningContext): Type[] {
@@ -23345,7 +23374,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     }
 
     function getWidenedTypeOfObjectLiteral(type: Type, context: WideningContext | undefined): Type {
-        if (isContextOrConfigTellingAgainstWidening(context)) {
+        if (isContextOrConfigTellingAgainstPrimitiveOrLiteralTypeWidening(context)) {
             return type ;
         }
         const members = createSymbolTable();
@@ -23370,7 +23399,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     }
 
     function getWidenedTypeWithContext(type: Type, context: WideningContext | undefined): Type {
-        if (isContextOrConfigTellingAgainstWidening(context)) {
+        if (isContextOrConfigTellingAgainstPrimitiveOrLiteralTypeWidening(context)) {
             return type ;
         }
         if (getObjectFlags(type) & ObjectFlags.RequiresWidening) {
@@ -29592,7 +29621,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         if (inDestructuringPattern) {
             return createTupleType(elementTypes, elementFlags);
         }
-        if (forceTuple || inConstContext || inTupleContext || isContextOrConfigTellingAgainstWidening(/* context */ undefined)) {
+        if (forceTuple || inConstContext || inTupleContext || isContextOrConfigTellingAgainstPrimitiveOrLiteralTypeWidening(/* context */ undefined)) {
             return createArrayLiteralType(createTupleType(elementTypes, elementFlags, /*readonly*/ inConstContext));
         }
         return createArrayLiteralType(createArrayType(elementTypes.length ?
