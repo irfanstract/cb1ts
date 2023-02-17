@@ -37477,33 +37477,16 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return nullWideningType;
             case SyntaxKind.NoSubstitutionTemplateLiteral:
             case SyntaxKind.StringLiteral:
-                {
-                    const actualType = (
-                        getFreshTypeOfLiteralType(getStringLiteralType((node as StringLiteralLike).text))
-                    ) ;
-                    return (
-                        getCbTsWidenedType1(actualType)
-                    ) ;
-                }
+                return getFreshTypeOfLiteralType(getStringLiteralType((node as StringLiteralLike).text));
             case SyntaxKind.NumericLiteral:
-                {
-                    checkGrammarNumericLiteral(node as NumericLiteral);
-                    const actualType = getFreshTypeOfLiteralType(getNumberLiteralType(+(node as NumericLiteral).text));
-                    return (
-                        getCbTsWidenedType1(actualType)
-                    ) ;
-                }
+                checkGrammarNumericLiteral(node as NumericLiteral);
+                return getFreshTypeOfLiteralType(getNumberLiteralType(+(node as NumericLiteral).text));
             case SyntaxKind.BigIntLiteral:
-                {
-                    checkGrammarBigIntLiteral(node as BigIntLiteral);
-                    const actualType = getFreshTypeOfLiteralType(getBigIntLiteralType({
-                        negative: false,
-                        base10Value: parsePseudoBigInt((node as BigIntLiteral).text)
-                    }));
-                    return (
-                        getCbTsWidenedType1(actualType)
-                    ) ;
-                }
+                checkGrammarBigIntLiteral(node as BigIntLiteral);
+                return getFreshTypeOfLiteralType(getBigIntLiteralType({
+                    negative: false,
+                    base10Value: parsePseudoBigInt((node as BigIntLiteral).text)
+                }));
             case SyntaxKind.TrueKeyword:
                 return trueType;
             case SyntaxKind.FalseKeyword:
