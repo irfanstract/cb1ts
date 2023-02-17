@@ -23058,6 +23058,16 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             type;
     }
 
+    function getNecessarilyWidenedLiteralType(type: Type): Type {
+        return type.flags & TypeFlags.EnumLiteral ? getBaseTypeOfEnumLiteralType(type as LiteralType) :
+             type.flags & TypeFlags.StringLiteral ? stringType :
+             type.flags & TypeFlags.NumberLiteral ? numberType :
+             type.flags & TypeFlags.BigIntLiteral ? bigintType :
+            type.flags & TypeFlags.BooleanLiteral ? booleanType :
+             type.flags & TypeFlags.Union ? mapType(type as UnionType, getNecessarilyWidenedLiteralType) :
+             type;
+    }
+
     function getWidenedUniqueESSymbolType(type: Type): Type {
         return type.flags & TypeFlags.UniqueESSymbol ? esSymbolType :
             type.flags & TypeFlags.Union ? mapType(type as UnionType, getWidenedUniqueESSymbolType) :
