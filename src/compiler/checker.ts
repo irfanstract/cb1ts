@@ -34187,8 +34187,17 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         forEach(node.typeArguments, checkSourceElement);
         const exprType = node.kind === SyntaxKind.ExpressionWithTypeArguments ? checkExpression(node.expression) :
             isThisIdentifier(node.exprName) ? checkThisExpression(node.exprName) :
-            checkExpression(node.exprName);
+            checkCbTsTypeQueryNode(node);
         return getInstantiationExpressionType(exprType, node);
+    }
+
+    function checkCbTsTypeQueryNode(...[node]: [
+        TypeQueryNode,
+    ]): Type {
+        const formalType = (
+            checkExpression(node.exprName)
+        ) ;
+        return formalType ;
     }
 
     function getInstantiationExpressionType(exprType: Type, node: NodeWithTypeArguments) {
