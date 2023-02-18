@@ -18178,6 +18178,18 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return type;
     }
 
+    function createCbTsCustomType(...[symbol, flags]: [Symbol, TypeFlags]) {
+        const type = createTypeWithSymbol(flags, symbol) ;
+        // type.escapedName = `__@${type.symbol.escapedName}@${getSymbolId(type.symbol)}` as __String;
+        return type;
+    }
+
+    function createCbTsValueofType(...[symbol, { base, }]: [Symbol, { base: Type ; }]) {
+        const tp = createCbTsCustomType(symbol, TypeFlags.TypeParameter) as TypeParameter ;
+        tp.constraint = base ;
+        return tp ;
+    }
+
     function getESSymbolLikeTypeForNode(node: Node) {
         if (isValidESSymbolDeclaration(node)) {
             const symbol = isCommonJsExportPropertyAssignment(node) ? getSymbolOfNode((node as BinaryExpression).left) : getSymbolOfNode(node);
