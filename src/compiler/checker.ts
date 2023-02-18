@@ -10559,7 +10559,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                             if (type === WideningMode1.PreservePrimitiveLiteralValue) return ;
                         }
                     }, e => e!)
-                    .includes(compilerOptions.inferredTypeSpecificity ?? (ts.cbTsTypeInferenceModeMap.get("easy")!))
+                    .includes(getCbTsEffectiveExpectedInferredTypeSpecificityLevel())
                 )
             )
         ) ;
