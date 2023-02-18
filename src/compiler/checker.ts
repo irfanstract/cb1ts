@@ -18198,6 +18198,33 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return esSymbolType;
     }
 
+    // /**
+    //  * `typeof` analogue of {@link getESSymbolLikeTypeForNode} .
+    //  */
+    // function getTypeofOpaqueTypeForNode({
+    //     referencingExpression,
+    //     referencedStatement,
+    //     knownFormalType,
+    // }: {
+    //     referencingExpression: TypeNode,
+    //     referencedStatement: Node,
+    //     knownFormalType: Type | undefined,
+    // }) {
+    //     if (isValidESSymbolDeclaration(referencedStatement)) {
+    //         const referencedSymbol = isCommonJsExportPropertyAssignment(referencedStatement) ? getSymbolOfNode((referencedStatement as BinaryExpression).left) : getSymbolOfNode(referencedStatement);
+    //         if (referencedSymbol) {
+    //             // const referencingExpressionLinks = getNodeLinks(referencingExpression);
+    //             const referencedSymbolLinks      = getSymbolLinks(referencedSymbol);
+    //             return referencedSymbolLinks.uniqueESSymbolType || (referencedSymbolLinks.uniqueESSymbolType = createOpaqueTypeofType(referencedSymbol));
+    //         }
+    //     }
+    //     return (
+    //         undefined
+    //         || knownFormalType
+    //         || unknownType
+    //     );
+    // }
+
     function getThisType(node: Node): Type {
         const container = getThisContainer(node, /*includeArrowFunctions*/ false, /*includeClassComputedPropertyName*/ false);
         const parent = container && container.parent;
