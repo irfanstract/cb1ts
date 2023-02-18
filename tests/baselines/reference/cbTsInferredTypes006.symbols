@@ -1,0 +1,42 @@
+=== tests/cases/compiler/cbTsInferredTypes006.ts ===
+// 
+
+// deliberately not setting `inferredTypeSpecificity` in this case
+
+
+
+
+
+
+{
+    const string1 = "hello" ;
+>string1 : Symbol(string1, Decl(cbTsInferredTypes006.ts, 10, 9))
+    
+    const stringStrong11: "hello" | "hi" = "hi" ;
+>stringStrong11 : Symbol(stringStrong11, Decl(cbTsInferredTypes006.ts, 12, 9))
+        
+}
+{
+    let string1 = "hello" ;
+>string1 : Symbol(string1, Decl(cbTsInferredTypes006.ts, 16, 7))
+    
+    let stringStrong11: "hello" | "hi" = "hi" ;
+>stringStrong11 : Symbol(stringStrong11, Decl(cbTsInferredTypes006.ts, 18, 7))
+        
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
