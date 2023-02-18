@@ -18180,10 +18180,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
     function createOpaqueTypeofType(symbol: Symbol) {
         const type = (
-            createTypeWithSymbol(TypeFlags.Singleton, symbol) as
+            createTypeWithSymbol(0, symbol) as
             (Type & Pick<UniqueESSymbolType, "symbol" | "escapedName">)
         );
-        type.escapedName = `__@${type.symbol.escapedName}@${getSymbolId(type.symbol)}` as __String;
+        type.escapedName = `__@${symbol.escapedName || type.symbol.escapedName}@${getSymbolId(type.symbol)}` as __String;
         return type;
     }
 
