@@ -27807,6 +27807,40 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         let type = getNarrowedTypeOfSymbol(localOrExportSymbol, node);
         const assignmentKind = getAssignmentTargetKind(node);
 
+        // if (isConfigTellingAgainstWidening(WideningMode1.PreserveOriginalArithmeticExpressionOrInterpolation)) {
+        //     // TODO disable this line
+        //     if (1) {
+        //         Debug.fail(`random failing ; would infer valueof type`) ;
+        //     }
+        // }
+        if ((
+            declaration
+            &&
+            isConstVariable(localOrExportSymbol)
+        )) {
+            const ssType = (
+                getCbTsValueofTypeForNode(declaration)
+            ) ;
+            if (isConfigTellingAgainstWidening(WideningMode1.PreserveOriginalArithmeticExpressionOrInterpolation)) {
+                const {
+                    sImpliedType ,
+                } = GST() ;
+                return (
+                    sImpliedType
+                ) ;
+            }
+            // to not be computed unless actually used; expensive.
+            function GST() {
+                const sImpliedType = (
+                    getIntersectionType([type, ssType])
+                ) ;
+                return {
+                    ssType ,
+                    sImpliedType ,
+                } ;
+            }
+        }
+
         if (assignmentKind) {
             if (!(localOrExportSymbol.flags & SymbolFlags.Variable) &&
                 !(isInJSFile(node) && localOrExportSymbol.flags & SymbolFlags.ValueModule)) {
