@@ -23421,7 +23421,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 ts.cbTsTypeInferenceModeMap.get("lazy2")! ,
                 ts.cbTsTypeInferenceModeMap.get("lazy")! ,
             ] satisfies ts.CbTsTypeInferenceModePresent[])
-            .includes(compilerOptions.inferredTypeSpecificity ?? ts.cbTsTypeInferenceModeMap.get("easy")!)
+            .includes(getCbTsEffectiveExpectedInferredTypeSpecificityLevel())
         ) ;
     }
     function doesTheConfigRequiresWideningForPrimitiveValuedExtrnQueryInitialisers() {
@@ -23430,7 +23430,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 ts.cbTsTypeInferenceModeMap.get("restricted")! ,
                 // ts.cbTsTypeInferenceModeMap.get("lazy2")! ,
             ] satisfies ts.CbTsTypeInferenceModePresent[])
-            .includes(compilerOptions.inferredTypeSpecificity ?? ts.cbTsTypeInferenceModeMap.get("easy")!)
+            .includes(getCbTsEffectiveExpectedInferredTypeSpecificityLevel())
         ) ;
     }
 
