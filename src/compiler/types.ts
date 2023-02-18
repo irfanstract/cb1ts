@@ -5780,8 +5780,8 @@ export interface SymbolLinks {
     asCbTsSingletonType?: Type ;                // Unique ValueOf Type
     cbTsMemberSingletonTypeCache?: (
         Map<(
-            | Pick<PropertyAccessExpression, "kind" | "name" >
-            | Pick<ElementAccessExpression, "kind" | "argumentExpression">
+            | string
+            | Expression
         ), Type>
     ) ; // Unique ValueOf Type
     declaredType?: Type;                        // Type of class, interface, enum, type alias, or type parameter
