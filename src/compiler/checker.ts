@@ -37464,6 +37464,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return actualType;
             }
         ) ;
+        const cbTsTp1 = (() => {
         switch (kind) {
             case SyntaxKind.Identifier:
                 return checkIdentifier(node as Identifier, checkMode);
@@ -37570,6 +37571,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 Debug.fail("Shouldn't ever directly check a JsxOpeningElement");
         }
         return errorType;
+        })() ;
+        const cbTsTp2 = getCbTsWidenedType1(cbTsTp1) ;
+        return cbTsTp2 ;
     }
 
     // DECLARATION AND STATEMENT TYPE CHECKING
