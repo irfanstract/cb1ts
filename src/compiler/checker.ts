@@ -18178,6 +18178,15 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return type;
     }
 
+    function createOpaqueTypeofType(symbol: Symbol) {
+        const type = (
+            createTypeWithSymbol(TypeFlags.Singleton, symbol) as
+            (Type & Pick<UniqueESSymbolType, "symbol" | "escapedName">)
+        );
+        type.escapedName = `__@${type.symbol.escapedName}@${getSymbolId(type.symbol)}` as __String;
+        return type;
+    }
+
     function getESSymbolLikeTypeForNode(node: Node) {
         if (isValidESSymbolDeclaration(node)) {
             const symbol = isCommonJsExportPropertyAssignment(node) ? getSymbolOfNode((node as BinaryExpression).left) : getSymbolOfNode(node);
