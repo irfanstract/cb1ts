@@ -1,0 +1,45 @@
+=== tests/cases/compiler/cbTsInferredTypesInLazy004.ts ===
+const string1 = "hello" ;
+>string1 : string
+>"hello" : string
+
+const stringStrong11: "hello" | "hi" = "hi" ;
+>stringStrong11 : "hello" | "hi"
+>"hi" : "hello" | "hi"
+    
+const stringStrong12: typeof stringStrong11 = stringStrong11 ;
+>stringStrong12 : "hello" | "hi"
+>stringStrong11 : "hello" | "hi"
+>stringStrong11 : "hello" | "hi"
+    
+const stringMeIn11A = stringStrong11 ;
+>stringMeIn11A : string
+>stringStrong11 : string
+
+
+
+
+
+
+const minorVersions: [0, 1, 2, 3, ] = [0, 1, 2, 3, ] ;
+>minorVersions : [0, 1, 2, 3]
+>[0, 1, 2, 3, ] : [0, 1, 2, 3]
+>0 : 0
+>1 : 1
+>2 : 2
+>3 : 3
+
+const minorVersionsAgainAgain = minorVersions ;
+>minorVersionsAgainAgain : number[]
+>minorVersions : number[]
+
+const minorVersionsAgainAgainEven: typeof minorVersions = minorVersions ;
+>minorVersionsAgainAgainEven : [0, 1, 2, 3]
+>minorVersions : [0, 1, 2, 3]
+>minorVersions : [0, 1, 2, 3]
+
+
+
+
+
+
