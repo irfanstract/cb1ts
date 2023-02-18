@@ -5778,7 +5778,12 @@ export interface SymbolLinks {
     nameType?: Type;                            // Type associated with a late-bound symbol
     uniqueESSymbolType?: Type;                  // UniqueESSymbol type for a symbol
     asCbTsSingletonType?: Type ;                // Unique ValueOf Type
-    cbTsMemberSingletonTypeCache?: Map<string, Type> ; // Unique ValueOf Type
+    cbTsMemberSingletonTypeCache?: (
+        Map<(
+            | Pick<PropertyAccessExpression, "kind" | "name" >
+            | Pick<ElementAccessExpression, "kind" | "argumentExpression">
+        ), Type>
+    ) ; // Unique ValueOf Type
     declaredType?: Type;                        // Type of class, interface, enum, type alias, or type parameter
     typeParameters?: TypeParameter[];           // Type parameters of type alias (undefined if non-generic)
     outerTypeParameters?: TypeParameter[];      // Outer type parameters of anonymous object type
