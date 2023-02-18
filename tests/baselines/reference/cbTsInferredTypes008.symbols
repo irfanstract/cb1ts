@@ -1,0 +1,60 @@
+=== tests/cases/compiler/cbTsInferredTypes008.ts ===
+// with the ITS flag being set to `medium` or `much`,
+// a type-omitted const initialised with bare query of existing variable `my.bar` shall be typed `valueof my.bar`
+
+
+
+
+
+
+
+
+
+
+const string1 = "hello" ;
+>string1 : Symbol(string1, Decl(cbTsInferredTypes008.ts, 12, 5))
+
+/** 
+ * the RHS happens to conform to singleton type (specifically, a constant type), so
+ * the resulting type shall not use the `typeof` notation but instead the contant type directly.
+ */
+const stringMeIn11A = string1 ;
+>stringMeIn11A : Symbol(stringMeIn11A, Decl(cbTsInferredTypes008.ts, 18, 5))
+>string1 : Symbol(string1, Decl(cbTsInferredTypes008.ts, 12, 5))
+
+
+
+
+
+
+const minorVersions: [0, 1, 2, 3, ] = [0, 1, 2, 3, ] ;
+>minorVersions : Symbol(minorVersions, Decl(cbTsInferredTypes008.ts, 25, 5))
+
+/** 
+ * the RHS happens to conform to singleton type (specifically, a constant type), so
+ * the resulting type shall not use the `typeof` notation but instead the contant type directly.
+ */
+const minorVersionsAgainAgain = minorVersions ;
+>minorVersionsAgainAgain : Symbol(minorVersionsAgainAgain, Decl(cbTsInferredTypes008.ts, 31, 5))
+>minorVersions : Symbol(minorVersions, Decl(cbTsInferredTypes008.ts, 25, 5))
+
+const minorVersionsAgainAgainEven: typeof minorVersions = minorVersions ;
+>minorVersionsAgainAgainEven : Symbol(minorVersionsAgainAgainEven, Decl(cbTsInferredTypes008.ts, 33, 5))
+>minorVersions : Symbol(minorVersions, Decl(cbTsInferredTypes008.ts, 25, 5))
+>minorVersions : Symbol(minorVersions, Decl(cbTsInferredTypes008.ts, 25, 5))
+
+/** 
+ * the RHS happens to conform to singleton type (specifically, a constant type), so
+ * the resulting type shall not use the `typeof` notation but instead the contant type directly.
+ */
+const minorVersionsAgainAgainAgain = minorVersionsAgainAgain ;
+>minorVersionsAgainAgainAgain : Symbol(minorVersionsAgainAgainAgain, Decl(cbTsInferredTypes008.ts, 39, 5))
+>minorVersionsAgainAgain : Symbol(minorVersionsAgainAgain, Decl(cbTsInferredTypes008.ts, 31, 5))
+
+// const nonConstTupleAgain = [Math.random(), 3, Math.random(), ] ;
+
+
+
+
+
+
