@@ -10525,6 +10525,12 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         PreserveFullFunctionBodyInfo ,
     }
 
+    function getCbTsEffectiveExpectedInferredTypeSpecificityLevel(): ts.CbTsTypeInferenceModePresent {
+        return (
+            compilerOptions.inferredTypeSpecificity ?? ts.cbTsTypeInferenceModeMap.get("easy")!
+        ) ;
+    }
+
     function isConfigTellingAgainstWidening(...[type,]: [WideningMode1,]): boolean {
         /**
          * see the comments around the definition of {@link ts.cbTsTypeInferenceConfigKey}.
