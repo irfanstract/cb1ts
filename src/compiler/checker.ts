@@ -27655,6 +27655,21 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return type;
     }
 
+    // TODO
+    /**
+     * a variation of {@link checkIdentifier} which instead return a `valueof` type pointing to it.
+     */
+    function getIdentifierValueofType(...[callingNode]: [Identifier]): Type {
+        const resolvedSymbol = getResolvedSymbol(callingNode);
+        if (resolvedSymbol === unknownSymbol) {
+            return errorType;
+        }
+
+        return (
+            getSymbolValueofType(resolvedSymbol)
+        ) ;
+    }
+
     function checkIdentifier(node: Identifier, checkMode: CheckMode | undefined): Type {
         if (isThisInTypeQuery(node)) {
             return checkThisExpression(node);
