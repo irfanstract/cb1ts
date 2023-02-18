@@ -18180,7 +18180,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
     function createOpaqueTypeofType(symbol: Symbol) {
         const type = (
-            createTypeWithSymbol(0, symbol) as
+            createTypeWithSymbol(TypeFlags.Object, symbol) as
             (Type & Pick<UniqueESSymbolType, "symbol" | "escapedName">)
         );
         type.escapedName = `__@${symbol.escapedName || type.symbol.escapedName}@${getSymbolId(type.symbol)}` as __String;
