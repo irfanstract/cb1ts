@@ -37418,16 +37418,12 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                  *
                  */
                 if (isInExpressionContext(node)) {
-                    for (const { actualTypeWidened, } of ((): [] | [{ actualTypeWidened: Type ; }] => {
-                        if (doesTheConfigRequiresWideningForPrimitiveLiteralValuedInitialisers()) {
-                            return [{
-                                actualTypeWidened: (
-                                    getNecessarilyWidenedLiteralType(actualType)
-                                ) ,
-                            }] ;
-                        }
-                        return [] ;
-                    })()) {
+                    for (const { actualTypeWidened, } of (
+                        cbTsCewGwtAtw({
+                            actualType,
+                            errorHighlightTargetNode: node ,
+                        })
+                    )) {
                         const expectedType = (
                             getContextualType(node as Expression, /* contextFlags */ undefined)
                             ||
@@ -37574,6 +37570,52 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         })() ;
         const cbTsTp2 = getCbTsWidenedType1(cbTsTp1) ;
         return cbTsTp2 ;
+    }
+
+    function cbTsCewGwtAtw({
+        actualType,
+        errorHighlightTargetNode,
+    }: {
+        actualType: Type ;
+        errorHighlightTargetNode: Node ;
+    }): [] | [{ actualTypeWidened: Type ; }] {
+        {
+            let t1: Type = actualType ;
+            if (doesTheConfigRequiresWideningForPrimitiveLiteralValuedInitialisers()) {
+                if (isFreshLiteralType(t1)) {
+                    t1 = getNecessarilyWidenedLiteralType(t1) ;
+                }
+            }
+            if (doesTheConfigRequiresWideningForPrimitiveValuedExtrnQueryInitialisers()) {
+                t1 = getNecessarilyWidenedLiteralType(t1) ;
+                if (isArrayOrTupleLikeType(t1)) {
+                    const elementTypeUnwidened = (
+                        getIndexedAccessType(t1, numberType)
+                    ) ;
+                    const elementTypeWidened = (
+                        cbTsCewGwtAtw({
+                            actualType: elementTypeUnwidened ,
+                            errorHighlightTargetNode ,
+                        })[0]?.actualTypeWidened
+                        ??
+                        getNecessarilyWidenedLiteralType(elementTypeUnwidened)
+                    ) ;
+                    t1 = (
+                        createArrayType((
+                            elementTypeWidened
+                        ), isReadonlyArrayType(t1))
+                    ) ;
+                }
+            }
+            if (t1 !== actualType) {
+                return [{
+                    actualTypeWidened: (
+                        t1
+                    ) ,
+                }] ;
+            }
+        }
+        return [] ;
     }
 
     // DECLARATION AND STATEMENT TYPE CHECKING
