@@ -18201,6 +18201,115 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return esSymbolType;
     }
 
+    function getCbTsValueofTypeForNode(...[node, experimentalOrInternalOptions]: [
+        subject: Node,
+        experimentalOrInternalOptions?: {
+            unifyTypesForAliases: boolean ;
+        } ,
+    ]) {
+        const {
+            unifyTypesForAliases,
+        } = (
+            experimentalOrInternalOptions || {
+                unifyTypesForAliases: true ,
+            }
+        ) ;
+        if (isValidESSymbolDeclaration(node)) {
+            const symbol = isCommonJsExportPropertyAssignment(node) ? getSymbolOfNode((node as BinaryExpression).left) : getSymbolOfNode(node);
+            if (symbol) {
+                const links = getSymbolLinks(symbol);
+                const symbolAssignedType = getTypeOfSymbol(symbol) ;
+                if (symbolAssignedType.flags & TypeFlags.UniqueESSymbol) {
+                    return getESSymbolLikeTypeForNode(node) ;
+                }
+                return (
+                    links.uniqueESSymbolType || (
+                        links.uniqueESSymbolType = (({
+                            baseType,
+                        }: {
+                            baseType: Type ;
+                        }): Type => {
+                            if (isGecwConstantType(baseType)) {
+                                return baseType ;
+                            }
+                            if (unifyTypesForAliases) {
+                                let tp = baseType;
+                                if ((baseType.flags & TypeFlags.TypeParameter)) {
+                                    tp = tp as TypeParameter ;
+                                    if (isCbTsValueofType(tp as TypeParameter)) {
+                                        return tp ;
+                                    }
+                                }
+                                // if (isTupleType(tp)) {
+                                //     return true ;
+                                // }
+                            }
+                            return (
+                                createCbTsValueofType(symbol, { base: baseType, })
+                            ) ;
+                        })({
+                            baseType: symbolAssignedType ,
+                        })
+                    )
+                );
+            }
+        }
+        return esSymbolType;
+    }
+    function isGecwConstantType(...[baseType]: [Type]): boolean {
+        {
+            const tp = baseType ;
+            if ((
+                false
+                || (tp === undefinedType)
+                || (tp === nullType)
+                || (tp === falseType || tp === trueType)
+                // || (tp.flags & TypeFlags.UniqueESSymbol) // TODO
+                || (tp.flags & TypeFlags.EnumLiteral)
+                || (tp.flags & TypeFlags.NumberLiteral)
+                || (tp.flags & TypeFlags.BigIntLiteral)
+                || (tp.flags & TypeFlags.StringLiteral)
+                // || ()
+            )) {
+                return true ;
+            }
+            if (isTupleType(tp)) {
+                const tpChildTypes = getTypeArguments(tp) ;
+                if (1) {
+                    if (tpChildTypes.every(tp => isGecwConstantType(tp))) {
+                        return true ;
+                    }
+                    else {
+                        return false ;
+                    }
+                }
+                else {
+                    return false ;
+                }
+            }
+        }
+        return false ;
+    }
+    function isCbTsValueofType(...[tp]: [TypeParameter]): false | (true) {
+        const {
+            // constraint = unknownType ,
+            symbol: innerSymbolRef,
+        } = tp satisfies TypeParameter ;
+        const innerSymbolRefLinks = (
+            // TODO
+            getSymbolLinks(innerSymbolRef)
+        ) ;
+        if (innerSymbolRefLinks.uniqueESSymbolType) {
+            if (innerSymbolRefLinks.uniqueESSymbolType === tp) {
+                return true ;
+            }
+            else {
+                return false ;
+            }
+        }
+        return false ;
+    }
+
     function getThisType(node: Node): Type {
         const container = getThisContainer(node, /*includeArrowFunctions*/ false, /*includeClassComputedPropertyName*/ false);
         const parent = container && container.parent;
