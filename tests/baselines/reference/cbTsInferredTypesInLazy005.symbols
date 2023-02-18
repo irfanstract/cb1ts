@@ -1,0 +1,41 @@
+=== tests/cases/compiler/cbTsInferredTypesInLazy005.ts ===
+const string1 = "hello" ;
+>string1 : Symbol(string1, Decl(cbTsInferredTypesInLazy005.ts, 0, 5))
+
+const stringStrong11: "hello" | "hi" = "hi" ;
+>stringStrong11 : Symbol(stringStrong11, Decl(cbTsInferredTypesInLazy005.ts, 2, 5))
+    
+const stringStrong12: typeof stringStrong11 = stringStrong11 ;
+>stringStrong12 : Symbol(stringStrong12, Decl(cbTsInferredTypesInLazy005.ts, 4, 5))
+>stringStrong11 : Symbol(stringStrong11, Decl(cbTsInferredTypesInLazy005.ts, 2, 5))
+>stringStrong11 : Symbol(stringStrong11, Decl(cbTsInferredTypesInLazy005.ts, 2, 5))
+    
+const stringMeIn11A = stringStrong11 ;
+>stringMeIn11A : Symbol(stringMeIn11A, Decl(cbTsInferredTypesInLazy005.ts, 6, 5))
+>stringStrong11 : Symbol(stringStrong11, Decl(cbTsInferredTypesInLazy005.ts, 2, 5))
+
+
+
+
+
+
+const minorVersions: [0, 1, 2, 3, ] = [0, 1, 2, 3, ] ;
+>minorVersions : Symbol(minorVersions, Decl(cbTsInferredTypesInLazy005.ts, 13, 5))
+
+const minorVersionsAgainAgain = minorVersions ;
+>minorVersionsAgainAgain : Symbol(minorVersionsAgainAgain, Decl(cbTsInferredTypesInLazy005.ts, 15, 5))
+>minorVersions : Symbol(minorVersions, Decl(cbTsInferredTypesInLazy005.ts, 13, 5))
+
+const minorVersionsAgainAgainEven: typeof minorVersions = minorVersions ;
+>minorVersionsAgainAgainEven : Symbol(minorVersionsAgainAgainEven, Decl(cbTsInferredTypesInLazy005.ts, 17, 5))
+>minorVersions : Symbol(minorVersions, Decl(cbTsInferredTypesInLazy005.ts, 13, 5))
+>minorVersions : Symbol(minorVersions, Decl(cbTsInferredTypesInLazy005.ts, 13, 5))
+
+const minorVersionsWeaklyTyped = [0, 1, 2, 3, ] ;
+>minorVersionsWeaklyTyped : Symbol(minorVersionsWeaklyTyped, Decl(cbTsInferredTypesInLazy005.ts, 19, 5))
+
+
+
+
+
+
