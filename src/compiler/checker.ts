@@ -18198,6 +18198,27 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return esSymbolType;
     }
 
+    /**
+     * see the code for {@link getIdentifierValueofType}.
+     */
+    function getSymbolValueofType(...[
+        resolvedSymbol,
+    ]: [
+        Symbol,
+    ]) {
+        const resolvedSymbolExpandosome = getExportSymbolOfValueSymbolIfExported(resolvedSymbol);
+
+        const resolvedSymbolEpndsomeLinks = getSymbolLinks(resolvedSymbolExpandosome) ;
+
+        return (
+            resolvedSymbolEpndsomeLinks.asCbTsSingletonType || (
+                resolvedSymbolEpndsomeLinks.asCbTsSingletonType = (
+                    createOpaqueTypeofType(resolvedSymbolExpandosome)
+                )
+            )
+        ) ;
+    }
+
     // /**
     //  * `typeof` analogue of {@link getESSymbolLikeTypeForNode} .
     //  */
