@@ -18238,7 +18238,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                             }
                             if (unifyTypesForAliases) {
                                 let tp = baseType;
-                                if ((baseType.flags & TypeFlags.TypeParameter)) {
+                                if ((tp.flags & TypeFlags.TypeParameter)) {
                                     tp = tp as TypeParameter ;
                                     if (isCbTsValueofType(tp as TypeParameter)) {
                                         return tp ;
