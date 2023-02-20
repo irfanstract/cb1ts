@@ -18190,6 +18190,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return tp ;
     }
 
+    type CbTsValueofTypeOps = (
+        ReturnType<typeof createCbTsValueofType>
+    ) ;
+
     function getESSymbolLikeTypeForNode(node: Node) {
         if (isValidESSymbolDeclaration(node)) {
             const symbol = isCommonJsExportPropertyAssignment(node) ? getSymbolOfNode((node as BinaryExpression).left) : getSymbolOfNode(node);
