@@ -18294,7 +18294,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         }
         return false ;
     }
-    function isCbTsValueofType(...[tp]: [TypeParameter]): false | (true) {
+    function isCbTsValueofType(...[tp]: [Type | CbTsValueofTypeOps]): false | (true) {
         const {
             // constraint = unknownType ,
             symbol: innerSymbolRef,
