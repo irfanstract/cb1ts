@@ -6122,6 +6122,15 @@ export type TypeId = number;
 // Properties common to all types
 export interface Type {
     flags: TypeFlags;                // Flags
+    /**
+     * may imply `flags === 0`
+     *
+     * if true, then
+     * the value of variable pointed by {@link symbol}
+     * shall be the only/sole instance
+     *
+     */
+    isCbTsValueofType?: boolean;
     /** @internal */ id: TypeId;      // Unique ID
     /** @internal */ checker: TypeChecker;
     symbol: Symbol;                  // Symbol associated with type (if any)
