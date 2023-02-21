@@ -243,6 +243,7 @@ export const enum SyntaxKind {
     FunctionType,
     ConstructorType,
     TypeQuery,
+    CbTsValueofType,
     TypeLiteral,
     ArrayType,
     TupleType,
