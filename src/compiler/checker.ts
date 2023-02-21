@@ -6290,6 +6290,14 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 type = getReducedType(type);
             }
 
+            if (isCbTsValueofType(type)) {
+                return (
+                    factory.createCbTsValueofTypeNode((
+                        symbolToExpression(type.symbol, context, SymbolFlags.None)
+                    ))
+                ) ;
+            }
+
             if (type.flags & TypeFlags.Any) {
                 if (type.aliasSymbol) {
                     return factory.createTypeReferenceNode(symbolToEntityNameNode(type.aliasSymbol), mapToTypeNodes(type.aliasTypeArguments, context));
@@ -18179,9 +18187,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return type;
     }
 
-    function createCbTsValueofType(...[symbol, { base, }]: [Symbol, { base: Type ; }]) {
-        const tp = createCbTsCustomType(symbol, TypeFlags.TypeParameter) as TypeParameter ;
-        tp.constraint = base ;
+    function createCbTsValueofType(...[symbol, { }]: [Symbol, { base: Type ; }]) {
+        const tp = createCbTsCustomType(symbol, 0 as TypeFlags) ;
+        tp.isCbTsValueofType = true ;
         return tp ;
     }
 
@@ -18233,11 +18241,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                             }
                             if (unifyTypesForAliases) {
                                 let tp = baseType;
-                                if ((tp.flags & TypeFlags.TypeParameter)) {
-                                    tp = tp as TypeParameter ;
-                                    if (isCbTsValueofType(tp as TypeParameter)) {
-                                        return tp ;
-                                    }
+                                if (isCbTsValueofType(tp)) {
+                                    tp = undefined ?? tp ;
+                                    return tp ;
                                 }
                                 // if (isTupleType(tp)) {
                                 //     return true ;
@@ -18258,6 +18264,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     function isGecwConstantType(...[baseType]: [Type]): boolean {
         {
             const tp = baseType ;
+            if (isCbTsValueofType(tp)) {
+                return true ;
+            }
             if ((
                 false
                 || (tp === undefinedType)
@@ -18290,23 +18299,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return false ;
     }
     function isCbTsValueofType(...[tp]: [Type | CbTsValueofTypeOps]): false | (true) {
-        const {
-            // constraint = unknownType ,
-            symbol: innerSymbolRef,
-        } = tp satisfies TypeParameter ;
-        const innerSymbolRefLinks = (
-            // TODO
-            getSymbolLinks(innerSymbolRef)
-        ) ;
-        if (innerSymbolRefLinks.uniqueESSymbolType) {
-            if (innerSymbolRefLinks.uniqueESSymbolType === tp) {
-                return true ;
-            }
-            else {
-                return false ;
-            }
-        }
-        return false ;
+        return tp.isCbTsValueofType ?? false ;
     }
 
     function getThisType(node: Node): Type {
@@ -20107,7 +20100,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return true;
             }
         }
-        else if (!((source.flags | target.flags) & (TypeFlags.UnionOrIntersection | TypeFlags.IndexedAccess | TypeFlags.Conditional | TypeFlags.Substitution))) {
+        else if (!((source.flags | target.flags) & (TypeFlags.UnionOrIntersection | TypeFlags.IndexedAccess | TypeFlags.Conditional | TypeFlags.Substitution)) && (
+            !isCbTsValueofType(source) && !isCbTsValueofType(target)
+        )) {
             // We have excluded types that may simplify to other forms, so types must have identical flags
             if (source.flags !== target.flags) return false;
             if (source.flags & TypeFlags.Singleton) return true;
@@ -20118,7 +20113,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return !!(related & RelationComparisonResult.Succeeded);
             }
         }
-        if (source.flags & TypeFlags.StructuredOrInstantiable || target.flags & TypeFlags.StructuredOrInstantiable) {
+        if (source.flags & TypeFlags.StructuredOrInstantiable || target.flags & TypeFlags.StructuredOrInstantiable || (
+            isCbTsValueofType(source) || isCbTsValueofType(target)
+        )) {
             return checkTypeRelatedTo(source, target, relation, /*errorNode*/ undefined);
         }
         return false;
@@ -20135,6 +20132,28 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 type.flags & TypeFlags.UnionOrIntersection ? getNormalizedUnionOrIntersectionType(type as UnionOrIntersectionType, writing) :
                 type.flags & TypeFlags.Substitution ? writing ? (type as SubstitutionType).baseType : getSubstitutionIntersection(type as SubstitutionType) :
                 type.flags & TypeFlags.Simplifiable ? getSimplifiedType(type, writing) :
+                isCbTsValueofType(type) ? (
+                    (function xUnfoldCbTsValueofType(...[type]: [CbTsValueofTypeOps]): Type {
+                        const {
+                            symbol: typeTargetSymbol ,
+                        } = type ;
+                        const typeTargetSymbolIntrinsicType = (
+                            getTypeOfSymbol(typeTargetSymbol)
+                        ) ;
+                        if (isCbTsValueofType(typeTargetSymbolIntrinsicType)) {
+                            return (
+                                xUnfoldCbTsValueofType(typeTargetSymbolIntrinsicType)
+                            ) ;
+                        }
+                        if ((
+                            isGecwConstantType(typeTargetSymbolIntrinsicType)
+                            || (type.flags & (TypeFlags.Literal))
+                        )) {
+                            return typeTargetSymbolIntrinsicType ;
+                        }
+                        return type ;
+                    })(type)
+                ) :
                 type;
             if (t === type) return t;
             type = t;
@@ -20554,6 +20573,35 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             // the target is exactly the constraint.
             if (source.flags & TypeFlags.TypeParameter && getConstraintOfType(source) === target) {
                 return Ternary.True;
+            }
+
+            if ((
+                relation === subtypeRelation || relation === assignableRelation
+            )) {
+                if (isCbTsValueofType(source)) {
+                    if (source === target) return Ternary.True;
+                    if (target.flags & TypeFlags.Union) {
+                        const {
+                            types : targetTypeAlts,
+                        } = target as UnionType ;
+                        if ((
+                            some(targetTypeAlts, (target: Type) => (
+                                isTypeRelatedTo(source, target, relation)
+                            ))
+                        )) {
+                            return Ternary.True ;
+                        }
+                        else {
+                            return Ternary.False ;
+                        }
+                    }
+                    const sourceSymbolFormalType = (
+                        getTypeOfSymbol(source.symbol)
+                    ) ;
+                    if (isTypeRelatedTo(sourceSymbolFormalType, target, relation)) {
+                        return Ternary.True ;
+                    }
+                }
             }
 
             // See if we're relating a definitely non-nullable type to a union that includes null and/or undefined
@@ -27832,7 +27880,17 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             // to not be computed unless actually used; expensive.
             function GST() {
                 const sImpliedType = (
-                    getIntersectionType([type, ssType])
+                    ((
+                        Debug.assert((
+                            isTypeAssignableTo(ssType, type)
+                        ), (
+                            `'ssType' shall be assignable to 'type'`
+                        ), () => (
+                            `'ssType' (${typeToString(ssType) }) shall be assignable to 'type' (${typeToString(type) })`
+                        ))
+                    ), (
+                        ssType
+                    ))
                 ) ;
                 return {
                     ssType ,
