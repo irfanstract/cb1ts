@@ -27923,8 +27923,28 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         // }
         if ((
             declaration
-            &&
-            isConstVariable(localOrExportSymbol)
+        )) {
+        const refersToConst = (
+            false
+            // || isConstVariable(localOrExportSymbol)
+            || (
+                ((): boolean => {
+                    const { flags: effectiveFlags1, } = localOrExportSymbol ;
+                    const { flags: effectiveFlags2, } = declaration ;
+                    return (
+                        false
+                        || (!!(effectiveFlags1 & SymbolFlags.Alias))
+                        || (!!(effectiveFlags1 & (SymbolFlags.Namespace | SymbolFlags.Type)))
+                        || (!!(effectiveFlags1 & SymbolFlags.Variable) && !!(effectiveFlags2 & NodeFlags.Const))
+                        || (!!(effectiveFlags1 & SymbolFlags.Function))
+                        || (true && !!(effectiveFlags2 & NodeFlags.Namespace))
+                    ) ;
+                })()
+            )
+        );
+        if ((
+            false
+            || refersToConst
         )) {
             const ssType = (
                 getCbTsValueofTypeForNode(declaration)
@@ -27961,6 +27981,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     sImpliedType ,
                 } ;
             }
+        } //
         }
 
         if (assignmentKind) {
