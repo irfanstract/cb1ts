@@ -6066,6 +6066,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         // get symbol of the first identifier of the entityName
         let meaning: SymbolFlags;
         if (entityName.parent.kind === SyntaxKind.TypeQuery ||
+            entityName.parent.kind === SyntaxKind.CbTsValueofType ||
             entityName.parent.kind === SyntaxKind.ExpressionWithTypeArguments && !isPartOfTypeNode(entityName.parent) ||
             entityName.parent.kind === SyntaxKind.ComputedPropertyName) {
             // Typeof value
