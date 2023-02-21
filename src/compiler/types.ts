@@ -207,6 +207,7 @@ export const enum SyntaxKind {
     StringKeyword,
     SymbolKeyword,
     TypeKeyword,
+    ValueOfKeyword,
     UndefinedKeyword,
     UniqueKeyword,
     UnknownKeyword,
@@ -243,6 +244,7 @@ export const enum SyntaxKind {
     FunctionType,
     ConstructorType,
     TypeQuery,
+    CbTsValueofType,
     TypeLiteral,
     ArrayType,
     TupleType,
@@ -650,6 +652,7 @@ export type KeywordSyntaxKind =
     | SyntaxKind.TryKeyword
     | SyntaxKind.TypeKeyword
     | SyntaxKind.TypeOfKeyword
+    | SyntaxKind.ValueOfKeyword
     | SyntaxKind.UndefinedKeyword
     | SyntaxKind.UniqueKeyword
     | SyntaxKind.UnknownKeyword
@@ -701,6 +704,7 @@ export type TypeNodeSyntaxKind =
     | SyntaxKind.FunctionType
     | SyntaxKind.ConstructorType
     | SyntaxKind.TypeQuery
+    | SyntaxKind.CbTsValueofType
     | SyntaxKind.TypeLiteral
     | SyntaxKind.ArrayType
     | SyntaxKind.TupleType
@@ -2222,6 +2226,18 @@ export interface TypeQueryNode extends NodeWithTypeArguments {
     readonly kind: SyntaxKind.TypeQuery;
     readonly exprName: EntityName;
 }
+
+export interface CbTsValueofTypeNode extends NodeWithTypeArguments, CbTsValueofTypeNodeOpsJustLikeTypeQueryNodes {
+    readonly kind: SyntaxKind.CbTsValueofType;
+    readonly exprName: Expression;
+}
+/* demonstrating the analogousness */
+type CbTsValueofTypeNodeOpsJustLikeTypeQueryNodes = {
+    /* reset each field's type yet maintain the optionality */
+    [k in keyof Pick<TypeQueryNode, (
+        | "exprName"
+    )>]?: unknown ;
+} ;
 
 // A TypeLiteral is the declaration node for an anonymous symbol.
 export interface TypeLiteralNode extends TypeNode, Declaration {
@@ -8301,6 +8317,8 @@ export interface NodeFactory {
     updateConstructorTypeNode(node: ConstructorTypeNode, modifiers: readonly Modifier[] | undefined, typeParameters: NodeArray<TypeParameterDeclaration> | undefined, parameters: NodeArray<ParameterDeclaration>, type: TypeNode): ConstructorTypeNode;
     createTypeQueryNode(exprName: EntityName, typeArguments?: readonly TypeNode[]): TypeQueryNode;
     updateTypeQueryNode(node: TypeQueryNode, exprName: EntityName, typeArguments?: readonly TypeNode[]): TypeQueryNode;
+    createCbTsValueofTypeNode(exprName: CbTsValueofTypeNode["exprName"]): CbTsValueofTypeNode;
+    updateCbTsValueofTypeNode(...args: [CbTsValueofTypeNode, ...Parameters<this["createCbTsValueofTypeNode"]>]): CbTsValueofTypeNode;
     createTypeLiteralNode(members: readonly TypeElement[] | undefined): TypeLiteralNode;
     updateTypeLiteralNode(node: TypeLiteralNode, members: NodeArray<TypeElement>): TypeLiteralNode;
     createArrayTypeNode(elementType: TypeNode): ArrayTypeNode;
