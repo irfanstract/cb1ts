@@ -661,6 +661,12 @@ const forEachChildTable: ForEachChildTable = {
         return visitNode(cbNode, node.exprName) ||
             visitNodes(cbNode, cbNodes, node.typeArguments);
     },
+    [SyntaxKind.CbTsValueofType]: (
+        function forEachChildInValueofType<T>(node: ts.CbTsValueofTypeNode, cbNode: (node: Node) => T | undefined, cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
+            return visitNode(cbNode, node.exprName) ||
+                visitNodes(cbNode, cbNodes, node.typeArguments);
+        } satisfies (ForEachChildTable)[keyof ForEachChildTable]
+    ),
     [SyntaxKind.TypeLiteral]: function forEachChildInTypeLiteral<T>(node: TypeLiteralNode, cbNode: (node: Node) => T | undefined, cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
         return visitNodes(cbNode, cbNodes, node.members);
     },

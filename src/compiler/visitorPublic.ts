@@ -791,6 +791,12 @@ const visitEachChildTable: VisitEachChildTable = {
             nodesVisitor(node.typeArguments, visitor, isTypeNode));
     },
 
+    [SyntaxKind.CbTsValueofType]: function visitEachChildOfValueofTypeNode(node, visitor, context, _nodesVisitor, nodeVisitor, _tokenVisitor) {
+        return context.factory.updateCbTsValueofTypeNode(node,
+            Debug.checkDefined(nodeVisitor(node.exprName, visitor, isExpression)),
+            );
+    },
+
     [SyntaxKind.TypeLiteral]: function visitEachChildOfTypeLiteralNode(node, visitor, context, nodesVisitor, _nodeVisitor, _tokenVisitor) {
         return context.factory.updateTypeLiteralNode(node,
             nodesVisitor(node.members, visitor, isTypeElement));
