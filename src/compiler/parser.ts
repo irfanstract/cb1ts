@@ -3804,6 +3804,19 @@ namespace Parser {
         return finishNode(factory.createTypeQueryNode(entityName, typeArguments), pos);
     }
 
+    // analogous to `parseTypeQuery`
+    function parseCbTsValueofType(): ts.CbTsValueofTypeNode {
+        const pos = getNodePos();
+        parseExpected(SyntaxKind.ValueOfKeyword); // 'valueof', not 'typeof'.
+        const entityName = parseExpression();
+        //
+        const typeArguments = (
+            !scanner.hasPrecedingLineBreak() ? tryParseTypeArguments() : undefined
+        );
+        Object(typeArguments) ; // no-unused-vars
+        return finishNode(factory.createCbTsValueofTypeNode(entityName), pos);
+    }
+
     function parseTypeParameter(): TypeParameterDeclaration {
         const pos = getNodePos();
         const modifiers = parseModifiers(/*allowDecorators*/ false, /*permitConstAsModifier*/ true);
@@ -4490,6 +4503,8 @@ namespace Parser {
             }
             case SyntaxKind.TypeOfKeyword:
                 return lookAhead(isStartOfTypeOfImportType) ? parseImportType() : parseTypeQuery();
+            case SyntaxKind.ValueOfKeyword:
+                return parseCbTsValueofType();
             case SyntaxKind.OpenBraceToken:
                 return lookAhead(isStartOfMappedType) ? parseMappedType() : parseTypeLiteral();
             case SyntaxKind.OpenBracketToken:
@@ -4523,6 +4538,7 @@ namespace Parser {
             case SyntaxKind.NullKeyword:
             case SyntaxKind.ThisKeyword:
             case SyntaxKind.TypeOfKeyword:
+            case SyntaxKind.ValueOfKeyword:
             case SyntaxKind.NeverKeyword:
             case SyntaxKind.OpenBraceToken:
             case SyntaxKind.OpenBracketToken:
