@@ -37592,7 +37592,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             (node.parent.kind === SyntaxKind.PropertyAccessExpression && (node.parent as PropertyAccessExpression).expression === node) ||
             (node.parent.kind === SyntaxKind.ElementAccessExpression && (node.parent as ElementAccessExpression).expression === node) ||
             ((node.kind === SyntaxKind.Identifier || node.kind === SyntaxKind.QualifiedName) && isInRightSideOfImportOrExportAssignment(node as Identifier) ||
-                (node.parent.kind === SyntaxKind.TypeQuery && (node.parent as TypeQueryNode).exprName === node)) ||
+                ((node.parent.kind === SyntaxKind.TypeQuery || node.parent.kind === SyntaxKind.CbTsValueofType) && (node.parent as (TypeQueryNode | ts.CbTsValueofTypeNode)).exprName === node)) ||
             (node.parent.kind === SyntaxKind.ExportSpecifier); // We allow reexporting const enums
 
         if (!ok) {
