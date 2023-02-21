@@ -1045,6 +1045,7 @@ export type HasChildren =
     | FunctionTypeNode
     | ConstructorTypeNode
     | TypeQueryNode
+    | CbTsValueofTypeNode
     | TypeLiteralNode
     | ArrayTypeNode
     | TupleTypeNode
