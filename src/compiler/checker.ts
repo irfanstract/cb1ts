@@ -27929,7 +27929,11 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             const ssType = (
                 getCbTsValueofTypeForNode(declaration)
             ) ;
-            if (isConfigTellingAgainstWidening(WideningMode1.PreserveOriginalArithmeticExpressionOrInterpolation)) {
+            if ((
+                isConfigTellingAgainstWidening(WideningMode1.PreserveOriginalArithmeticExpressionOrInterpolation)
+                ||
+                ((checkMode ?? 0) & CheckMode.ForceCbTsValueofType)
+            )) {
                 const {
                     sImpliedType ,
                 } = GST() ;
