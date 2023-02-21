@@ -15517,6 +15517,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                  * there's need for special-casing for now
                  */
                 switch (referent.kind) {
+                    case SyntaxKind.Identifier:
+                        return (
+                            checkIdentifier(referent as Identifier, chkMode)
+                        ) ;
                     default:
                         return (
                             checkExpression(referent, chkMode)
