@@ -18267,7 +18267,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 unifyTypesForAliases: true ,
             }
         ) ;
-        if (isValidESSymbolDeclaration(node)) {
+        if (isDeclaration(node)) {
             const symbol = isCommonJsExportPropertyAssignment(node) ? getSymbolOfNode((node as BinaryExpression).left) : getSymbolOfNode(node);
             if (symbol) {
                 const links = getSymbolLinks(symbol);
@@ -18305,7 +18305,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 );
             }
         }
-        return esSymbolType;
+        return unresolvedType;
     }
     function isGecwConstantType(...[baseType]: [Type]): boolean {
         {
