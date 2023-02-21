@@ -15805,6 +15805,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             case SyntaxKind.TypeReference:
                 return isJSDocTypeReference(node) || !!(resolveTypeReferenceName(node as TypeReferenceNode, SymbolFlags.Type).flags & SymbolFlags.TypeAlias);
             case SyntaxKind.TypeQuery:
+            case SyntaxKind.CbTsValueofType:
                 return true;
             case SyntaxKind.TypeOperator:
                 return (node as TypeOperatorNode).operator !== SyntaxKind.UniqueKeyword && mayResolveTypeAlias((node as TypeOperatorNode).type);
