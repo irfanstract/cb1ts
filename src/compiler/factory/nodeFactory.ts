@@ -598,6 +598,7 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         createTypeQueryNode,
         updateTypeQueryNode,
         createCbTsValueofTypeNode,
+        updateCbTsValueofTypeNode,
         createTypeLiteralNode,
         updateTypeLiteralNode,
         createArrayTypeNode,
@@ -2316,6 +2317,21 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         node.exprName = exprName;
         node.transformFlags = TransformFlags.ContainsTypeScript;
         return node;
+    }
+
+    function updateCbTsValueofTypeNode(...[
+        this1,
+        newExprName,
+    ]: Parameters<NodeFactory["updateCbTsValueofTypeNode"]>): ReturnType<typeof createCbTsValueofTypeNode> {
+        if ((
+            false
+            || this1.exprName !== newExprName
+        )) {
+            return update((
+                createCbTsValueofTypeNode(newExprName)
+            ), this1) ;
+        }
+        else return this1 ;
     }
 
     // @api
