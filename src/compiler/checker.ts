@@ -1247,6 +1247,8 @@ export const enum CheckMode {
     RestBindingElement = 1 << 6,                    // Checking a type that is going to be used to determine the type of a rest binding element
                                                     //   e.g. in `const { a, ...rest } = foo`, when checking the type of `foo` to determine the type of `rest`,
                                                     //   we need to preserve generic types instead of substituting them for constraints
+    /** NOT FULLY SUPPORTED */
+    ForceCbTsValueofType = 1 << 19                  // force returning `valueof` types . bit-pattern subject to change.
 }
 
 /** @internal */
