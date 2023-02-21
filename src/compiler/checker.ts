@@ -18418,6 +18418,8 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return getTypeFromTypeReference(node as ExpressionWithTypeArguments);
             case SyntaxKind.TypeQuery:
                 return getTypeFromTypeQueryNode(node as TypeQueryNode);
+            case SyntaxKind.CbTsValueofType:
+                return getTypeFromCbTsValueofType(node as ts.CbTsValueofTypeNode);
             case SyntaxKind.ArrayType:
             case SyntaxKind.TupleType:
                 return getTypeFromArrayOrTupleTypeNode(node as ArrayTypeNode | TupleTypeNode);
