@@ -207,6 +207,7 @@ export const enum SyntaxKind {
     StringKeyword,
     SymbolKeyword,
     TypeKeyword,
+    ValueOfKeyword,
     UndefinedKeyword,
     UniqueKeyword,
     UnknownKeyword,
@@ -651,6 +652,7 @@ export type KeywordSyntaxKind =
     | SyntaxKind.TryKeyword
     | SyntaxKind.TypeKeyword
     | SyntaxKind.TypeOfKeyword
+    | SyntaxKind.ValueOfKeyword
     | SyntaxKind.UndefinedKeyword
     | SyntaxKind.UniqueKeyword
     | SyntaxKind.UnknownKeyword
