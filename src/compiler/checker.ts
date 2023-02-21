@@ -44576,6 +44576,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return checkTypePredicate(node as TypePredicateNode);
             case SyntaxKind.TypeQuery:
                 return checkTypeQuery(node as TypeQueryNode);
+            case SyntaxKind.CbTsValueofType:
+                // TODO
+                return void getTypeFromCbTsValueofType(node as ts.CbTsValueofTypeNode);
             case SyntaxKind.TypeLiteral:
                 return checkTypeLiteral(node as TypeLiteralNode);
             case SyntaxKind.ArrayType:
