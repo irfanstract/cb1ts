@@ -8326,6 +8326,7 @@ export interface NodeFactory {
     createTypeQueryNode(exprName: EntityName, typeArguments?: readonly TypeNode[]): TypeQueryNode;
     updateTypeQueryNode(node: TypeQueryNode, exprName: EntityName, typeArguments?: readonly TypeNode[]): TypeQueryNode;
     createCbTsValueofTypeNode(exprName: CbTsValueofTypeNode["exprName"]): CbTsValueofTypeNode;
+    updateCbTsValueofTypeNode(...args: [CbTsValueofTypeNode, ...Parameters<this["createCbTsValueofTypeNode"]>]): CbTsValueofTypeNode;
     createTypeLiteralNode(members: readonly TypeElement[] | undefined): TypeLiteralNode;
     updateTypeLiteralNode(node: TypeLiteralNode, members: NodeArray<TypeElement>): TypeLiteralNode;
     createArrayTypeNode(elementType: TypeNode): ArrayTypeNode;
