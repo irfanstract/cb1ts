@@ -6159,6 +6159,14 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         // Otherwise, we always strip comments out.
         const printer = type !== unresolvedType ? createPrinterWithRemoveComments() : createPrinterWithDefaults();
         const sourceFile = enclosingDeclaration && getSourceFileOfNode(enclosingDeclaration);
+        if ((
+            false
+            || isCbTsValueofType(type)
+            // || (type.flags & TypeFlags.ESSymbolLike)
+            // || (type.flags & TypeFlags.Object)
+        )) {
+            writer.write(`/* id=0x${(type.id satisfies number).toString(0x10) } */ `) ;
+        }
         printer.writeNode(EmitHint.Unspecified, typeNode, /*sourceFile*/ sourceFile, writer);
         const result = writer.getText();
 
