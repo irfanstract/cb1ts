@@ -13797,6 +13797,27 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         const t = !(type.flags & TypeFlags.Instantiable) ? type : getBaseConstraintOfType(type) || unknownType;
         return getObjectFlags(t) & ObjectFlags.Mapped ? getApparentTypeOfMappedType(t as MappedType) :
             t.flags & TypeFlags.Intersection ? getApparentTypeOfIntersectionType(t as IntersectionType) :
+            isCbTsValueofType(t) ? (
+                /**
+                 * reducing the
+                 */
+                ((): Type => {
+                    const formalT = (
+                        getTypeOfSymbol(t.symbol)
+                    ) ;
+                    // in certain case `formalT === t`
+                    if (t !== formalT) {
+                        let tp2: Type = (
+                            getApparentType(formalT)
+                        ) ;
+                        tp2 = undefined ?? tp2 ; // prefer-const
+                        // TODO
+                        return tp2 ;
+                    }
+                    // TODO
+                    return t ;
+                })()
+            ) :
             t.flags & TypeFlags.StringLike ? globalStringType :
             t.flags & TypeFlags.NumberLike ? globalNumberType :
             t.flags & TypeFlags.BigIntLike ? getGlobalBigIntType() :
