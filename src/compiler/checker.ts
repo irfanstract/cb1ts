@@ -31551,6 +31551,21 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             );
             propType = isThisPropertyAccessInConstructor(node, prop) ? autoType : writing ? getWriteTypeOfSymbol(prop) : getTypeOfSymbol(prop);
         }
+        if ((isWriteAccess(node) satisfies boolean) === false) {
+            propType = (
+                ((): Type => {
+                    if (isConfigTellingAgainstWidening(WideningMode1.PreserveOriginalArithmeticExpressionOrInterpolation)) {
+                        return (
+                            getIntersectionType([
+                                propType,
+                                getIndexedAccessType(leftType, keyType, AccessFlags.ExpressionPosition) ,
+                            ])
+                        ) ;
+                    }
+                    return propType ;
+                })()
+            );
+        }
 
         return getFlowTypeOfAccessExpression(node, prop, propType, right, checkMode);
     }
