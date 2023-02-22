@@ -6294,11 +6294,12 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             }
 
             if (isCbTsValueofType(type)) {
-                return (
+                let resultingNode: TypeNode = (
                     factory.createCbTsValueofTypeNode((
                         symbolToExpression(type.symbol, context, SymbolFlags.None)
                     ))
                 ) ;
+                return resultingNode ;
             }
 
             if (type.flags & TypeFlags.Any) {
