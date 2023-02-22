@@ -1887,6 +1887,8 @@ export function createPrinter(printerOptions: PrinterOptions = {}, handlers: Pri
                     return emitConstructorType(node as ConstructorTypeNode);
                 case SyntaxKind.TypeQuery:
                     return emitTypeQuery(node as TypeQueryNode);
+                case SyntaxKind.CbTsValueofType:
+                    return emitCbTsValueofType(node as ts.CbTsValueofTypeNode) ;
                 case SyntaxKind.TypeLiteral:
                     return emitTypeLiteral(node as TypeLiteralNode);
                 case SyntaxKind.ArrayType:
@@ -2754,6 +2756,44 @@ export function createPrinter(printerOptions: PrinterOptions = {}, handlers: Pri
         writeSpace();
         emit(node.exprName);
         emitTypeArguments(node, node.typeArguments);
+    }
+
+    function emitCbTsValueofType(node: ts.CbTsValueofTypeNode) {
+        const { exprName, typeArguments, } = node ;
+        const doesNotNeedParentheses = ((): boolean => {
+            switch (exprName.kind) {
+                case SyntaxKind.Identifier :
+                case SyntaxKind.QualifiedName :
+                case SyntaxKind.NumericLiteral :
+                case SyntaxKind.StringLiteral :
+                    return true ;
+            }
+            if (isLiteralExpression(exprName)) {
+                return true ;
+            }
+            return false ;
+        })() ;
+
+        const doEmitImplWithoutParentheses = () => {
+            // if (1) {
+            //     write(`/* Referent=${ } */`) ;
+            //     writeSpace() ;
+            // }
+            writeKeyword("valueof");
+            writeSpace();
+            emit(exprName);
+            Debug.assert(typeArguments === undefined, `sorry, 'typeArguments' on CbTsValueofTypeNode does not make sense.`) ;
+            emitTypeArguments(node, node.typeArguments);
+        } ;
+
+        if (doesNotNeedParentheses) {
+            doEmitImplWithoutParentheses() ;
+        }
+        else {
+            writePunctuation("(") ;
+            doEmitImplWithoutParentheses() ;
+            writePunctuation(")") ;
+        }
     }
 
     function emitTypeLiteral(node: TypeLiteralNode) {
