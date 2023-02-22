@@ -18374,6 +18374,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     return false ;
                 }
             }
+            if (tp.flags & TypeFlags.UniqueESSymbol) {
+                return true ;
+            }
         }
         return false ;
     }
