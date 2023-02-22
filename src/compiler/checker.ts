@@ -17608,7 +17608,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         // for a generic T and a non-generic K, we eagerly resolve T[K] if it originates in an expression. This is to
         // preserve backwards compatibility. For example, an element access 'this["foo"]' has always been resolved
         // eagerly using the constraint type of 'this' at the given location.
-        if (isGenericIndexType(indexType) || (accessNode && accessNode.kind !== SyntaxKind.IndexedAccessType ?
+        if (isGenericIndexType(indexType) || (
+            // `valueof` types shall in-this-case behave as type-parameters.
+            isCbTsValueofType(objectType)
+        ) || (accessNode && accessNode.kind !== SyntaxKind.IndexedAccessType ?
             isGenericTupleType(objectType) && !indexTypeLessThan(indexType, objectType.target.fixedLength) :
             isGenericObjectType(objectType) && !(isTupleType(objectType) && indexTypeLessThan(indexType, objectType.target.fixedLength)))) {
             if (objectType.flags & TypeFlags.AnyOrUnknown) {
