@@ -31561,6 +31561,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         }
 
         let propType: Type;
+        let keyType: Type;
         if (!prop) {
             const indexInfo = !isPrivateIdentifier(right) && (assignmentKind === AssignmentKind.None || !isGenericObjectType(leftType) || isThisTypeParameter(leftType)) ?
                 getApplicableIndexInfoForName(apparentType, right.escapedText) : undefined;
@@ -31587,6 +31588,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 error(node, Diagnostics.Index_signature_in_type_0_only_permits_reading, typeToString(apparentType));
             }
 
+            keyType = indexInfo.keyType ;
             propType = (compilerOptions.noUncheckedIndexedAccess && !isAssignmentTarget(node)) ? getUnionType([indexInfo.type, missingType]) : indexInfo.type;
             if (compilerOptions.noPropertyAccessFromIndexSignature && isPropertyAccessExpression(node)) {
                 error(right, Diagnostics.Property_0_comes_from_an_index_signature_so_it_must_be_accessed_with_0, unescapeLeadingUnderscores(right.escapedText));
@@ -31609,6 +31611,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return errorType;
             }
 
+            keyType = (
+                // TODO
+                getStringLiteralType(prop.escapedName as string)
+            );
             propType = isThisPropertyAccessInConstructor(node, prop) ? autoType : writing ? getWriteTypeOfSymbol(prop) : getTypeOfSymbol(prop);
         }
 
