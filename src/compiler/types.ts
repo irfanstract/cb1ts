@@ -6806,6 +6806,7 @@ export interface WideningContext {
     propertyName?: __String;        // Name of property in parent
     siblings?: Type[];              // Types of siblings
     resolvedProperties?: Symbol[];  // Properties occurring in sibling object literals
+    primitiveOrObjectOrArrayLiteralTypeWideningRequired: 0 | 1;
 }
 
 /** @internal */
@@ -6978,6 +6979,12 @@ export enum PollingWatchKind {
 
 export type CompilerOptionsValue = string | number | boolean | (string | number)[] | string[] | MapLike<string[]> | PluginImport[] | ProjectReference[] | null | undefined;
 
+import { cbTsTypeInferenceConfigKey, } from "./_namespaces/ts";
+import { cbTsTypeInferenceModeMap, } from "./_namespaces/ts";
+export type CbTsTypeInferenceModePresent = (
+    ReturnType<typeof cbTsTypeInferenceModeMap.get> & {}
+) ;
+
 export interface CompilerOptions {
     /** @internal */ all?: boolean;
     allowImportingTsExtensions?: boolean;
@@ -7067,6 +7074,7 @@ export interface CompilerOptions {
     /** @internal */
     noDtsResolution?: boolean;
     noUncheckedIndexedAccess?: boolean;
+    [cbTsTypeInferenceConfigKey]?: CbTsTypeInferenceModePresent ;
     out?: string;
     outDir?: string;
     outFile?: string;

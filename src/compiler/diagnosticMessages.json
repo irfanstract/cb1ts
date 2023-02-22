@@ -7540,6 +7540,34 @@
         "category": "Message",
         "code": 95175
     },
+    "inferred type specificity.": {
+        "category": "Message",
+        "code": 4870003
+    },
+    "Always infer simple types, never literal types.": {
+        "category": "Message",
+        "code": 4870004
+    },
+    "Always infer simple types, never literal types, except for primitive-typed expr(s).": {
+        "category": "Message",
+        "code": 4870005
+    },
+    "Always infer simple types, never literal types, except for primitive-typed expr(s) and loaded values.": {
+        "category": "Message",
+        "code": 4870006
+    },
+    "Always maintain actual type, except for opaque interpolations, and excluding function-or-class bodies.": {
+        "category": "Message",
+        "code": 4870007
+    },
+    "Always maintain actual type, excluding function-or-class bodies.": {
+        "category": "Message",
+        "code": 4870008
+    },
+    "Always maintain actual expressions.": {
+        "category": "Message",
+        "code": 4870009
+    },
 
     "No value exists in scope for the shorthand property '{0}'. Either declare one or provide an initializer.": {
         "category": "Error",
