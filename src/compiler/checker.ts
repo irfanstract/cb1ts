@@ -10515,6 +10515,43 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return getFlowTypeOfReference(reference, autoType, initialType);
     }
 
+    function isConfigTellingAgainstWidening(): boolean {
+        return (
+            false
+            || (
+                true
+                && (
+                    ([
+                        ts.cbTsTypeInferenceModeMap.get("medium-ez")! ,
+                        ts.cbTsTypeInferenceModeMap.get("medium")! ,
+                        ts.cbTsTypeInferenceModeMap.get("medium-flw")! ,
+                        ts.cbTsTypeInferenceModeMap.get("medium-flw-1")! ,
+                        ts.cbTsTypeInferenceModeMap.get("much")! ,
+                    ] satisfies ts.CbTsTypeInferenceModePresent[])
+                    .includes(compilerOptions.inferredTypeSpecificity ?? 0)
+                )
+            )
+        ) ;
+    }
+    // context ? !context.wideningRequired : isConfigTellingAgainstWidening()
+    function isContextOrConfigTellingAgainstWidening(context: WideningContext | undefined): boolean {
+        return (
+            (context ? !context.wideningRequired : false) || isConfigTellingAgainstWidening()
+        ) ;
+    }
+
+    /**
+     *
+     *
+     * @deprecated
+     * semantically,
+     * {@link getWidenedType} and its variants are all no different in being respectful to {@link isContextOrConfigTellingAgainstWidening}.
+     *
+     */
+    function getConfigDefinedlyWidenedType(...[tpAfterOptionality]: [Type]): Type {
+        return getWidenedType(tpAfterOptionality) ;
+    }
+
     function getWidenedTypeForAssignmentDeclaration(symbol: Symbol, resolvedSymbol?: Symbol) {
         // function/class/{} initializers are themselves containers, so they won't merge in the same way as other initializers
         const container = getAssignedExpandoInitializer(symbol.valueDeclaration);
