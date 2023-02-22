@@ -31623,7 +31623,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     if (isConfigTellingAgainstWidening(WideningMode1.PreserveOriginalArithmeticExpressionOrInterpolation)) {
                         return (
                             getIntersectionType([
-                                propType,
+                                // propType,
                                 getIndexedAccessType(leftType, keyType, AccessFlags.ExpressionPosition) ,
                             ])
                         ) ;
