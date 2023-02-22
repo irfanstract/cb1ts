@@ -597,6 +597,8 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         updateConstructorTypeNode,
         createTypeQueryNode,
         updateTypeQueryNode,
+        createCbTsValueofTypeNode,
+        updateCbTsValueofTypeNode,
         createTypeLiteralNode,
         updateTypeLiteralNode,
         createArrayTypeNode,
@@ -2300,6 +2302,36 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
             || node.typeArguments !== typeArguments
             ? update(createTypeQueryNode(exprName, typeArguments), node)
             : node;
+    }
+
+    type CbTsValueofTypeNode1 = (
+        ReturnType<NodeFactory["createCbTsValueofTypeNode"]> & {}
+    ) ;
+    // @api
+    function createCbTsValueofTypeNode(...[
+        exprName,
+    ]: Parameters<NodeFactory["createCbTsValueofTypeNode"]>): CbTsValueofTypeNode1 {
+        const node = (
+            createBaseNode<CbTsValueofTypeNode1>(SyntaxKind.CbTsValueofType)
+        );
+        node.exprName = exprName;
+        node.transformFlags = TransformFlags.ContainsTypeScript;
+        return node;
+    }
+
+    function updateCbTsValueofTypeNode(...[
+        this1,
+        newExprName,
+    ]: Parameters<NodeFactory["updateCbTsValueofTypeNode"]>): ReturnType<typeof createCbTsValueofTypeNode> {
+        if ((
+            false
+            || this1.exprName !== newExprName
+        )) {
+            return update((
+                createCbTsValueofTypeNode(newExprName)
+            ), this1) ;
+        }
+        else return this1 ;
     }
 
     // @api
