@@ -6135,6 +6135,30 @@ export interface Type {
     /** @internal */ id: TypeId;      // Unique ID
     /** @internal */ checker: TypeChecker;
     symbol: Symbol;                  // Symbol associated with type (if any)
+    /**
+     * {@link isCbTsValueofType}
+     */
+    memberValueofTypeCache?: (
+        & {
+            /**
+             * `keyType` must be a type reasonable for member access.
+             * - `"bar"`         -> `ctx.bar `
+             * - `"myOp"`        -> `ctx.myOp`
+             * - `number`        -> `values[val satisfies number]`
+             * - `string`        -> `values[val satisfies string]`
+             * - `typeof recognSymbol // names a Symbol`
+             *                   -> `values[recognSymbol]`
+             *
+             * the signature matches {@link Map.get}
+             *
+             */
+            get(...args: [
+                keyType: Type ,
+                options?: {
+                } ,
+            ]): Type | undefined ;
+        }
+    ) ;
     pattern?: DestructuringPattern;  // Destructuring pattern represented by type (if any)
     aliasSymbol?: Symbol;            // Alias associated with type
     aliasTypeArguments?: readonly Type[]; // Alias type arguments (if any)
