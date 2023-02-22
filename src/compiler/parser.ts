@@ -661,6 +661,12 @@ const forEachChildTable: ForEachChildTable = {
         return visitNode(cbNode, node.exprName) ||
             visitNodes(cbNode, cbNodes, node.typeArguments);
     },
+    [SyntaxKind.CbTsValueofType]: (
+        function forEachChildInValueofType<T>(node: ts.CbTsValueofTypeNode, cbNode: (node: Node) => T | undefined, cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
+            return visitNode(cbNode, node.exprName) ||
+                visitNodes(cbNode, cbNodes, node.typeArguments);
+        } satisfies (ForEachChildTable)[keyof ForEachChildTable]
+    ),
     [SyntaxKind.TypeLiteral]: function forEachChildInTypeLiteral<T>(node: TypeLiteralNode, cbNode: (node: Node) => T | undefined, cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
         return visitNodes(cbNode, cbNodes, node.members);
     },
@@ -3804,6 +3810,19 @@ namespace Parser {
         return finishNode(factory.createTypeQueryNode(entityName, typeArguments), pos);
     }
 
+    // analogous to `parseTypeQuery`
+    function parseCbTsValueofType(): ts.CbTsValueofTypeNode {
+        const pos = getNodePos();
+        parseExpected(SyntaxKind.ValueOfKeyword); // 'valueof', not 'typeof'.
+        const entityName = parseExpression();
+        //
+        const typeArguments = (
+            !scanner.hasPrecedingLineBreak() ? tryParseTypeArguments() : undefined
+        );
+        Object(typeArguments) ; // no-unused-vars
+        return finishNode(factory.createCbTsValueofTypeNode(entityName), pos);
+    }
+
     function parseTypeParameter(): TypeParameterDeclaration {
         const pos = getNodePos();
         const modifiers = parseModifiers(/*allowDecorators*/ false, /*permitConstAsModifier*/ true);
@@ -4490,6 +4509,8 @@ namespace Parser {
             }
             case SyntaxKind.TypeOfKeyword:
                 return lookAhead(isStartOfTypeOfImportType) ? parseImportType() : parseTypeQuery();
+            case SyntaxKind.ValueOfKeyword:
+                return parseCbTsValueofType();
             case SyntaxKind.OpenBraceToken:
                 return lookAhead(isStartOfMappedType) ? parseMappedType() : parseTypeLiteral();
             case SyntaxKind.OpenBracketToken:
@@ -4523,6 +4544,7 @@ namespace Parser {
             case SyntaxKind.NullKeyword:
             case SyntaxKind.ThisKeyword:
             case SyntaxKind.TypeOfKeyword:
+            case SyntaxKind.ValueOfKeyword:
             case SyntaxKind.NeverKeyword:
             case SyntaxKind.OpenBraceToken:
             case SyntaxKind.OpenBracketToken:
