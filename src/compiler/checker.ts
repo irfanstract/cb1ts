@@ -6307,6 +6307,13 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                         + `Type ID: ${type.id} ; `
                     ))
                 ) ;
+                resultingNode = (
+                    ts.addSyntheticTrailingComment(resultingNode, SyntaxKind.MultiLineCommentTrivia, (
+                        ""
+                        // the type which `typeof` (not `valueof` !) would return
+                        + `Formal/Declared Type: ${typeToString(getTypeOfSymbol(type.symbol))} ; `
+                    ))
+                ) ;
                 return resultingNode ;
             }
 
