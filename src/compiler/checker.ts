@@ -18377,6 +18377,15 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             if (tp.flags & TypeFlags.UniqueESSymbol) {
                 return true ;
             }
+            if (tp.flags & TypeFlags.Object) {
+                const { symbol: tpSymbol, } = tp ;
+                // const { objectFlags: objFlags, } = tp as ObjectType ;
+                if ((
+                    (tpSymbol.flags & (SymbolFlags.ValueModule | SymbolFlags.Enum | SymbolFlags.Class))
+                )) {
+                    return true ;
+                }
+            }
         }
         return false ;
     }
