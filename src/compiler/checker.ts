@@ -6312,7 +6312,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                         ""
                         // the type which `typeof` (not `valueof` !) would return
                         + `Formal/Declared Type: ${typeToString(getTypeOfSymbol(type.symbol))} ; `
-                    ))
+                    ).replace(/^\s*|\s*$/g, () => " "))
                 ) ;
                 return resultingNode ;
             }
