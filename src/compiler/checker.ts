@@ -20691,6 +20691,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             if (source.flags & TypeFlags.TypeParameter && getConstraintOfType(source) === target) {
                 return Ternary.True;
             }
+            if (isCbTsValueofType(source) && getConstraintOfType(source) === target) {
+                return Ternary.True;
+            }
 
             if ((
                 relation === subtypeRelation || relation === assignableRelation || relation === identityRelation
