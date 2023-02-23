@@ -20693,7 +20693,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             }
 
             if ((
-                relation === subtypeRelation || relation === assignableRelation
+                relation === subtypeRelation || relation === assignableRelation || relation === identityRelation
             )) {
                 if (isCbTsValueofType(source)) {
                     if (source === target) return Ternary.True;
