@@ -6305,7 +6305,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                         // not the ID of the referenced symbol, instead being the ID of the type itself ;
                         // important since multiple symbols can share a `valueof` type
                         + `Type ID: ${type.id} ; `
-                    ))
+                    ).replace(/^\s*|\s*$/g, () => " "))
                 ) ;
                 resultingNode = (
                     ts.addSyntheticTrailingComment(resultingNode, SyntaxKind.MultiLineCommentTrivia, (
