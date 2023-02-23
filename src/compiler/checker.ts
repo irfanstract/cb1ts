@@ -6158,7 +6158,6 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         const typeNode = nodeBuilder.typeToTypeNode(type, enclosingDeclaration, toNodeBuilderFlags(flags) | NodeBuilderFlags.IgnoreErrors | (noTruncation ? NodeBuilderFlags.NoTruncation : 0));
         if (typeNode === undefined) return Debug.fail("should always get typenode");
         // The unresolved type gets a synthesized comment on `any` to hint to users that it's not a plain `any`.
-        // Otherwise, we always strip comments out.
         const printer = type !== unresolvedType ? createPrinterWithRemoveComments() : createPrinterWithDefaults();
         const sourceFile = enclosingDeclaration && getSourceFileOfNode(enclosingDeclaration);
         printer.writeNode(EmitHint.Unspecified, typeNode, /*sourceFile*/ sourceFile, writer);
@@ -6309,9 +6308,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 ) ;
                 resultingNode = (
                     ts.addSyntheticTrailingComment(resultingNode, SyntaxKind.MultiLineCommentTrivia, (
-                        ""
-                        // the type which `typeof` (not `valueof` !) would return
-                        + `Formal/Declared Type: ${typeToString(getTypeOfSymbol(type.symbol))} ; `
+                        ttnwFormatCbTsValueofTypeFormInfoTxt(type)
                     ).replace(/^\s*|\s*$/g, () => " "))
                 ) ;
                 return resultingNode ;
@@ -6535,6 +6532,45 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 const objectTypeNode = typeToTypeNodeHelper((type as IndexedAccessType).objectType, context);
                 const indexTypeNode = typeToTypeNodeHelper((type as IndexedAccessType).indexType, context);
                 context.approximateLength += 2;
+                {
+                    const {
+                        objectType,
+                        indexType,
+                    } = (
+                        (type as IndexedAccessType)
+                    ) ;
+                    if (isCbTsValueofType(objectType)) {
+                        const objectTypeSourceEffectiveForm = (
+                            // TODO
+                            getTypeOfSymbol(objectType.symbol) satisfies Type
+                        ) ;
+                        // getSymbolOfNameOrPropertyAccessExpression();
+                        const baseConstraint: Type = (
+                            // TODO
+                            undefined
+                            || getConstraintOfType(type)
+                            || getIndexedAccessType(objectTypeSourceEffectiveForm, indexType)
+                            || unresolvedType
+                        ) ;
+                        let resultingNode = factory.createIndexedAccessTypeNode(objectTypeNode, indexTypeNode) ;
+                        // disabled for making harder to read
+                        if (0) {
+                            resultingNode = (
+                                ts.addSyntheticTrailingComment(resultingNode, SyntaxKind.MultiLineCommentTrivia, (
+                                    `in ${typeToString(objectType) }`
+                                ).replace(/^\s*|\s*$/g, () => " "))
+                            ) ;
+                        }
+                        resultingNode = (
+                            ts.addSyntheticTrailingComment(resultingNode, SyntaxKind.MultiLineCommentTrivia, (
+                                ttnwFormatEffectiveFormInfoTxt({
+                                    effectiveForm: baseConstraint ,
+                                })
+                            ).replace(/^\s*|\s*$/g, () => " "))
+                        ) ;
+                        return resultingNode ;
+                    }
+                }
                 return factory.createIndexedAccessTypeNode(objectTypeNode, indexTypeNode);
             }
             if (type.flags & TypeFlags.Conditional) {
@@ -7048,6 +7084,32 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 }
                 return typeElements.length ? typeElements : undefined;
             }
+        }
+        function ttnwFormatCbTsValueofTypeFormInfoTxt(...[type]: [CbTsValueofTypeOps]): string {
+            const declaredType = getTypeOfSymbol(type.symbol) ;
+            // the type which `typeof` (not `valueof` !) would return
+            const effectiveForm = declaredType ; // TODO
+            return (
+                ttnwFormatEffectiveFormInfoTxt({
+                    effectiveForm ,
+                })
+            ) ;
+        }
+        function ttnwFormatEffectiveFormInfoTxt(...[{
+            effectiveForm ,
+        }]: [{
+            /** the type which `typeof` (not `valueof` !) would return */
+            effectiveForm: Type ;
+        }]): string {
+            // the apparent-type
+            const effectiveApparentType = getApparentType(effectiveForm) ; // TODO
+            return (
+                ""
+                // the type which `typeof` (not `valueof` !) would return
+                + `Effective Form: ${typeToString(effectiveForm)} ; `
+                // the apparent-type
+                + `Effective Apparent Type: ${typeToString(effectiveApparentType)} ; `
+            ) ;
         }
 
         function createElidedInformationPlaceholder(context: NodeBuilderContext) {
@@ -13451,9 +13513,24 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
     function getConstraintOfType(type: InstantiableType | UnionOrIntersectionType): Type | undefined {
         return type.flags & TypeFlags.TypeParameter ? getConstraintOfTypeParameter(type as TypeParameter) :
+            isCbTsValueofType(type) ? getConstraintOfCbTsValueofType(type as CbTsValueofTypeOps) :
             type.flags & TypeFlags.IndexedAccess ? getConstraintOfIndexedAccess(type as IndexedAccessType) :
             type.flags & TypeFlags.Conditional ? getConstraintOfConditionalType(type as ConditionalType) :
             getBaseConstraintOfType(type);
+    }
+
+    function getConstraintOfCbTsValueofType(...[tp]: [CbTsValueofTypeOps]): Type {
+        const referent = tp.symbol ;
+        const referentDeclaredForm = (
+            getTypeOfSymbol(referent)
+        ) ;
+        const referentEffectiveForm = (
+            // TODO
+            referentDeclaredForm
+        ) ;
+        return (
+            referentEffectiveForm
+        ) ;
     }
 
     function getConstraintOfTypeParameter(typeParameter: TypeParameter): Type | undefined {
@@ -13471,6 +13548,21 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     }
 
     function getSimplifiedTypeOrConstraint(type: Type) {
+        // {
+        //     if (isCbTsValueofType(type)) {
+        //         const targetVarFormalType = (
+        //             getTypeOfSymbol(type.symbol) satisfies Type
+        //         ) ;
+        //         // TODO
+        //         return (
+        //             (/* ts-7023 */ (): Type | undefined => (
+        //                 (
+        //                     getApparentType(targetVarFormalType)
+        //                 ) satisfies (Type)
+        //             ))()
+        //         ) ;
+        //     }
+        // }
         const simplified = getSimplifiedType(type, /*writing*/ false);
         return simplified !== type ? simplified : getConstraintOfType(type);
     }
@@ -13657,6 +13749,25 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             if (t.flags & TypeFlags.TypeParameter) {
                 const constraint = getConstraintFromTypeParameter(t as TypeParameter);
                 return (t as TypeParameter).isThisType || !constraint ?
+                    constraint :
+                    getBaseConstraint(constraint);
+            }
+            // `valueof` types are effectively implicitly-declared type-parameters.
+            if (isCbTsValueofType(t)) {
+                const constraint = (
+                    (
+                        // TODO
+                        ((): Type => {
+                            const { symbol: referent, } = t ;
+                            const referentDeclaredForm = getTypeOfSymbol(referent) ;
+                            const referentEffectiveForm = (
+                                referentDeclaredForm // TODO
+                            ) ;
+                            return referentEffectiveForm ;
+                        })()
+                    ) satisfies Type
+                );
+                return !constraint ?
                     constraint :
                     getBaseConstraint(constraint);
             }
@@ -20673,6 +20784,31 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             // side) or the type variable (on the target side).
             const source = getNormalizedType(originalSource, /*writing*/ false);
             let target = getNormalizedType(originalTarget, /*writing*/ true);
+
+            if ((
+                (source.flags & TypeFlags.IndexedAccess)
+            )) {
+                const {
+                    indexType,
+                    objectType,
+                } = (source as IndexedAccessType) ;
+                // Object() ;
+                if ((
+                    false
+                    || (
+                        true
+                        && isCbTsValueofType(objectType)
+                        && (
+                            true
+                            && (indexType.flags & TypeFlags.StringLiteral)
+                            && ((indexType as StringLiteralType).value === "EPSILON")
+                        )
+                    )
+                    || (objectType.flags & TypeFlags.TypeParameter)
+                )) {
+                    Object() ;
+                }
+            }
 
             if (source === target) return Ternary.True;
 
@@ -31619,6 +31755,35 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             propType = (
                 ((): Type => {
                     if (isConfigTellingAgainstWidening(WideningMode1.PreserveOriginalArithmeticExpressionOrInterpolation)) {
+                        // TODO
+                        if (0) {
+                        if (parentSymbol) {
+                            if (keyType.flags & TypeFlags.StringLiteral) {
+                                const parentSYmbolTable = (
+                                    parentSymbol.members || (
+                                        parentSymbol.members = createSymbolTable()
+                                    )
+                                ) ;
+                                const key1 = (
+                                    (keyType as StringLiteralType).value as __String
+                                ) ;
+                                const accSymbol = (
+                                    (parentSYmbolTable.get(key1) || (
+                                        parentSYmbolTable.set(key1, (
+                                            // TODO
+                                            createSymbol(SymbolFlags.Variable, key1)
+                                        ))
+                                    ))
+                                    ,
+                                    parentSYmbolTable.get(key1)!
+                                ) ;
+                                // return (
+                                //     getForSymbo
+                                // ) ;
+                                Object(accSymbol) ;
+                            }
+                        }
+                        }
                         return (
                             getIntersectionType([
                                 // propType,
