@@ -13441,9 +13441,24 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
     function getConstraintOfType(type: InstantiableType | UnionOrIntersectionType): Type | undefined {
         return type.flags & TypeFlags.TypeParameter ? getConstraintOfTypeParameter(type as TypeParameter) :
+            isCbTsValueofType(type) ? getConstraintOfCbTsValueofType(type as CbTsValueofTypeOps) :
             type.flags & TypeFlags.IndexedAccess ? getConstraintOfIndexedAccess(type as IndexedAccessType) :
             type.flags & TypeFlags.Conditional ? getConstraintOfConditionalType(type as ConditionalType) :
             getBaseConstraintOfType(type);
+    }
+
+    function getConstraintOfCbTsValueofType(...[tp]: [CbTsValueofTypeOps]): Type {
+        const referent = tp.symbol ;
+        const referentDeclaredForm = (
+            getTypeOfSymbol(referent)
+        ) ;
+        const referentEffectiveForm = (
+            // TODO
+            referentDeclaredForm
+        ) ;
+        return (
+            referentEffectiveForm
+        ) ;
     }
 
     function getConstraintOfTypeParameter(typeParameter: TypeParameter): Type | undefined {
@@ -13647,6 +13662,25 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             if (t.flags & TypeFlags.TypeParameter) {
                 const constraint = getConstraintFromTypeParameter(t as TypeParameter);
                 return (t as TypeParameter).isThisType || !constraint ?
+                    constraint :
+                    getBaseConstraint(constraint);
+            }
+            // `valueof` types are effectively implicitly-declared type-parameters.
+            if (isCbTsValueofType(t)) {
+                const constraint = (
+                    (
+                        // TODO
+                        ((): Type => {
+                            const { symbol: referent, } = t ;
+                            const referentDeclaredForm = getTypeOfSymbol(referent) ;
+                            const referentEffectiveForm = (
+                                referentDeclaredForm // TODO
+                            ) ;
+                            return referentEffectiveForm ;
+                        })()
+                    ) satisfies Type
+                );
+                return !constraint ?
                     constraint :
                     getBaseConstraint(constraint);
             }
