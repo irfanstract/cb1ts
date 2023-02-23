@@ -20676,6 +20676,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             if (source.flags & TypeFlags.TypeParameter && getConstraintOfType(source) === target) {
                 return Ternary.True;
             }
+            if (isCbTsValueofType(source) && getConstraintOfType(source) === target) {
+                return Ternary.True;
+            }
 
             // See if we're relating a definitely non-nullable type to a union that includes null and/or undefined
             // plus a single non-nullable type. If so, remove null and/or undefined from the target type.
