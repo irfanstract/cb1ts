@@ -20737,6 +20737,48 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             if (relation === comparableRelation && !(target.flags & TypeFlags.Never) && isSimpleTypeRelatedTo(target, source, relation) ||
                 isSimpleTypeRelatedTo(source, target, relation, reportErrors ? reportError : undefined)) return Ternary.True;
 
+            /**
+             * for two types `C1` and `C2` each being anything non-null except `never`,
+             * for these three *relationship*s,
+             * for any types `K1` and `K2` ,
+             * `rel(C1, C2) && rel(K1, K2)` implies `rel(C1[K1], C2[K1])` ,
+             *
+             */
+            if ((
+                relation === subtypeRelation || relation === assignableRelation || relation === identityRelation
+            )) {
+                if ((
+                    true
+                    && (source.flags & TypeFlags.IndexedAccess)
+                    && (target.flags & TypeFlags.IndexedAccess)
+                )) {
+                    function ASS(_t: Type): asserts _t is IndexedAccessType {}
+                    ASS(source) ;
+                    ASS(target) ;
+                    const wereCtxTypesRelatedBySameRelationship = (
+                        (
+                            isTypeRelatedTo(...([
+                                source.objectType ,
+                                target.objectType ,
+                            ] satisfies [Type, Type,]), relation)
+                        ) satisfies boolean
+                    ) ;
+                    const wereKeyTypesRelatedBySameRelationship = (
+                        (
+                            isTypeRelatedTo(...([
+                                source.indexType ,
+                                target.indexType ,
+                            ] satisfies [Type, Type,]), relation)
+                        ) satisfies boolean
+                    ) ;
+                    // note: "both", not "any".
+                    if (wereCtxTypesRelatedBySameRelationship && wereKeyTypesRelatedBySameRelationship) {
+                        return Ternary.True ;
+                    }
+                    // TODO
+                }
+            }
+
             if (source.flags & TypeFlags.StructuredOrInstantiable || target.flags & TypeFlags.StructuredOrInstantiable) {
                 const isPerformingExcessPropertyChecks = !(intersectionState & IntersectionState.Target) && (isObjectLiteralType(source) && getObjectFlags(source) & ObjectFlags.FreshLiteral);
                 if (isPerformingExcessPropertyChecks) {
