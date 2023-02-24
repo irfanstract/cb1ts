@@ -10532,6 +10532,14 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return getFlowTypeOfReference(reference, autoType, initialType);
     }
 
+    /**
+     * fast, imprecise mode of working with `valueof` types.
+     * defaults to 0. return 0 to (currently only halfway) to being precise.
+     */
+    function getCbTsValueofTypesFastImpreciseMode(): number {
+        return 0 ;
+    }
+
     enum WideningMode1 {
         PreservePrimitiveLiteralValue ,
         PreservePrimitiveOrObjectOrArrayLiteralsReturnValue ,
