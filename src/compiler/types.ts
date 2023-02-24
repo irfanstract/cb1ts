@@ -6189,6 +6189,10 @@ export namespace CbTsSpecificType {
         return !!(t.flags & TypeFlags.Object) ;
     }
 
+    export function isTypeParameter(t: Type): t is TypeParameter {
+        return !!(t.flags & TypeFlags.TypeParameter) ;
+    }
+
     /**
      * {@link TypeFlags.IndexedAccess}.
      */
