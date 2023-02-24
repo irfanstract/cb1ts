@@ -10564,14 +10564,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             )
         ) ;
     }
-    function isConfigDemandingForReturnTypePreservation(): boolean {
+    function isContextOrConfigTellingAgainstWidening(context: WideningContext | undefined, ...args: Parameters<typeof isConfigTellingAgainstWidening>): boolean {
         return (
-            isConfigTellingAgainstWidening(WideningMode1.PreservePrimitiveOrObjectOrArrayLiteralsReturnValue)
-        ) ;
-    }
-    function isContextOrConfigDemandingForReturnTypePreservation(context: WideningContext | undefined): boolean {
-        return (
-            (context ? !context.primitiveOrObjectOrArrayLiteralTypeWideningRequired : false) || isConfigDemandingForReturnTypePreservation()
+            (context ? false : false) || isConfigTellingAgainstWidening(...args)
         ) ;
     }
 
@@ -10580,7 +10575,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
      *
      * @deprecated
      * semantically,
-     * {@link getWidenedType} and its variants are all no different in being respectful to {@link isContextOrConfigDemandingForReturnTypePreservation}.
+     * {@link getWidenedType} and its variants are all no different in being respectful to {@link isContextOrConfigTellingAgainstWidening}.
      *
      */
     function getConfigDefinedlyWidenedType(...[tpAfterOptionality]: [Type]): Type {
@@ -23177,7 +23172,11 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     }
 
     function getWidenedLiteralType(type: Type): Type {
-        if (isContextOrConfigDemandingForReturnTypePreservation(/* context */ undefined)) {
+        if ((
+            // `getWidenedLiteralType` is special in that
+            // setting the constraint to `PreservePrimitiveLiteralValue` introduced breaking changes
+            isContextOrConfigTellingAgainstWidening(/* context */ undefined, WideningMode1.PreservePrimitiveOrObjectOrArrayLiteralsReturnValue)
+        )) {
             return type ;
         }
         return type.flags & TypeFlags.EnumLiteral && isFreshLiteralType(type) ? getBaseTypeOfEnumLiteralType(type as LiteralType) :
@@ -23455,7 +23454,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     }
 
     function createWideningContext(parent: WideningContext | undefined, propertyName: __String | undefined, siblings: Type[] | undefined): WideningContext {
-        return { parent, primitiveOrObjectOrArrayLiteralTypeWideningRequired: isContextOrConfigDemandingForReturnTypePreservation(parent) ? 0 : 1, propertyName, siblings, resolvedProperties: undefined };
+        return { parent, propertyName, siblings, resolvedProperties: undefined };
     }
 
     function getSiblingsOfContext(context: WideningContext): Type[] {
@@ -23515,7 +23514,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     }
 
     function getWidenedTypeOfObjectLiteral(type: Type, context: WideningContext | undefined): Type {
-        if (isContextOrConfigDemandingForReturnTypePreservation(context)) {
+        if (isContextOrConfigTellingAgainstWidening(context, WideningMode1.PreservePrimitiveOrObjectOrArrayLiteralsReturnValue)) {
             return type ;
         }
         const members = createSymbolTable();
@@ -23560,9 +23559,6 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     }
 
     function getWidenedTypeWithContext(type: Type, context: WideningContext | undefined): Type {
-        if (isContextOrConfigDemandingForReturnTypePreservation(context)) {
-            return type ;
-        }
         if (getObjectFlags(type) & ObjectFlags.RequiresWidening) {
             if (context === undefined && type.widened) {
                 return type.widened;
@@ -29816,7 +29812,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         if (inDestructuringPattern) {
             return createTupleType(elementTypes, elementFlags);
         }
-        if (forceTuple || inConstContext || inTupleContext || isContextOrConfigDemandingForReturnTypePreservation(/* context */ undefined)) {
+        if (forceTuple || inConstContext || inTupleContext || isContextOrConfigTellingAgainstWidening(/* context */ undefined, WideningMode1.PreservePrimitiveOrObjectOrArrayLiteralsReturnValue)) {
             return createArrayLiteralType(createTupleType(elementTypes, elementFlags, /*readonly*/ inConstContext));
         }
         return createArrayLiteralType(createArrayType(elementTypes.length ?
