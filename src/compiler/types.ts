@@ -6196,6 +6196,13 @@ export namespace CbTsSpecificType {
         return !!(t.flags & TypeFlags.IndexedAccess) ;
     }
 
+    export function isUnion(t: Type): t is UnionType {
+        return !!(t.flags & TypeFlags.Union) ;
+    }
+    export function isIntersection(t: Type): t is IntersectionType {
+        return !!(t.flags & TypeFlags.Intersection) ;
+    }
+
     /**
      * a single-instance type?
      */
