@@ -6158,7 +6158,7 @@ export namespace CbTsSpecificType {
     /**
      * {@link TypeFlags.Literal}.
      */
-    export function isPrimitiveLiteralType(t: Type): t is (
+    export function isPrimitiveLiteralSingletonType(t: Type): t is (
         | (LiteralType & (
             | LiteralType
             | StringLiteralType
@@ -6219,7 +6219,7 @@ export namespace CbTsSpecificType {
         return (
             false
             || isUndefinedTypeOrNullType(t)
-            || isPrimitiveLiteralType(t)
+            || isPrimitiveLiteralSingletonType(t)
             || isUniqueSymbolSelector(t)
         ) ;
     }
