@@ -6141,6 +6141,73 @@ export interface Type {
     widened?: Type; // Cached widened form of the type
 }
 
+/**
+ * a handful of relevant utility methods for working with {@link Type}s.
+ */
+export namespace CbTsSpecificType {
+
+    export function isUndefinedOrNull(t: Type): t is (
+        | IntrinsicType
+    ) {
+        return (
+            false
+            || !!(t.flags & (TypeFlags.Undefined | TypeFlags.Null))
+        ) ;
+    }
+
+    /**
+     * {@link TypeFlags.Literal}.
+     */
+    export function isPrimitiveLiteralType(t: Type): t is (
+        | (LiteralType & (
+            | LiteralType
+            | StringLiteralType
+            | NumberLiteralType
+            | BigIntLiteralType
+        ))
+    ) {
+        return !!(t.flags & TypeFlags.Literal) ;
+    }
+
+    /**
+     * if it selects *exactly* *one* `unique symbol`.
+     */
+    export function isUniqueSymbolSelector(t: Type): t is (
+        | UniqueESSymbolType
+    ) {
+        // TODO
+        return (
+            false
+            || !!(t.flags & TypeFlags.UniqueESSymbol)
+        ) ;
+    }
+
+    /**
+     * {@link TypeFlags.Object}.
+     */
+    export function isObjectType(t: Type): t is ObjectType {
+        return !!(t.flags & TypeFlags.Object) ;
+    }
+
+    /**
+     * a single-instance type?
+     */
+    export function isMonomorphicType(t: Type): t is (
+        | Type
+        | LiteralType
+        | UniqueESSymbolType
+        | ObjectType
+    ) {
+        return (
+            false
+            || isUndefinedOrNull(t)
+            || isPrimitiveLiteralType(t)
+            || isUniqueSymbolSelector(t)
+        ) ;
+    }
+
+}
+
 /** @internal */
 // Intrinsic types (TypeFlags.Intrinsic)
 export interface IntrinsicType extends Type {
