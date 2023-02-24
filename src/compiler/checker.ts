@@ -6423,6 +6423,20 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return symbolToTypeNode(type.aliasSymbol, context, SymbolFlags.Type, typeArgumentNodes);
             }
 
+            if (isCbTsValueofType(type)) {
+                const {
+                    referencedBinding: originatingBinding ,
+                } = (
+                    getCbTsValueofTypeInfo(type)
+                ) ;
+                const e = (
+                    symbolToExpression(originatingBinding, context, SymbolFlags.Value)
+                ) ;
+                return (
+                    factory.createCbTsValueofTypeNode(e)
+                ) ;
+            }
+
             const objectFlags = getObjectFlags(type);
 
             if (objectFlags & ObjectFlags.Reference) {
