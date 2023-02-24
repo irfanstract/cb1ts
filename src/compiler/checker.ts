@@ -18214,8 +18214,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     }
 
     function createCbTsValueofType(...[symbol, { base, }]: [Symbol, { base: Type ; }]) {
-        const tp = createCbTsCustomType(symbol, TypeFlags.TypeParameter) as TypeParameter ;
-        tp.constraint = base ;
+        const tp = createCbTsValueofTypeImpl(symbol, {
+        }) ;
+        globalThis.Object(base) ; // TS-6133
         return tp ;
     }
 
@@ -18319,24 +18320,57 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         }
         return false ;
     }
-    function isCbTsValueofType(...[tp]: [TypeParameter]): false | (true) {
-        const {
-            // constraint = unknownType ,
-            symbol: innerSymbolRef,
-        } = tp satisfies TypeParameter ;
-        const innerSymbolRefLinks = (
-            // TODO
-            getSymbolLinks(innerSymbolRef)
-        ) ;
-        if (innerSymbolRefLinks.uniqueESSymbolType) {
-            if (innerSymbolRefLinks.uniqueESSymbolType === tp) {
-                return true ;
-            }
-            else {
-                return false ;
-            }
+    function isCbTsValueofType(tp: Type): tp is XCbTsValueofType {
+        if (ts.CbTsSpecificType.isValueofType(tp)) {
+            return true ;
         }
+        // TODO
         return false ;
+    }
+    /**
+     * ad-hoc opaque type.
+     */
+    interface XCbTsValueofType extends Type {
+        _XCbTsValueofTypeSpecific: any ; // BRANDING
+    }
+    function createCbTsValueofTypeImpl(...[
+        symbol, {
+            //
+        },
+    ]: [
+        Symbol, {
+            //
+        } ,
+    ]) {
+        const tp = createCbTsCustomType(symbol, TypeFlags.ActualValueOf) ;
+        return tp ;
+    }
+    function getCbTsValueofTypeInfo(...[tp]: [XCbTsValueofType]): {
+        /**
+         * the referent, being the relevant `var` (can only be `const`, `namespace`, `enum` or the like because it needs to be `const`).
+         * not necessarily `const v: Bar = ... ;` or *parameter*;
+         * can be an element in case of descturcturing `const { parent, } = ... ;`, or a member of an(other) `valueof`-typed name(space).
+         */
+        referencedBinding: Symbol ;
+        /**
+         * result of `typeof <originatingBinding>` for classical, non-customised `typeof` behv
+         */
+        referencedBindingFormal: Type ;
+    } {
+        const originatingBinding1 = (
+            /**
+             * reference: {@link getTypeOfFuncClassEnumModuleWorker}.
+             */
+            tp.symbol
+        ) ;
+        const declaredForm = (
+            // TODO
+            getTypeOfSymbol(originatingBinding1)
+        ) ;
+        return {
+            referencedBinding: originatingBinding1 ,
+            referencedBindingFormal: declaredForm ,
+        } ;
     }
 
     function getThisType(node: Node): Type {
