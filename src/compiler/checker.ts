@@ -15478,6 +15478,36 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return links.resolvedType;
     }
 
+    // analogous to `getTypeFromTypeQueryNode`
+    function getTypeFromCbTsValueofType(...[caller]: [ts.CbTsValueofTypeNode]): Type {
+        const links = getNodeLinks(caller);
+        if (!links.resolvedType) {
+            // the operand (Expression) shall be treated just as for Expression(s) (with)in statement-positions, except that
+            // the inferred types shall (whenever possible) be the `valueof`-types.
+            // note:
+            const type = ((): Type => {
+                const { exprName: referent, } = caller ;
+                /**
+                 * `checkExpression` and `checkExpressionRelated` will in general widen the types, so
+                 * there's need for special-casing for now
+                 */
+                switch (referent.kind) {
+                    default:
+                }
+                /**
+                 * fall back to `checkExpression` and `checkExpressionRelated`
+                 */
+                return (
+                    // note:
+                    // `checkExpressionCached` could go against FCA (flow-ctrl analysis) ; use `checkExpression` directly .
+                    checkExpression(referent)
+                ) ;
+            })();
+            links.resolvedType = getRegularTypeOfLiteralType(getWidenedType(type));
+        }
+        return links.resolvedType;
+    }
+
     function getTypeOfGlobalSymbol(symbol: Symbol | undefined, arity: number): ObjectType {
 
         function getTypeDeclaration(symbol: Symbol): Declaration | undefined {
