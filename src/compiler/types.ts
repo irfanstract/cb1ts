@@ -6146,7 +6146,7 @@ export interface Type {
  */
 export namespace CbTsSpecificType {
 
-    export function isUndefinedOrNull(t: Type): t is (
+    export function isUndefinedTypeOrNullType(t: Type): t is (
         | IntrinsicType
     ) {
         return (
@@ -6218,7 +6218,7 @@ export namespace CbTsSpecificType {
     ) {
         return (
             false
-            || isUndefinedOrNull(t)
+            || isUndefinedTypeOrNullType(t)
             || isPrimitiveLiteralType(t)
             || isUniqueSymbolSelector(t)
         ) ;
