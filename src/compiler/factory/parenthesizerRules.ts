@@ -557,6 +557,7 @@ export function createParenthesizerRules(factory: NodeFactory): ParenthesizerRul
             case SyntaxKind.InferType:
             case SyntaxKind.TypeOperator:
             case SyntaxKind.TypeQuery: // Not strictly necessary, but makes generated output more readable and avoids breaks in DT tests
+            case SyntaxKind.CbTsValueofType:
                 return factory.createParenthesizedType(type);
         }
         return parenthesizeOperandOfTypeOperator(type);
