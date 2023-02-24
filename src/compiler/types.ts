@@ -6212,6 +6212,13 @@ export namespace CbTsSpecificType {
         return !!(t.flags & TypeFlags.Intersection) ;
     }
 
+    export function isValueofType(t: Type): boolean {
+        return (
+            false
+            || !!(t.flags & TypeFlags.ActualValueOf)
+        ) ;
+    }
+
     /**
      * a single-instance type?
      */
