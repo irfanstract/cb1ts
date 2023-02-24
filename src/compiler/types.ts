@@ -6190,6 +6190,13 @@ export namespace CbTsSpecificType {
     }
 
     /**
+     * {@link TypeFlags.IndexedAccess}.
+     */
+    export function isIndexedAccessType(t: Type): t is IndexedAccessType {
+        return !!(t.flags & TypeFlags.IndexedAccess) ;
+    }
+
+    /**
      * a single-instance type?
      */
     export function isMonomorphicType(t: Type): t is (
