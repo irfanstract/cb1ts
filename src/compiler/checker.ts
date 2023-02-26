@@ -18479,6 +18479,8 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
          * result of `typeof <originatingBinding>` for classical, non-customised `typeof` behv
          */
         referencedBindingFormal: Type ;
+        //
+        declaringTypeInfo: false | XCbTsValueofType ;
     } {
         const originatingBinding1 = (
             /**
@@ -18493,9 +18495,29 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         const parentSymbol = (
             getParentOfSymbol(originatingBinding1)
         ) ;
+        const {
+            declaringTypeInfo: declaringTypeInfoFnl ,
+        } = ((): {
+            declaringTypeInfo: false | XCbTsValueofType ;
+        } => {
+            if (parentSymbol) {
+                const declaringType = (
+                    getCbTsValueofTypeForSymbol(parentSymbol)
+                ) ;
+                if (isCbTsValueofType(declaringType)) {
+                    return {
+                        declaringTypeInfo: declaringType ,
+                    } ;
+                }
+            }
+            return {
+                declaringTypeInfo: false ,
+            } ;
+        })() ;
         return {
             referencedBinding: originatingBinding1 ,
             referencedBindingFormal: declaredForm ,
+            declaringTypeInfo: declaringTypeInfoFnl ,
         } ;
     }
 
