@@ -18464,8 +18464,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             //
         } ,
     ]) {
-        const tp = createCbTsCustomType(symbol, TypeFlags.ActualValueOf) ;
-        return tp ;
+        const type = createCbTsCustomType(symbol, TypeFlags.ActualValueOf) ;
+        (type as { escapedName?: __String ; }).escapedName = `__@${type.symbol.escapedName}@${getSymbolId(type.symbol)}` as __String;
+        return type ;
     }
     function getCbTsValueofTypeInfo(...[tp]: [XCbTsValueofType]): {
         /**
