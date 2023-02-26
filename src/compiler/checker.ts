@@ -27945,6 +27945,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                         || (!!(effectiveFlags1 & SymbolFlags.Alias))
                         || (!!(effectiveFlags1 & (SymbolFlags.Namespace | SymbolFlags.Type)))
                         || (!!(effectiveFlags1 & SymbolFlags.Variable) && !!(effectiveFlags2 & NodeFlags.Const))
+                        || (!!(effectiveFlags2 & NodeFlags.Const)) // `const` even if not `var`s or the like
                         || (!!(effectiveFlags1 & SymbolFlags.Function))
                         || (true && !!(effectiveFlags2 & NodeFlags.Namespace))
                     ) ;
