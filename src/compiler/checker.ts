@@ -6437,6 +6437,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 const e = (
                     symbolToExpression(originatingBinding, context, SymbolFlags.Value)
                 ) ;
+                const actualFormalShortStr = (
+                    typeToString(actualFormal)
+                ) ;
                 let resultingNode: TypeNode = (
                     factory.createCbTsValueofTypeNode(e)
                 ) ;
@@ -6445,6 +6448,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     ts.addSyntheticTrailingComment(resultingNode, SyntaxKind.MultiLineCommentTrivia, " " + (
                         " "
                         + `id: (${idHexString}) ; `
+                        + `representation: (${actualFormalShortStr}) ; `
                     ) + " ")
                 ) ;
                 return resultingNode ;
