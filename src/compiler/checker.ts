@@ -6431,6 +6431,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 } = (
                     getCbTsValueofTypeInfo(type)
                 ) ;
+                const idHexString = (
+                    "0x" + type.id.toString(0x10).padStart(4, "3")
+                ) ;
                 const e = (
                     symbolToExpression(originatingBinding, context, SymbolFlags.Value)
                 ) ;
@@ -6441,6 +6444,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 resultingNode = (
                     ts.addSyntheticTrailingComment(resultingNode, SyntaxKind.MultiLineCommentTrivia, " " + (
                         " "
+                        + `id: (${idHexString}) ; `
                     ) + " ")
                 ) ;
                 return resultingNode ;
