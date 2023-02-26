@@ -6438,6 +6438,11 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     factory.createCbTsValueofTypeNode(e)
                 ) ;
                 resultingNode = undefined || resultingNode ; // prefer-const
+                resultingNode = (
+                    ts.addSyntheticTrailingComment(resultingNode, SyntaxKind.MultiLineCommentTrivia, " " + (
+                        " "
+                    ) + " ")
+                ) ;
                 return resultingNode ;
             }
 
