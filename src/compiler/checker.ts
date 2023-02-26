@@ -27939,7 +27939,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             || (
                 ((): boolean => {
                     const { flags: effectiveFlags1, } = localOrExportSymbol ;
-                    const { flags: effectiveFlags2, } = declaration ;
+                    const { flags: effectiveFlags2, } = { flags: getCombinedNodeFlags(declaration), } ;
                     return (
                         false
                         || (!!(effectiveFlags1 & SymbolFlags.Alias))
