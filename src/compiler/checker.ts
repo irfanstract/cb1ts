@@ -18335,6 +18335,97 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         subject: Node,
         experimentalOrInternalOptions?: GecwInitGetOptions ,
     ]) {
+        return (
+            gecwInitAndGet([
+                [GecwNameType.GivenBySourceNode, node] ,
+                { mustCheckWhetherUniqueSymbol: 1, } ,
+            ], experimentalOrInternalOptions)
+        ) ;
+    }
+    function getCbTsValueofTypeForSymbol(...[node, experimentalOrInternalOptions]: [
+        subject: Symbol,
+        experimentalOrInternalOptions?: GecwInitGetOptions ,
+    ]) {
+        return (
+            gecwInitAndGet([
+                [GecwNameType.GivenBySymbol, node] ,
+                { mustCheckWhetherUniqueSymbol: 1, } ,
+            ], experimentalOrInternalOptions)
+        ) ;
+    }
+    enum GecwNameType {
+        GivenBySourceNode ,
+        GivenBySymbol ,
+    }
+    function gecwInitAndGet(...[[subject, { mustCheckWhetherUniqueSymbol, }], experimentalOrInternalOptions]: [
+        subject: [
+            (
+                | [GecwNameType.GivenBySourceNode, Node, ]
+                | [GecwNameType.GivenBySymbol, Symbol,]
+            ),
+            (
+                {}
+                & { mustCheckWhetherUniqueSymbol: 0 | 0.5 | 1 ; }
+            ) ,
+        ],
+        experimentalOrInternalOptions?: GecwInitGetOptions ,
+    ]): Type {
+        const ssr = (() : (
+            | undefined
+            | (
+                & (
+                    | {
+                        resolvedDef: Node ;
+                        resolvedSymbol: Symbol ;
+                    }
+                    | {
+                        resolvedDef: false ;
+                        resolvedSymbol: Symbol ;
+                    }
+                )
+            )
+        ) => {
+            /**
+             * see {@link getESSymbolLikeTypeForNode}'s code.
+             */
+            if (subject[0] === GecwNameType.GivenBySourceNode) {
+                const node = subject[1] satisfies Node ;
+                if (isDeclaration(node)) {
+                    const symbol = isCommonJsExportPropertyAssignment(node) ? getSymbolOfNode((node as BinaryExpression).left) : getSymbolOfNode(node);
+                    if (symbol) {
+                        return {
+                            resolvedDef: node ,
+                            resolvedSymbol: symbol ,
+                        } ;
+                    }
+                }
+            }
+            /**
+             * see {@link checkIdentifier}'s code.
+             */
+            if (subject[0] === GecwNameType.GivenBySymbol) {
+                const symbol = subject[1] ;
+                const {
+                    valueDeclaration: node ,
+                } = getExportSymbolOfValueSymbolIfExported(symbol) ;
+                if (node) {
+                    return {
+                        resolvedDef: node ,
+                        resolvedSymbol: symbol ,
+                    } ;
+                }
+                else {
+                    return {
+                        resolvedDef: node || false ,
+                        resolvedSymbol: symbol ,
+                    } ;
+                }
+            }
+            return undefined ;
+        })() || ({
+            resolvedSymbol: false ,
+            resolvedDef: false
+        } as const) ;
         const {
             unifyTypesForAliases,
         } = (
@@ -18342,13 +18433,31 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 unifyTypesForAliases: true ,
             }
         ) ;
-        if (isDeclaration(node)) {
-            const symbol = isCommonJsExportPropertyAssignment(node) ? getSymbolOfNode((node as BinaryExpression).left) : getSymbolOfNode(node);
+        if (ssr.resolvedSymbol) {
+            const {
+                resolvedDef: node ,
+                resolvedSymbol: symbol ,
+            } = ssr ;
+            GcwFlow1:
             if (symbol) {
                 const links = getSymbolLinks(symbol);
                 const symbolAssignedType = getTypeOfSymbol(symbol) ;
-                if (symbolAssignedType.flags & TypeFlags.UniqueESSymbol) {
-                    return getESSymbolLikeTypeForNode(node) ;
+                if (0 < mustCheckWhetherUniqueSymbol) {
+                    if (symbolAssignedType.flags & TypeFlags.UniqueESSymbol) {
+                        if (node) {
+                            return getESSymbolLikeTypeForNode(node) ;
+                        }
+                        else {
+                            if ((0.9 <= mustCheckWhetherUniqueSymbol)) {
+                                if (1) {
+                                    if (isGecwConstantType(symbolAssignedType)) {
+                                        return symbolAssignedType ;
+                                    }
+                                }
+                                break GcwFlow1 ;
+                            }
+                        }
+                    }
                 }
                 return (
                     links.uniqueESSymbolType || (
