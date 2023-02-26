@@ -18353,6 +18353,74 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             ], experimentalOrInternalOptions)
         ) ;
     }
+    function getCbTsValueofNestedType({
+        lefthandType ,
+        keyType ,
+    }: {
+        lefthandType: XCbTsValueofType ,
+        keyType: Type ,
+    }): Type {
+        switch (getCbTsValueofTypesFastImpreciseMode()) {
+            case 1:
+            case 2:
+                // return (
+                //     // plain indexed access type .
+                //     //
+                //     // in theory, `valueof` types shall only occur for `const` paths, not possibly-mutable paths.
+                //     // therefore, at this point,
+                //     //  - `accessFlags` should contain `ExpressionPosition`
+                //     //
+                //     createIndexedAccessType(lefthandType, keyType, (
+                //         0
+                //         | AccessFlags.ExpressionPosition
+                //     ), /* aliasSymbol */ undefined, /* aliasTypeArguments */ undefined)
+                // ) ;
+                break ;
+            default:
+                const lefthandTypeMemberTable = (
+                    lefthandType.xcbtMemberTypeCache || (
+                        lefthandType.xcbtMemberTypeCache = (
+                            new Map()
+                        )
+                        , lefthandType.xcbtMemberTypeCache
+                    )
+                ) ;
+                for (const _ of [1, 2]) {
+                    const c = lefthandTypeMemberTable.get(keyType) ;
+                    if (c) {
+                        return c ;
+                    }
+                    else {
+                        const cS = (
+                            (
+                                createSymbol(SymbolFlags.Transient, typeToString(keyType) as __String)
+                            ) satisfies Symbol
+                        ) ;
+                        cS.parent = (
+                            getCbTsValueofTypeInfo(lefthandType).referencedBinding satisfies Symbol
+                        ) ;
+                        const c = (
+                            (
+                                gecwInitAndGet([
+                                    [GecwNameType.GivenBySymbol, cS] ,
+                                    { mustCheckWhetherUniqueSymbol: 0.5, } ,
+                                ])
+                            ) satisfies Type
+                        );
+                        lefthandTypeMemberTable.set(keyType, c) ;
+                    }
+                }
+                return (
+                    Debug.fail("TODO")
+                ) ;
+        }
+        return (
+            getIndexedAccessType((
+                getCbTsValueofTypeInfo(lefthandType)
+                .referencedBindingFormal
+            ), keyType)
+        ) ;
+    }
     enum GecwNameType {
         GivenBySourceNode ,
         GivenBySymbol ,
@@ -18576,6 +18644,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
      */
     interface XCbTsValueofType extends Type {
         _XCbTsValueofTypeSpecific: any ; // BRANDING
+        xcbtMemberTypeCache?: Map<Type, Type> ;
     }
     function createCbTsValueofTypeImpl(...[
         symbol, {
