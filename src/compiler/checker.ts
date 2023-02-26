@@ -18490,6 +18490,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             // TODO
             getTypeOfSymbol(originatingBinding1)
         ) ;
+        const parentSymbol = (
+            getParentOfSymbol(originatingBinding1)
+        ) ;
         return {
             referencedBinding: originatingBinding1 ,
             referencedBindingFormal: declaredForm ,
