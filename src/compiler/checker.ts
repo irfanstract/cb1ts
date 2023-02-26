@@ -6426,6 +6426,8 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             if (isCbTsValueofType(type)) {
                 const {
                     referencedBinding: originatingBinding ,
+                    referencedBindingFormal: rbFormal,
+                    representation: actualFormal,
                 } = (
                     getCbTsValueofTypeInfo(type)
                 ) ;
