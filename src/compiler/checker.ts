@@ -18323,9 +18323,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
     function getCbTsValueofTypeForNode(...[node, experimentalOrInternalOptions]: [
         subject: Node,
-        experimentalOrInternalOptions?: {
-            unifyTypesForAliases: boolean ;
-        } ,
+        experimentalOrInternalOptions?: GecwInitGetOptions ,
     ]) {
         const {
             unifyTypesForAliases,
@@ -18374,6 +18372,11 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         }
         return unresolvedType;
     }
+    type GecwInitGetOptions = (
+        | {
+            unifyTypesForAliases: boolean ;
+        }
+    );
     function isGecwConstantType(...[baseType]: [Type]): boolean {
         {
             const tp = baseType ;
