@@ -6437,6 +6437,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 const e = (
                     symbolToExpression(originatingBinding, context, SymbolFlags.Value)
                 ) ;
+                const rbFormalShortStr = (
+                    typeToString(rbFormal)
+                ) ;
                 const actualFormalShortStr = (
                     typeToString(actualFormal)
                 ) ;
@@ -6448,6 +6451,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     ts.addSyntheticTrailingComment(resultingNode, SyntaxKind.MultiLineCommentTrivia, " " + (
                         " "
                         + `id: (${idHexString}) ; `
+                        + `rbf: (${rbFormalShortStr}) ; `
                         + `representation: (${actualFormalShortStr}) ; `
                     ) + " ")
                 ) ;
