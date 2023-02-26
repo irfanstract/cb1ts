@@ -6432,9 +6432,11 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 const e = (
                     symbolToExpression(originatingBinding, context, SymbolFlags.Value)
                 ) ;
-                return (
+                let resultingNode: TypeNode = (
                     factory.createCbTsValueofTypeNode(e)
                 ) ;
+                resultingNode = undefined || resultingNode ; // prefer-const
+                return resultingNode ;
             }
 
             const objectFlags = getObjectFlags(type);
