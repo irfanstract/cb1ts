@@ -17650,16 +17650,6 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             if (objectType.flags & TypeFlags.AnyOrUnknown) {
                 return objectType;
             }
-            if (isCbTsValueofType(objectType)) {
-                if (getCbTsValueofTypesFastImpreciseMode() === 0) {
-                    return (
-                        getCbTsValueofNestedType({
-                            lefthandType: objectType ,
-                            keyType: indexType ,
-                        })
-                    ) ;
-                }
-            }
             // Defer the operation by creating an indexed access type.
             const persistentAccessFlags = accessFlags & AccessFlags.Persistent;
             const id = objectType.id + "," + indexType.id + "," + persistentAccessFlags + getAliasId(aliasSymbol, aliasTypeArguments);
