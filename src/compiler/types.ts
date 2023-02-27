@@ -6150,6 +6150,10 @@ export interface Type {
     );
     /** @internal */
     xcbtMemberTypeCache?: Map<Type, Type> ;
+    /** @internal */
+    cbTsNameWithinParentValueofType?: (
+        Type
+    );
 }
 
 /**
