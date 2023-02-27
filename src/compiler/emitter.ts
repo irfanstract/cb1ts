@@ -4847,10 +4847,23 @@ export function createPrinter(printerOptions: PrinterOptions = {}, handlers: Pri
         return lastModifier && !positionIsSynthesized(lastModifier.end) ? lastModifier.end : node.pos;
     }
 
-    function emitTypeAnnotation(node: TypeNode | undefined) {
+    function emitTypeAnnotation(...[
+        node,
+        { typeAnnComment = "", } = {} ,
+    ]: [
+        node: TypeNode | undefined,
+        cm?: (
+            {}
+            & { typeAnnComment?: string ; }
+        ),
+    ]) {
         if (node) {
             writePunctuation(":");
             writeSpace();
+            if (typeAnnComment) {
+                writeComment(typeAnnComment) ;
+                writeSpace();
+            }
             emit(node);
         }
     }

@@ -6248,6 +6248,18 @@ export namespace CbTsSpecificType {
 
 }
 
+export namespace CbTsSpecificType {
+    export type NamedOrIndexedAccessValueofTypeCache = (
+        // TODO
+        | (
+            // the values shall each be either a `valueof` type or any monomorphic/single-instance type.
+            Map<Type, Type>
+        )
+        // // eslint-disable-next-line @typescript-eslint/array-type
+        // | Array<Type> // avoid using this !
+    ) ;
+}
+
 /** @internal */
 // Intrinsic types (TypeFlags.Intrinsic)
 export interface IntrinsicType extends Type {
