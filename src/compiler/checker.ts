@@ -6426,15 +6426,36 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             if (isCbTsValueofType(type)) {
                 const {
                     referencedBinding: originatingBinding ,
+                    referencedBindingFormal: rbFormal,
+                    representation: actualFormal,
                 } = (
                     getCbTsValueofTypeInfo(type)
+                ) ;
+                const idHexString = (
+                    "0x" + type.id.toString(0x10).padStart(4, "3")
                 ) ;
                 const e = (
                     symbolToExpression(originatingBinding, context, SymbolFlags.Value)
                 ) ;
-                return (
+                const rbFormalShortStr = (
+                    typeToString(rbFormal)
+                ) ;
+                const actualFormalShortStr = (
+                    typeToString(actualFormal)
+                ) ;
+                let resultingNode: TypeNode = (
                     factory.createCbTsValueofTypeNode(e)
                 ) ;
+                resultingNode = undefined || resultingNode ; // prefer-const
+                resultingNode = (
+                    ts.addSyntheticTrailingComment(resultingNode, SyntaxKind.MultiLineCommentTrivia, " " + (
+                        " "
+                        + `id: (${idHexString}) ; `
+                        + `rbf: (${rbFormalShortStr}) ; `
+                        + `representation: (${actualFormalShortStr}) ; `
+                    ) + " ")
+                ) ;
+                return resultingNode ;
             }
 
             const objectFlags = getObjectFlags(type);
