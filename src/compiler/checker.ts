@@ -1247,6 +1247,11 @@ export const enum CheckMode {
     RestBindingElement = 1 << 6,                    // Checking a type that is going to be used to determine the type of a rest binding element
                                                     //   e.g. in `const { a, ...rest } = foo`, when checking the type of `foo` to determine the type of `rest`,
                                                     //   we need to preserve generic types instead of substituting them for constraints
+    /**
+     * {@link ts.CompilerOptions.inferredTypeSpecificity `inferredTypeSpecificity`} can be (re)configured.
+     * to prevent it from taking effect on `let`s, there's need to explicitly subvert the config on such ctx(s)
+     */
+    ForceClassicWidenedType = 1 << 20 ,
     ForceCbTsValueofType = 1 << 19 ,                // force returning `valueof` types . bit-pattern subject to change.
 }
 
@@ -17636,34 +17641,16 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         // for a generic T and a non-generic K, we eagerly resolve T[K] if it originates in an expression. This is to
         // preserve backwards compatibility. For example, an element access 'this["foo"]' has always been resolved
         // eagerly using the constraint type of 'this' at the given location.
-        if (isGenericIndexType(indexType) || (
-            // `valueof` types shall in-this-case behave as type-parameters.
-            isCbTsValueofType(objectType)
-        ) || (accessNode && accessNode.kind !== SyntaxKind.IndexedAccessType ?
+        if (isGenericIndexType(indexType) || (accessNode && accessNode.kind !== SyntaxKind.IndexedAccessType ?
             isGenericTupleType(objectType) && !indexTypeLessThan(indexType, objectType.target.fixedLength) :
             isGenericObjectType(objectType) && !(isTupleType(objectType) && indexTypeLessThan(indexType, objectType.target.fixedLength)))) {
             if (objectType.flags & TypeFlags.AnyOrUnknown) {
                 return objectType;
             }
-            if (isCbTsValueofType(objectType)) {
-                if (getCbTsValueofTypesFastImpreciseMode() === 0) {
-                    return (
-                        getCbTsValueofNestedType({
-                            lefthandType: objectType ,
-                            keyType: indexType ,
-                        })
-                    ) ;
-                }
-            }
             // Defer the operation by creating an indexed access type.
-            const persistentAccessFlags = accessFlags & AccessFlags.Persistent;
-            const id = objectType.id + "," + indexType.id + "," + persistentAccessFlags + getAliasId(aliasSymbol, aliasTypeArguments);
-            let type = indexedAccessTypes.get(id);
-            if (!type) {
-                indexedAccessTypes.set(id, type = createIndexedAccessType(objectType, indexType, persistentAccessFlags, aliasSymbol, aliasTypeArguments));
-            }
-
-            return type;
+            return (
+                getDeferredIndexedAccessType(objectType, indexType, accessFlags, accessNode, aliasSymbol, aliasTypeArguments)
+            ) ;
         }
         // In the following we resolve T[K] to the type of the property in T selected by K.
         // We treat boolean as different from other unions to improve errors;
@@ -17694,6 +17681,32 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 : getUnionType(propTypes, UnionReduction.Literal, aliasSymbol, aliasTypeArguments);
         }
         return getPropertyTypeForIndexType(objectType, apparentObjectType, indexType, indexType, accessNode, accessFlags | AccessFlags.CacheSymbol | AccessFlags.ReportDeprecated);
+    }
+
+    function getDeferredIndexedAccessType(...[
+        objectType, indexType,
+        accessFlags,
+        _accessNode, // unused
+        aliasSymbol, aliasTypeArguments ,
+    ]: Parameters<(
+        /**
+         * trying to adopt the parameter sig of {@link getIndexedAccessTypeOrUndefined}, but
+         * can't simply that due to the type differences introduced by the parameters' defaults.
+         * has to manually, using the `{ <index>: {}, }` syntax, mark select elements as required.
+         * see also {@link createTupleTargetType}.
+         */
+        (...args: Parameters<typeof getIndexedAccessTypeOrUndefined> & {
+            2: {} ;
+        }) => void
+    )>) {
+        const persistentAccessFlags = accessFlags & AccessFlags.Persistent;
+        const id = objectType.id + "," + indexType.id + "," + persistentAccessFlags + getAliasId(aliasSymbol, aliasTypeArguments);
+        let type = indexedAccessTypes.get(id);
+        if (!type) {
+            indexedAccessTypes.set(id, type = createIndexedAccessType(objectType, indexType, persistentAccessFlags, aliasSymbol, aliasTypeArguments));
+        }
+
+        return type;
     }
 
     function getTypeFromIndexedAccessTypeNode(node: IndexedAccessTypeNode) {
@@ -41331,6 +41344,42 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             checkSourceElement(node.type);
         }
 
+        const {
+            // isParametric ,
+            isEffectivelyConstDecl: isEffectivelyConstDecl ,
+            // isEffectivelyMutableDecl ,
+        } = ((): {
+            // /** whether it defines parameter */
+            // isParametric: boolean ;
+            /**
+             * this shall reflect whether the resulting binding shall never change value for its lifetime.
+             * {@link checkQualifiedName QN(s)} where all each token names such var, depending on {@link isConfigTellingAgainstWidening},
+             * might need to be typed retaining the name (using `valueof` types).
+             */
+            isEffectivelyConstDecl: boolean ;
+            isEffectivelyMutableDecl: boolean ;
+        } => {
+            const bindingModifiers = (
+                getCombinedModifierFlags(node)
+            ) ;
+            const isConstDecl = (
+                false
+                || !!(bindingModifiers & (ModifierFlags.Const))
+            ) ;
+            const isMutableDecl = (
+                false
+            ) ;
+            return {
+                isEffectivelyConstDecl: isConstDecl ,
+                isEffectivelyMutableDecl: isMutableDecl ,
+            } ;
+        })() ;
+        let requiredInitialiserCheckMode: CheckMode = 0 as CheckMode ;
+        // requiredInitialiserCheckMode |= CheckMode.Normal;
+        if (isEffectivelyConstDecl) {
+            requiredInitialiserCheckMode |= CheckMode.ForceCbTsValueofType ;
+        }
+
         // JSDoc `function(string, string): string` syntax results in parameters with no name
         if (!node.name) {
             return;
@@ -41343,7 +41392,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         if (node.name.kind === SyntaxKind.ComputedPropertyName) {
             checkComputedPropertyName(node.name);
             if (hasOnlyExpressionInitializer(node) && node.initializer) {
-                checkExpressionCached(node.initializer);
+                checkExpressionCached(node.initializer, requiredInitialiserCheckMode);
             }
         }
 
@@ -41446,7 +41495,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     (initializer.properties.length === 0 || isPrototypeAccess(node.name)) &&
                     !!symbol.exports?.size;
                 if (!isJSObjectLiteralInitializer && node.parent.parent.kind !== SyntaxKind.ForInStatement) {
-                    checkTypeAssignableToAndOptionallyElaborate(checkExpressionCached(initializer), type, node, initializer, /*headMessage*/ undefined);
+                    checkTypeAssignableToAndOptionallyElaborate(checkExpressionCached(initializer, requiredInitialiserCheckMode), type, node, initializer, /*headMessage*/ undefined);
                 }
             }
             if (symbol.declarations && symbol.declarations.length > 1) {
@@ -41466,7 +41515,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 errorNextVariableOrPropertyDeclarationMustHaveSameType(symbol.valueDeclaration, type, node, declarationType);
             }
             if (hasOnlyExpressionInitializer(node) && node.initializer) {
-                checkTypeAssignableToAndOptionallyElaborate(checkExpressionCached(node.initializer), declarationType, node, node.initializer, /*headMessage*/ undefined);
+                checkTypeAssignableToAndOptionallyElaborate(checkExpressionCached(node.initializer, requiredInitialiserCheckMode), declarationType, node, node.initializer, /*headMessage*/ undefined);
             }
             if (symbol.valueDeclaration && !areDeclarationFlagsIdentical(node, symbol.valueDeclaration)) {
                 error(node.name, Diagnostics.All_declarations_of_0_must_have_identical_modifiers, declarationNameToString(node.name));
