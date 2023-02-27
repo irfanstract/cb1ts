@@ -6144,6 +6144,10 @@ export interface Type {
     immediateBaseConstraint?: Type;  // Immediate base constraint cache
     /** @internal */
     widened?: Type; // Cached widened form of the type
+    /** @internal */
+    cbTsParentValueofType?: (
+        Type
+    );
 }
 
 /**
