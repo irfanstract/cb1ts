@@ -18446,7 +18446,15 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         GivenBySourceNode ,
         GivenBySymbol ,
     }
-    function gecwInitAndGet(...[[subject, { mustCheckWhetherUniqueSymbol, }], experimentalOrInternalOptions]: [
+    function gecwInitAndGet(...[
+        [
+            subject,
+            {
+                mustCheckWhetherUniqueSymbol,
+            } ,
+        ],
+        experimentalOrInternalOptions ,
+    ]: [
         subject: [
             (
                 | [GecwNameType.GivenBySourceNode, Node, ]
