@@ -41338,6 +41338,42 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             checkSourceElement(node.type);
         }
 
+        const {
+            // isParametric ,
+            isEffectivelyConstDecl: isEffectivelyConstDecl ,
+            // isEffectivelyMutableDecl ,
+        } = ((): {
+            // /** whether it defines parameter */
+            // isParametric: boolean ;
+            /**
+             * this shall reflect whether the resulting binding shall never change value for its lifetime.
+             * {@link checkQualifiedName QN(s)} where all each token names such var, depending on {@link isConfigTellingAgainstWidening},
+             * might need to be typed retaining the name (using `valueof` types).
+             */
+            isEffectivelyConstDecl: boolean ;
+            isEffectivelyMutableDecl: boolean ;
+        } => {
+            const bindingModifiers = (
+                getCombinedModifierFlags(node)
+            ) ;
+            const isConstDecl = (
+                false
+                || !!(bindingModifiers & (ModifierFlags.Const))
+            ) ;
+            const isMutableDecl = (
+                false
+            ) ;
+            return {
+                isEffectivelyConstDecl: isConstDecl ,
+                isEffectivelyMutableDecl: isMutableDecl ,
+            } ;
+        })() ;
+        let requiredInitialiserCheckMode: CheckMode = 0 as CheckMode ;
+        // requiredInitialiserCheckMode |= CheckMode.Normal;
+        if (isEffectivelyConstDecl) {
+            requiredInitialiserCheckMode |= CheckMode.ForceCbTsValueofType ;
+        }
+
         // JSDoc `function(string, string): string` syntax results in parameters with no name
         if (!node.name) {
             return;
@@ -41350,7 +41386,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         if (node.name.kind === SyntaxKind.ComputedPropertyName) {
             checkComputedPropertyName(node.name);
             if (hasOnlyExpressionInitializer(node) && node.initializer) {
-                checkExpressionCached(node.initializer);
+                checkExpressionCached(node.initializer, requiredInitialiserCheckMode);
             }
         }
 
@@ -41453,7 +41489,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     (initializer.properties.length === 0 || isPrototypeAccess(node.name)) &&
                     !!symbol.exports?.size;
                 if (!isJSObjectLiteralInitializer && node.parent.parent.kind !== SyntaxKind.ForInStatement) {
-                    checkTypeAssignableToAndOptionallyElaborate(checkExpressionCached(initializer), type, node, initializer, /*headMessage*/ undefined);
+                    checkTypeAssignableToAndOptionallyElaborate(checkExpressionCached(initializer, requiredInitialiserCheckMode), type, node, initializer, /*headMessage*/ undefined);
                 }
             }
             if (symbol.declarations && symbol.declarations.length > 1) {
@@ -41473,7 +41509,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 errorNextVariableOrPropertyDeclarationMustHaveSameType(symbol.valueDeclaration, type, node, declarationType);
             }
             if (hasOnlyExpressionInitializer(node) && node.initializer) {
-                checkTypeAssignableToAndOptionallyElaborate(checkExpressionCached(node.initializer), declarationType, node, node.initializer, /*headMessage*/ undefined);
+                checkTypeAssignableToAndOptionallyElaborate(checkExpressionCached(node.initializer, requiredInitialiserCheckMode), declarationType, node, node.initializer, /*headMessage*/ undefined);
             }
             if (symbol.valueDeclaration && !areDeclarationFlagsIdentical(node, symbol.valueDeclaration)) {
                 error(node.name, Diagnostics.All_declarations_of_0_must_have_identical_modifiers, declarationNameToString(node.name));
