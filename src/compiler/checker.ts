@@ -13441,9 +13441,24 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
     function getConstraintOfType(type: InstantiableType | UnionOrIntersectionType): Type | undefined {
         return type.flags & TypeFlags.TypeParameter ? getConstraintOfTypeParameter(type as TypeParameter) :
+            isCbTsValueofType(type) ? getConstraintOfCbTsValueofType(type as CbTsValueofTypeOps) :
             type.flags & TypeFlags.IndexedAccess ? getConstraintOfIndexedAccess(type as IndexedAccessType) :
             type.flags & TypeFlags.Conditional ? getConstraintOfConditionalType(type as ConditionalType) :
             getBaseConstraintOfType(type);
+    }
+
+    function getConstraintOfCbTsValueofType(...[tp]: [CbTsValueofTypeOps]): Type {
+        const referent = tp.symbol ;
+        const referentDeclaredForm = (
+            getTypeOfSymbol(referent)
+        ) ;
+        const referentEffectiveForm = (
+            // TODO
+            referentDeclaredForm
+        ) ;
+        return (
+            referentEffectiveForm
+        ) ;
     }
 
     function getConstraintOfTypeParameter(typeParameter: TypeParameter): Type | undefined {
@@ -13650,6 +13665,25 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     constraint :
                     getBaseConstraint(constraint);
             }
+            // `valueof` types are effectively implicitly-declared type-parameters.
+            if (isCbTsValueofType(t)) {
+                const constraint = (
+                    (
+                        // TODO
+                        ((): Type => {
+                            const { symbol: referent, } = t ;
+                            const referentDeclaredForm = getTypeOfSymbol(referent) ;
+                            const referentEffectiveForm = (
+                                referentDeclaredForm // TODO
+                            ) ;
+                            return referentEffectiveForm ;
+                        })()
+                    ) satisfies Type
+                );
+                return !constraint ?
+                    constraint :
+                    getBaseConstraint(constraint);
+            }
             if (t.flags & TypeFlags.UnionOrIntersection) {
                 const types = (t as UnionOrIntersectionType).types;
                 const baseTypes: Type[] = [];
@@ -13789,6 +13823,27 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         const t = !(type.flags & TypeFlags.Instantiable) ? type : getBaseConstraintOfType(type) || unknownType;
         return getObjectFlags(t) & ObjectFlags.Mapped ? getApparentTypeOfMappedType(t as MappedType) :
             t.flags & TypeFlags.Intersection ? getApparentTypeOfIntersectionType(t as IntersectionType) :
+            isCbTsValueofType(t) ? (
+                /**
+                 * reducing the
+                 */
+                ((): Type => {
+                    const formalT = (
+                        getTypeOfSymbol(t.symbol)
+                    ) ;
+                    // in certain case `formalT === t`
+                    if (t !== formalT) {
+                        let tp2: Type = (
+                            getApparentType(formalT)
+                        ) ;
+                        tp2 = undefined ?? tp2 ; // prefer-const
+                        // TODO
+                        return tp2 ;
+                    }
+                    // TODO
+                    return t ;
+                })()
+            ) :
             t.flags & TypeFlags.StringLike ? globalStringType :
             t.flags & TypeFlags.NumberLike ? globalNumberType :
             t.flags & TypeFlags.BigIntLike ? getGlobalBigIntType() :
@@ -20676,6 +20731,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             if (source.flags & TypeFlags.TypeParameter && getConstraintOfType(source) === target) {
                 return Ternary.True;
             }
+            if (isCbTsValueofType(source) && getConstraintOfType(source) === target) {
+                return Ternary.True;
+            }
 
             // See if we're relating a definitely non-nullable type to a union that includes null and/or undefined
             // plus a single non-nullable type. If so, remove null and/or undefined from the target type.
@@ -20692,6 +20750,48 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
             if (relation === comparableRelation && !(target.flags & TypeFlags.Never) && isSimpleTypeRelatedTo(target, source, relation) ||
                 isSimpleTypeRelatedTo(source, target, relation, reportErrors ? reportError : undefined)) return Ternary.True;
+
+            /**
+             * for two types `C1` and `C2` each being anything non-null except `never`,
+             * for these three *relationship*s,
+             * for any types `K1` and `K2` ,
+             * `rel(C1, C2) && rel(K1, K2)` implies `rel(C1[K1], C2[K1])` ,
+             *
+             */
+            if ((
+                relation === subtypeRelation || relation === assignableRelation || relation === identityRelation
+            )) {
+                if ((
+                    true
+                    && (source.flags & TypeFlags.IndexedAccess)
+                    && (target.flags & TypeFlags.IndexedAccess)
+                )) {
+                    function ASS(_t: Type): asserts _t is IndexedAccessType {}
+                    ASS(source) ;
+                    ASS(target) ;
+                    const wereCtxTypesRelatedBySameRelationship = (
+                        (
+                            isTypeRelatedTo(...([
+                                source.objectType ,
+                                target.objectType ,
+                            ] satisfies [Type, Type,]), relation)
+                        ) satisfies boolean
+                    ) ;
+                    const wereKeyTypesRelatedBySameRelationship = (
+                        (
+                            isTypeRelatedTo(...([
+                                source.indexType ,
+                                target.indexType ,
+                            ] satisfies [Type, Type,]), relation)
+                        ) satisfies boolean
+                    ) ;
+                    // note: "both", not "any".
+                    if (wereCtxTypesRelatedBySameRelationship && wereKeyTypesRelatedBySameRelationship) {
+                        return Ternary.True ;
+                    }
+                    // TODO
+                }
+            }
 
             if (source.flags & TypeFlags.StructuredOrInstantiable || target.flags & TypeFlags.StructuredOrInstantiable) {
                 const isPerformingExcessPropertyChecks = !(intersectionState & IntersectionState.Target) && (isObjectLiteralType(source) && getObjectFlags(source) & ObjectFlags.FreshLiteral);
