@@ -18679,6 +18679,18 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             unifyTypesForAliases: boolean ;
         }
     );
+    function gecwInitAndGetLefthandMemberTable(...[lefthandType]: [
+        Type ,
+    ]) {
+        return (
+            lefthandType.xcbtMemberTypeCache || (
+                lefthandType.xcbtMemberTypeCache = (
+                    new Map()
+                )
+                , lefthandType.xcbtMemberTypeCache
+            )
+        ) ;
+    }
     function gctvnt({
         lefthandType ,
         keyType ,
