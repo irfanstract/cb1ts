@@ -17262,6 +17262,8 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             }
             const prop = getPropertyOfType(objectType, propName);
             if (prop) {
+                let xrt: Type | undefined ;
+                xrt = (() => {
                 if (accessFlags & AccessFlags.ReportDeprecated && accessNode && prop.declarations && isDeprecatedSymbol(prop) && isUncalledFunctionReference(accessNode, prop)) {
                     const deprecatedNode = accessExpression?.argumentExpression ?? (isIndexedAccessTypeNode(accessNode) ? accessNode.indexType : accessNode);
                     addDeprecatedSuggestion(deprecatedNode, prop.declarations, propName as string);
@@ -17283,6 +17285,20 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return accessExpression && getAssignmentTargetKind(accessExpression) !== AssignmentKind.Definite ? getFlowTypeOfReference(accessExpression, propType) :
                     accessNode && isIndexedAccessTypeNode(accessNode) && containsMissingType(propType) ? getUnionType([propType, undefinedType]) :
                     propType;
+                })();
+                if (xrt) {
+                    ({
+                        finalType: xrt ,
+                    } = (
+                        gpttOnHasResolveddPropType({
+                            leftHandType: objectType ,
+                            indexType ,
+                            accessFlags ,
+                            resolvedPropValueType: xrt ,
+                        })
+                    )) ;
+                }
+                return xrt ;
             }
             if (everyType(objectType, isTupleType) && isNumericLiteralName(propName)) {
                 const index = +propName;
@@ -17303,7 +17319,17 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 if (index >= 0) {
                     errorIfWritingToReadonlyIndex(getIndexInfoOfType(objectType, numberType));
                     return mapType(objectType, t => {
-                        const restType = getRestTypeOfTupleType(t as TupleTypeReference) || undefinedType;
+                        let restType = getRestTypeOfTupleType(t as TupleTypeReference) || undefinedType;
+                        ({
+                            finalType: restType ,
+                        } = (
+                            gpttOnHasResolveddPropType({
+                                leftHandType: t ,
+                                indexType ,
+                                accessFlags ,
+                                resolvedPropValueType: restType
+                            })
+                        ));
                         return accessFlags & AccessFlags.IncludeUndefined ? getUnionType([restType, missingType]) : restType;
                     });
                 }
@@ -17317,6 +17343,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             // index signature applies even when accessing with a symbol-like type.
             const indexInfo = getApplicableIndexInfo(objectType, indexType) || getIndexInfoOfType(objectType, stringType);
             if (indexInfo) {
+                let xrt: Type | undefined = (() => {
                 if (accessFlags & AccessFlags.NoIndexSignatures && indexInfo.keyType !== numberType) {
                     if (accessExpression) {
                         error(accessExpression, Diagnostics.Type_0_cannot_be_used_to_index_type_1, typeToString(indexType), typeToString(originalObjectType));
@@ -17341,6 +17368,20 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     return getUnionType([indexInfo.type, missingType]);
                 }
                 return indexInfo.type;
+                })() ;
+                if (xrt) {
+                    ({
+                        finalType: xrt ,
+                    } = (
+                        gpttOnHasResolveddPropType({
+                            leftHandType: objectType ,
+                            indexType ,
+                            accessFlags ,
+                            resolvedPropValueType: xrt
+                        })
+                    ));
+                }
+                return xrt ;
             }
             if (indexType.flags & TypeFlags.Never) {
                 return neverType;
@@ -17349,6 +17390,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return anyType;
             }
             if (accessExpression && !isConstEnumObjectType(objectType)) {
+                let xrt: Type | undefined = (() => {
                 if (isObjectLiteralType(objectType)) {
                     if (noImplicitAny && indexType.flags & (TypeFlags.StringLiteral | TypeFlags.NumberLiteral)) {
                         diagnostics.add(createDiagnosticForNode(accessExpression, Diagnostics.Property_0_does_not_exist_on_type_1, (indexType as StringLiteralType).value, typeToString(objectType)));
@@ -17414,6 +17456,20 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     }
                 }
                 return undefined;
+                })();
+                if (xrt) {
+                    ({
+                        finalType: xrt ,
+                    } = (
+                        gpttOnHasResolveddPropType({
+                            leftHandType: objectType ,
+                            indexType ,
+                            accessFlags ,
+                            resolvedPropValueType: xrt
+                        })
+                    ));
+                }
+                return xrt ;
             }
         }
         if (isJSLiteralType(objectType)) {
