@@ -18600,6 +18600,21 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         // TODO
         return false ;
     }
+    function isCbTsTopLevelValueofType(tp: XCbTsValueofType): boolean {
+        Debug.assert(tp.cbTsParentValueofType, `${() => tp.cbTsParentValueofType} not properly initialised`) ;
+        if (tp.cbTsParentValueofType === missingType) {
+            Debug.assert(!tp.cbTsNameWithinParentValueofType, `is top-level variant yet ${() => tp.cbTsNameWithinParentValueofType} is non-null`) ;
+            return true ;
+        }
+        else return false ;
+    }
+    function getCbTsNestedValueofTypeParentType(tp: XCbTsValueofType): Type | undefined {
+        Debug.assert(tp.cbTsParentValueofType, `${() => tp.cbTsParentValueofType} not properly initialised`) ;
+        return (
+            tp.cbTsParentValueofType !== missingType ?
+            tp.cbTsParentValueofType : undefined
+        ) ;
+    }
     /**
      * ad-hoc opaque type.
      */
