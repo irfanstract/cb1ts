@@ -18427,7 +18427,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return (
             gecwInitAndGet([
                 [GecwNameType.GivenBySourceNode, node] ,
-                { mustCheckWhetherUniqueSymbol: 1, } ,
+                { mustCheckWhetherUniqueSymbol: 1, assumedParentValueofType: missingType, } ,
             ], experimentalOrInternalOptions)
         ) ;
     }
@@ -18438,7 +18438,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return (
             gecwInitAndGet([
                 [GecwNameType.GivenBySymbol, node] ,
-                { mustCheckWhetherUniqueSymbol: 1, } ,
+                { mustCheckWhetherUniqueSymbol: 1, assumedParentValueofType: missingType, } ,
             ], experimentalOrInternalOptions)
         ) ;
     }
@@ -18451,6 +18451,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             subject,
             {
                 mustCheckWhetherUniqueSymbol,
+                assumedParentValueofType,
             } ,
         ],
         experimentalOrInternalOptions ,
@@ -18463,6 +18464,13 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             (
                 {}
                 & { mustCheckWhetherUniqueSymbol: 0 | 0.5 | 1 ; }
+                & {
+                    /**
+                     * - for top-level `valueof` type: {@link missingType}
+                     * - for nested    `valueof` type: regular non-null {@link Type} (does not have to be a `valueof` type)
+                     */
+                    assumedParentValueofType: Type ;
+                }
             ) ,
         ],
         experimentalOrInternalOptions?: GecwInitGetOptions ,
@@ -18576,9 +18584,15 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                                 //     return true ;
                                 // }
                             }
-                            return (
-                                createCbTsValueofType(symbol, { base: baseType, })
-                            ) ;
+                            return (() => {
+                                const tp = (
+                                    createCbTsValueofType(symbol, { base: baseType, })
+                                ) ;
+                                tp.cbTsParentValueofType = (
+                                    assumedParentValueofType
+                                ) ;
+                                return tp ;
+                            })() ;
                         })({
                             baseType: symbolAssignedType ,
                         })
