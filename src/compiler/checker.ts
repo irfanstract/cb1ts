@@ -28036,13 +28036,38 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         // }
         if ((
             declaration
-            &&
-            isConstVariable(localOrExportSymbol)
+        )) {
+        const refersToConst = (
+            false
+            // || isConstVariable(localOrExportSymbol)
+            || (
+                ((): boolean => {
+                    const { flags: effectiveFlags1, } = localOrExportSymbol ;
+                    const { flags: effectiveFlags2, } = { flags: getCombinedNodeFlags(declaration), } ;
+                    return (
+                        false
+                        || (!!(effectiveFlags1 & SymbolFlags.Alias))
+                        || (!!(effectiveFlags1 & (SymbolFlags.Namespace | SymbolFlags.Type)))
+                        || (!!(effectiveFlags1 & SymbolFlags.Variable) && !!(effectiveFlags2 & NodeFlags.Const))
+                        || (!!(effectiveFlags2 & NodeFlags.Const)) // `const` even if not `var`s or the like
+                        || (!!(effectiveFlags1 & SymbolFlags.Function))
+                        || (true && !!(effectiveFlags2 & NodeFlags.Namespace))
+                    ) ;
+                })()
+            )
+        );
+        if ((
+            false
+            || refersToConst
         )) {
             const ssType = (
                 getCbTsValueofTypeForNode(declaration)
             ) ;
-            if (isConfigTellingAgainstWidening(WideningMode1.PreserveOriginalArithmeticExpressionOrInterpolation)) {
+            if ((
+                isConfigTellingAgainstWidening(WideningMode1.PreserveOriginalArithmeticExpressionOrInterpolation)
+                ||
+                ((checkMode ?? 0) & CheckMode.ForceCbTsValueofType)
+            )) {
                 const {
                     sImpliedType ,
                 } = GST() ;
@@ -28060,6 +28085,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     sImpliedType ,
                 } ;
             }
+        } //
         }
 
         if (assignmentKind) {
