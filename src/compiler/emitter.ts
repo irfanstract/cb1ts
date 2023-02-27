@@ -4847,7 +4847,16 @@ export function createPrinter(printerOptions: PrinterOptions = {}, handlers: Pri
         return lastModifier && !positionIsSynthesized(lastModifier.end) ? lastModifier.end : node.pos;
     }
 
-    function emitTypeAnnotation(node: TypeNode | undefined) {
+    function emitTypeAnnotation(...[
+        node,
+        {
+        } = {} ,
+    ]: [
+        subject: TypeNode | undefined,
+        options?: (
+            {}
+        ),
+    ]) {
         if (node) {
             writePunctuation(":");
             writeSpace();
