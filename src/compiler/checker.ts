@@ -17499,6 +17499,78 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         }
     }
 
+    /**
+     * to make sure that
+     * - if `isConfigTellingAgainstWidening(WideningMode1.PreserveOriginalArithmeticExpressionOrInterpolation)`,
+     *   - if `accessFlags` contains `ExpressionPosition`,
+     *     - try return the `valueof` type, except if `resolvedPropValueType` is already a single-instance type
+     */
+    function gpttOnHasResolveddPropType({
+        leftHandType: objectType,
+        indexType,
+        accessFlags ,
+        resolvedPropValueType: xrt0 ,
+    }: {
+        leftHandType: Type ;
+        indexType: Type ;
+        resolvedPropValueType: Type;
+        accessFlags: AccessFlags ;
+    }): {
+        finalType: Type ;
+    } {
+        let xrt: Type = xrt0;
+        if ((
+            (accessFlags & AccessFlags.ExpressionPosition) &&
+            isConfigTellingAgainstWidening(WideningMode1.PreserveOriginalArithmeticExpressionOrInterpolation)
+        )) {
+            GpttFlow1: {
+                if (isCbTsValueofType(xrt)) {
+                    break GpttFlow1 ;
+                }
+                if (isGecwConstantType(xrt)) {
+                    break GpttFlow1 ;
+                }
+                if (0 < getCbTsValueofTypesFastImpreciseMode()) {
+                    break GpttFlow1 ;
+                }
+                // const lefthandTypePrinted = (
+                //     nodeBuilder.typeToTypeNode(objectType)
+                // ) ;
+                // if (!lefthandTypePrinted) {
+                //     break GpttFlow1 ;
+                // }
+                // // TODO
+                // // TODO
+                // if (lefthandTypePrinted.kind === SyntaxKind.TypeQuery) {
+                //     ; // TODO
+                // }
+                // if (0) {
+                // }
+                xrt = (
+                    // TODO
+                    gctvnt({
+                        lefthandType: objectType ,
+                        keyType: indexType ,
+                        accessFlags ,
+                        onResolutiveCommit: ({
+                            normalType ,
+                        }) => ({
+                            finalType: (
+                                // TODO
+                                // indexType
+                                // xrt
+                                normalType
+                            ) ,
+                        }) ,
+                    })
+                ) ;
+            }
+        }
+        return {
+            finalType: xrt ,
+        } ;
+    }
+
     function getIndexNodeForAccessExpression(accessNode: ElementAccessExpression | IndexedAccessTypeNode | PropertyName | BindingName | SyntheticExpression) {
         return accessNode.kind === SyntaxKind.ElementAccessExpression ? accessNode.argumentExpression :
             accessNode.kind === SyntaxKind.IndexedAccessType ? accessNode.indexType :
@@ -18617,6 +18689,134 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 )
                 , lefthandType.xcbtMemberTypeCache
             )
+        ) ;
+    }
+    function gctvnt({
+        lefthandType ,
+        keyType ,
+        // accessFlags ,
+        onResolutiveCommit: mayAccept ,
+    }: {
+        lefthandType: Type ,
+        keyType: Type ,
+        accessFlags: AccessFlags ,
+        /**
+         * this function will be called with `normalType` being a (fresh) `valueof` type constructed using the given properties, and
+         * the returned struct's `finalType` will be the final *the resolved type* for the combination of `keyType` and, possibly, `accessFlags`.
+         * `finalType` can be `normalType` or instead a different type.
+         */
+        onResolutiveCommit: (
+            (ctx: {
+                /**
+                 * the default generated type
+                 */
+                normalType: Type ;
+            }) => {
+                /**
+                 * the desired type. can be `normalType`.
+                 */
+                finalType: Type ;
+            }
+        ) ,
+    }): Type {
+        if ((
+            !(isTypeAssignableTo(lefthandType, emptyObjectType))
+            || (lefthandType === neverType)
+        )) {
+            if (lefthandType === missingType) {
+                return (
+                    Debug.fail(`invalid left-hand object type 'missingType' - 'missingType' is reserved for top-level types`)
+                ) ;
+            }
+            return (
+                Debug.fail(`invalid left-hand object type ${typeToString(lefthandType)}`)
+            ) ;
+        }
+        const lefthandTypeMemberTable = (
+            gecwInitAndGetLefthandMemberTable(lefthandType)
+        ) ;
+        for (const _ of [1, 2]) {
+            const c = lefthandTypeMemberTable.get(keyType) ;
+            if (c) {
+                return c ;
+            }
+            else {
+                const cS = (
+                    (
+                        createSymbol(SymbolFlags.Transient, (
+                            ((): __String => {
+                                if (ts.CbTsSpecificType.isPrimitiveLiteralSingletonType(keyType)) {
+                                    return (
+                                        (
+                                            /** see the ES specification for translating arbitrary values to string kyes */
+                                            (keyType.value)
+                                            .toString()
+                                        ) as __String
+                                    ) ;
+                                }
+                                if (keyType.flags & TypeFlags.UniqueESSymbol) {
+                                    return `symbolic(${keyType.id })` as __String;
+                                }
+                                return typeToString(keyType) as __String ;
+                            })()
+                        ))
+                    ) satisfies Symbol
+                ) ;
+                cS.parent = (
+                    ((): Symbol | undefined => {
+                        if (isCbTsValueofType(lefthandType)) {
+                            return (
+                                getCbTsValueofTypeInfo(lefthandType).referencedBinding satisfies Symbol
+                            ) ;
+                        }
+                        /**
+                         * {@link getTypeOfFuncClassEnumModuleWorker}
+                         */
+                        if ((
+                            ts.CbTsSpecificType.isObjectType(lefthandType)
+                            &&
+                            (lefthandType.flags & ObjectFlags.Anonymous)
+                            // && (lefthandType.symbol)
+                        )) {
+                            // TODO
+                            return (
+                                lefthandType.symbol
+                            ) ;
+                        }
+                        return undefined ;
+                    })()
+                ) ;
+                const defaultValueType = (
+                    (
+                        gecwInitAndGet([
+                            [GecwNameType.GivenBySymbol, cS] ,
+                            {
+                                mustCheckWhetherUniqueSymbol: 0.5,
+                                assumedParentValueofType: lefthandType,
+                            } ,
+                        ])
+                    ) satisfies Type
+                ) ;
+                if (isCbTsValueofType(defaultValueType)) {
+                    defaultValueType.cbTsNameWithinParentValueofType ||= (
+                        keyType
+                    ) ;
+                }
+                const valueType = (
+                    (
+                        mayAccept({
+                            normalType: (
+                                defaultValueType
+                            ) ,
+                        })
+                        .finalType
+                    ) satisfies Type
+                );
+                lefthandTypeMemberTable.set(keyType, valueType) ;
+            }
+        }
+        return (
+            Debug.fail("TODO")
         ) ;
     }
     function isGecwConstantType(...[baseType]: [Type]): boolean {
