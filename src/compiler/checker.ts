@@ -18634,6 +18634,22 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             if (tp.flags & TypeFlags.UniqueESSymbol) {
                 return true ;
             }
+            /**
+             * module-like objects (`exports`s, `namespace`, the static ctx of `class`es, `enum`s),
+             * when assigned to `var`-like(s),
+             * will cause the inferred type to be `typeof` types (unless configured otherwise by `compilerOptions`).
+             * ```
+             *   // import * as Immutable from "immutable" ;
+             *   namespace Immutable {
+             *      export function Range(....) {.....}
+             *      export function Seq(......) {.....}
+             *      export function List(.....) {.....}
+             *   }
+             *   export const myOwnImmutables = Immutable ; // infers `typeof Immutable`
+             * ```
+             * there's no evidence that such `typeof` types __uniquely__ select the NS it targets.
+             * for correctness, such cases had to be foregone.
+             */
         }
         return false ;
     }
