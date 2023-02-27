@@ -17691,6 +17691,32 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return getPropertyTypeForIndexType(objectType, apparentObjectType, indexType, indexType, accessNode, accessFlags | AccessFlags.CacheSymbol | AccessFlags.ReportDeprecated);
     }
 
+    function getDeferredIndexedAccessType(...[
+        objectType, indexType,
+        accessFlags,
+        _accessNode, // unused
+        aliasSymbol, aliasTypeArguments ,
+    ]: Parameters<(
+        /**
+         * trying to adopt the parameter sig of {@link getIndexedAccessTypeOrUndefined}, but
+         * can't simply that due to the type differences introduced by the parameters' defaults.
+         * has to manually, using the `{ <index>: {}, }` syntax, mark select elements as required.
+         * see also {@link createTupleTargetType}.
+         */
+        (...args: Parameters<typeof getIndexedAccessTypeOrUndefined> & {
+            2: {} ;
+        }) => void
+    )>) {
+        const persistentAccessFlags = accessFlags & AccessFlags.Persistent;
+        const id = objectType.id + "," + indexType.id + "," + persistentAccessFlags + getAliasId(aliasSymbol, aliasTypeArguments);
+        let type = indexedAccessTypes.get(id);
+        if (!type) {
+            indexedAccessTypes.set(id, type = createIndexedAccessType(objectType, indexType, persistentAccessFlags, aliasSymbol, aliasTypeArguments));
+        }
+
+        return type;
+    }
+
     function getTypeFromIndexedAccessTypeNode(node: IndexedAccessTypeNode) {
         const links = getNodeLinks(node);
         if (!links.resolvedType) {
