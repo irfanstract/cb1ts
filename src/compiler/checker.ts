@@ -6438,8 +6438,59 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 const idHexString = (
                     "0x" + type.id.toString(0x10).padStart(4, "3")
                 ) ;
-                const e = (
-                    symbolToExpression(originatingBinding, context, SymbolFlags.Value)
+                const resultingNode1 = (
+                    ((): TypeNode => {
+                        {
+                            if (isCbTsTopLevelValueofType(type)) {
+                                return (
+                                    factory.createCbTsValueofTypeNode((
+                                        symbolToExpression(originatingBinding, context, SymbolFlags.Value)
+                                    ))
+                                ) ;
+                            }
+                            if (getCbTsNestedValueofTypeParentType(type)) {
+                                const {
+                                    cbTsNameWithinParentValueofType: indexType = unresolvedType ,
+                                    cbTsParentValueofType: parentType = unresolvedType ,
+                                } = type ;
+                                const pr = (
+                                    typeToTypeNodeHelper(parentType, context)
+                                ) ;
+                                const indexF = (
+                                    typeToTypeNodeHelper(indexType, context)
+                                ) ;
+                                let resultingNode: TypeNode = (
+                                    ((): TypeNode => {
+                                        // TODO
+                                        // switch (pr.kind) {
+                                        //     case SyntaxKind.CbTsValueofType:
+                                        //         // // TODO
+                                        //         // if (indexF.flags & (TypeFlags.NumberLiteral)) {
+                                        //         //     // TODO
+                                        //         //     const e = (
+                                        //         //         (pr as ts.CbTsValueofTypeNode).exprName
+                                        //         //     ) ;
+                                        //         //     return (
+                                        //         //         factory.createCbTsValueofTypeNode((
+                                        //         //             factory.createElementAccessExpression((
+                                        //         //                 e
+                                        //         //             ), indexF)
+                                        //         //         ))
+                                        //         //     ) ;
+                                        //         // }
+                                        //     default :
+                                        // }
+                                        return (
+                                            factory.createIndexedAccessTypeNode(pr, indexF)
+                                        ) ;
+                                    })()
+                                ) ;
+                                resultingNode = undefined || resultingNode ;
+                                return resultingNode ;
+                            }
+                        }
+                        return Debug.fail(`should be unreachable`) ;
+                    })()
                 ) ;
                 const rbFormalShortStr = (
                     typeToString(rbFormal)
@@ -6448,7 +6499,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     typeToString(actualFormal)
                 ) ;
                 let resultingNode: TypeNode = (
-                    factory.createCbTsValueofTypeNode(e)
+                    resultingNode1
                 ) ;
                 resultingNode = undefined || resultingNode ; // prefer-const
                 resultingNode = (
