@@ -17651,14 +17651,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return objectType;
             }
             // Defer the operation by creating an indexed access type.
-            const persistentAccessFlags = accessFlags & AccessFlags.Persistent;
-            const id = objectType.id + "," + indexType.id + "," + persistentAccessFlags + getAliasId(aliasSymbol, aliasTypeArguments);
-            let type = indexedAccessTypes.get(id);
-            if (!type) {
-                indexedAccessTypes.set(id, type = createIndexedAccessType(objectType, indexType, persistentAccessFlags, aliasSymbol, aliasTypeArguments));
-            }
-
-            return type;
+            return (
+                getDeferredIndexedAccessType(objectType, indexType, accessFlags, accessNode, aliasSymbol, aliasTypeArguments)
+            ) ;
         }
         // In the following we resolve T[K] to the type of the property in T selected by K.
         // We treat boolean as different from other unions to improve errors;
