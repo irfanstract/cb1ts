@@ -4850,16 +4850,22 @@ export function createPrinter(printerOptions: PrinterOptions = {}, handlers: Pri
     function emitTypeAnnotation(...[
         node,
         {
+            typeAnnComment = "",
         } = {} ,
     ]: [
         subject: TypeNode | undefined,
         options?: (
             {}
+            & { typeAnnComment?: string ; }
         ),
     ]) {
         if (node) {
             writePunctuation(":");
             writeSpace();
+            if (typeAnnComment) {
+                writeComment(typeAnnComment) ;
+                writeSpace();
+            }
             emit(node);
         }
     }
