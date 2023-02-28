@@ -6162,8 +6162,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         const typeNode = nodeBuilder.typeToTypeNode(type, enclosingDeclaration, toNodeBuilderFlags(flags) | NodeBuilderFlags.IgnoreErrors | (noTruncation ? NodeBuilderFlags.NoTruncation : 0));
         if (typeNode === undefined) return Debug.fail("should always get typenode");
         // The unresolved type gets a synthesized comment on `any` to hint to users that it's not a plain `any`.
-        // Otherwise, we always strip comments out.
-        const printer = type !== unresolvedType ? createPrinterWithRemoveComments() : createPrinterWithDefaults();
+        const printer = type !== unresolvedType ? createPrinterWithDefaults() : createPrinterWithDefaults();
         const sourceFile = enclosingDeclaration && getSourceFileOfNode(enclosingDeclaration);
         printer.writeNode(EmitHint.Unspecified, typeNode, /*sourceFile*/ sourceFile, writer);
         const result = writer.getText();
@@ -6612,6 +6611,20 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
             return Debug.fail("Should be unreachable.");
 
+
+            // function cbTsValueofResolve(...[type]: [Type]): Type {
+            //     const {
+            //         referencedBinding: originatingBinding ,
+            //         referencedBindingFormal: rbFormal,
+            //         representation: actualFormal,
+            //     } = (
+            //         getCbTsValueofTypeInfo(type)
+            //     ) ;
+            //     const idHexString = (
+            //         "0x" + type.id.toString(0x10).padStart(4, "3")
+            //     ) ;
+            //     return Debug.fail(`a CbTsValueofType which is neither a top-level one nor a nested one`);
+            // }
 
             function conditionalTypeToTypeNode(type: ConditionalType) {
                 const checkTypeNode = typeToTypeNodeHelper(type.checkType, context);
@@ -17831,6 +17844,17 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 getDeferredIndexedAccessType(objectType, indexType, accessFlags, accessNode, aliasSymbol, aliasTypeArguments)
             ) ;
         }
+        // `valueof` types shall behave as unresolved type-parameters.
+        if ((
+            isCbTsValueofType(objectType)
+        )) {
+            if (0) {
+                // Defer the operation by creating an indexed access type.
+                return (
+                    getDeferredIndexedAccessType(objectType, indexType, accessFlags, accessNode, aliasSymbol, aliasTypeArguments)
+                ) ;
+            }
+        }
         // In the following we resolve T[K] to the type of the property in T selected by K.
         // We treat boolean as different from other unions to improve errors;
         // skipping straight to getPropertyTypeForIndexType gives errors with 'boolean' instead of 'true'.
@@ -18565,6 +18589,53 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             ], experimentalOrInternalOptions)
         ) ;
     }
+    // // TS-6133
+    // function getCbTsValueofNestedTypeUnused(): void {
+    //     if (1) {
+    //         return ;
+    //     }
+    //     getCbTsValueofNestedTypeUnused() ;
+    //     Object(getCbTsValueofNestedType) ;
+    // }
+    // function getCbTsValueofNestedType({
+    //     lefthandType ,
+    //     keyType ,
+    // }: {
+    //     lefthandType: XCbTsValueofType ,
+    //     keyType: Type ,
+    // }): Type {
+    //     switch (getCbTsValueofTypesFastImpreciseMode()) {
+    //         case 1:
+    //         case 2:
+    //             // return (
+    //             //     // plain indexed access type .
+    //             //     //
+    //             //     // in theory, `valueof` types shall only occur for `const` paths, not possibly-mutable paths.
+    //             //     // therefore, at this point,
+    //             //     //  - `accessFlags` should contain `ExpressionPosition`
+    //             //     //
+    //             //     createIndexedAccessType(lefthandType, keyType, (
+    //             //         0
+    //             //         | AccessFlags.ExpressionPosition
+    //             //     ), /* aliasSymbol */ undefined, /* aliasTypeArguments */ undefined)
+    //             // ) ;
+    //             break ;
+    //         default:
+    //             return (
+    //                 gctvnt({
+    //                     lefthandType ,
+    //                     keyType ,
+    //                     onResolutiveCommit: ({ normalType, }) => ({ finalType: normalType, }) ,
+    //                 })
+    //             ) ;
+    //     }
+    //     return (
+    //         getIndexedAccessType((
+    //             getCbTsValueofTypeInfo(lefthandType)
+    //             .referencedBindingFormal
+    //         ), keyType)
+    //     ) ;
+    // }
     enum GecwNameType {
         GivenBySourceNode ,
         GivenBySymbol ,
