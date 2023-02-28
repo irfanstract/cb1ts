@@ -18317,6 +18317,37 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     return false ;
                 }
             }
+            if (tp.flags & TypeFlags.UniqueESSymbol) {
+                return true ;
+            }
+            if (tp.flags & TypeFlags.Object) {
+                const { symbol: tpSymbol, } = tp ;
+                // const { objectFlags: objFlags, } = tp as ObjectType ;
+                if ((
+                    (tpSymbol.flags & (SymbolFlags.ValueModule | SymbolFlags.Enum | SymbolFlags.Class))
+                )) {
+                    return true ;
+                }
+            }
+            // currently disabled for relative inefficency
+            if (0) {
+                /**
+                 * if {@link typeToString} would print it as `typeof` type (note possible union or intersection!),
+                 * return `true`
+                 */
+                {
+                    const tpAsString = (
+                        typeToString(tp)
+                    ) ;
+                    if ((
+                        // merely `.match(/^typeof /g)` is not enough in case of unions like `typeof Boolean | typeof somethingElse`
+                        tpAsString.match(/^typeof /g)
+                        && tpAsString.match(/^typeof [\w\.]+$/)
+                    )) {
+                        return true ;
+                    }
+                }
+            }
         }
         return false ;
     }
