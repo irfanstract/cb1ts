@@ -18323,10 +18323,167 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
     function getCbTsValueofTypeForNode(...[node, experimentalOrInternalOptions]: [
         subject: Node,
-        experimentalOrInternalOptions?: {
-            unifyTypesForAliases: boolean ;
-        } ,
+        experimentalOrInternalOptions?: GecwInitGetOptions ,
     ]) {
+        return (
+            gecwInitAndGet([
+                [GecwNameType.GivenBySourceNode, node] ,
+                { mustCheckWhetherUniqueSymbol: 1, } ,
+            ], experimentalOrInternalOptions)
+        ) ;
+    }
+    function getCbTsValueofTypeForSymbol(...[node, experimentalOrInternalOptions]: [
+        subject: Symbol,
+        experimentalOrInternalOptions?: GecwInitGetOptions ,
+    ]) {
+        return (
+            gecwInitAndGet([
+                [GecwNameType.GivenBySymbol, node] ,
+                { mustCheckWhetherUniqueSymbol: 1, } ,
+            ], experimentalOrInternalOptions)
+        ) ;
+    }
+    function getCbTsValueofNestedType({
+        lefthandType ,
+        keyType ,
+    }: {
+        lefthandType: XCbTsValueofType ,
+        keyType: Type ,
+    }): Type {
+        switch (getCbTsValueofTypesFastImpreciseMode()) {
+            case 1:
+            case 2:
+                // return (
+                //     // plain indexed access type .
+                //     //
+                //     // in theory, `valueof` types shall only occur for `const` paths, not possibly-mutable paths.
+                //     // therefore, at this point,
+                //     //  - `accessFlags` should contain `ExpressionPosition`
+                //     //
+                //     createIndexedAccessType(lefthandType, keyType, (
+                //         0
+                //         | AccessFlags.ExpressionPosition
+                //     ), /* aliasSymbol */ undefined, /* aliasTypeArguments */ undefined)
+                // ) ;
+                break ;
+            default:
+                const lefthandTypeMemberTable = (
+                    lefthandType.xcbtMemberTypeCache || (
+                        lefthandType.xcbtMemberTypeCache = (
+                            new Map()
+                        )
+                        , lefthandType.xcbtMemberTypeCache
+                    )
+                ) ;
+                for (const _ of [1, 2]) {
+                    const c = lefthandTypeMemberTable.get(keyType) ;
+                    if (c) {
+                        return c ;
+                    }
+                    else {
+                        const cS = (
+                            (
+                                createSymbol(SymbolFlags.Transient, typeToString(keyType) as __String)
+                            ) satisfies Symbol
+                        ) ;
+                        cS.parent = (
+                            getCbTsValueofTypeInfo(lefthandType).referencedBinding satisfies Symbol
+                        ) ;
+                        const c = (
+                            (
+                                gecwInitAndGet([
+                                    [GecwNameType.GivenBySymbol, cS] ,
+                                    { mustCheckWhetherUniqueSymbol: 0.5, } ,
+                                ])
+                            ) satisfies Type
+                        );
+                        lefthandTypeMemberTable.set(keyType, c) ;
+                    }
+                }
+                return (
+                    Debug.fail("TODO")
+                ) ;
+        }
+        return (
+            getIndexedAccessType((
+                getCbTsValueofTypeInfo(lefthandType)
+                .referencedBindingFormal
+            ), keyType)
+        ) ;
+    }
+    enum GecwNameType {
+        GivenBySourceNode ,
+        GivenBySymbol ,
+    }
+    function gecwInitAndGet(...[[subject, { mustCheckWhetherUniqueSymbol, }], experimentalOrInternalOptions]: [
+        subject: [
+            (
+                | [GecwNameType.GivenBySourceNode, Node, ]
+                | [GecwNameType.GivenBySymbol, Symbol,]
+            ),
+            (
+                {}
+                & { mustCheckWhetherUniqueSymbol: 0 | 0.5 | 1 ; }
+            ) ,
+        ],
+        experimentalOrInternalOptions?: GecwInitGetOptions ,
+    ]): Type {
+        const ssr = (() : (
+            | undefined
+            | (
+                & (
+                    | {
+                        resolvedDef: Node ;
+                        resolvedSymbol: Symbol ;
+                    }
+                    | {
+                        resolvedDef: false ;
+                        resolvedSymbol: Symbol ;
+                    }
+                )
+            )
+        ) => {
+            /**
+             * see {@link getESSymbolLikeTypeForNode}'s code.
+             */
+            if (subject[0] === GecwNameType.GivenBySourceNode) {
+                const node = subject[1] satisfies Node ;
+                if (isDeclaration(node)) {
+                    const symbol = isCommonJsExportPropertyAssignment(node) ? getSymbolOfNode((node as BinaryExpression).left) : getSymbolOfNode(node);
+                    if (symbol) {
+                        return {
+                            resolvedDef: node ,
+                            resolvedSymbol: symbol ,
+                        } ;
+                    }
+                }
+            }
+            /**
+             * see {@link checkIdentifier}'s code.
+             */
+            if (subject[0] === GecwNameType.GivenBySymbol) {
+                const symbol = subject[1] ;
+                const {
+                    valueDeclaration: node ,
+                } = getExportSymbolOfValueSymbolIfExported(symbol) ;
+                if (node) {
+                    return {
+                        resolvedDef: node ,
+                        resolvedSymbol: symbol ,
+                    } ;
+                }
+                else {
+                    return {
+                        resolvedDef: node || false ,
+                        resolvedSymbol: symbol ,
+                    } ;
+                }
+            }
+            return undefined ;
+        })() || ({
+            resolvedSymbol: false ,
+            resolvedDef: false
+        } as const) ;
         const {
             unifyTypesForAliases,
         } = (
@@ -18334,13 +18491,31 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 unifyTypesForAliases: true ,
             }
         ) ;
-        if (isDeclaration(node)) {
-            const symbol = isCommonJsExportPropertyAssignment(node) ? getSymbolOfNode((node as BinaryExpression).left) : getSymbolOfNode(node);
+        if (ssr.resolvedSymbol) {
+            const {
+                resolvedDef: node ,
+                resolvedSymbol: symbol ,
+            } = ssr ;
+            GcwFlow1:
             if (symbol) {
                 const links = getSymbolLinks(symbol);
                 const symbolAssignedType = getTypeOfSymbol(symbol) ;
-                if (symbolAssignedType.flags & TypeFlags.UniqueESSymbol) {
-                    return getESSymbolLikeTypeForNode(node) ;
+                if (0 < mustCheckWhetherUniqueSymbol) {
+                    if (symbolAssignedType.flags & TypeFlags.UniqueESSymbol) {
+                        if (node) {
+                            return getESSymbolLikeTypeForNode(node) ;
+                        }
+                        else {
+                            if ((0.9 <= mustCheckWhetherUniqueSymbol)) {
+                                if (1) {
+                                    if (isGecwConstantType(symbolAssignedType)) {
+                                        return symbolAssignedType ;
+                                    }
+                                }
+                                break GcwFlow1 ;
+                            }
+                        }
+                    }
                 }
                 return (
                     links.uniqueESSymbolType || (
@@ -18374,6 +18549,11 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         }
         return unresolvedType;
     }
+    type GecwInitGetOptions = (
+        | {
+            unifyTypesForAliases: boolean ;
+        }
+    );
     function isGecwConstantType(...[baseType]: [Type]): boolean {
         {
             const tp = baseType ;
@@ -18454,6 +18634,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
      */
     interface XCbTsValueofType extends Type {
         _XCbTsValueofTypeSpecific: any ; // BRANDING
+        xcbtMemberTypeCache?: Map<Type, Type> ;
     }
     function createCbTsValueofTypeImpl(...[
         symbol, {
@@ -18464,8 +18645,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             //
         } ,
     ]) {
-        const tp = createCbTsCustomType(symbol, TypeFlags.ActualValueOf) ;
-        return tp ;
+        const type = createCbTsCustomType(symbol, TypeFlags.ActualValueOf) ;
+        (type as { escapedName?: __String ; }).escapedName = `__@${type.symbol.escapedName}@${getSymbolId(type.symbol)}` as __String;
+        return type ;
     }
     function getCbTsValueofTypeInfo(...[tp]: [XCbTsValueofType]): {
         /**
@@ -18478,6 +18660,12 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
          * result of `typeof <originatingBinding>` for classical, non-customised `typeof` behv
          */
         referencedBindingFormal: Type ;
+        /**
+         * representation for this type.
+         */
+        representation: Type;
+        //
+        declaringTypeInfo: false | XCbTsValueofType ;
     } {
         const originatingBinding1 = (
             /**
@@ -18489,9 +18677,44 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             // TODO
             getTypeOfSymbol(originatingBinding1)
         ) ;
+        const representation = (
+            ((): Type => {
+                if (isCbTsValueofType(declaredForm)) {
+                    return (
+                        getCbTsValueofTypeInfo(declaredForm)
+                        .representation
+                    ) ;
+                }
+                return declaredForm ;
+            })()
+        ) ;
+        const parentSymbol = (
+            getParentOfSymbol(originatingBinding1)
+        ) ;
+        const {
+            declaringTypeInfo: declaringTypeInfoFnl ,
+        } = ((): {
+            declaringTypeInfo: false | XCbTsValueofType ;
+        } => {
+            if (parentSymbol) {
+                const declaringType = (
+                    getCbTsValueofTypeForSymbol(parentSymbol)
+                ) ;
+                if (isCbTsValueofType(declaringType)) {
+                    return {
+                        declaringTypeInfo: declaringType ,
+                    } ;
+                }
+            }
+            return {
+                declaringTypeInfo: false ,
+            } ;
+        })() ;
         return {
             referencedBinding: originatingBinding1 ,
             referencedBindingFormal: declaredForm ,
+            representation ,
+            declaringTypeInfo: declaringTypeInfoFnl ,
         } ;
     }
 
