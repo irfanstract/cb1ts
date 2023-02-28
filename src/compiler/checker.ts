@@ -17262,6 +17262,8 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             }
             const prop = getPropertyOfType(objectType, propName);
             if (prop) {
+                let xrt: Type | undefined ;
+                xrt = (() => {
                 if (accessFlags & AccessFlags.ReportDeprecated && accessNode && prop.declarations && isDeprecatedSymbol(prop) && isUncalledFunctionReference(accessNode, prop)) {
                     const deprecatedNode = accessExpression?.argumentExpression ?? (isIndexedAccessTypeNode(accessNode) ? accessNode.indexType : accessNode);
                     addDeprecatedSuggestion(deprecatedNode, prop.declarations, propName as string);
@@ -17283,6 +17285,20 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return accessExpression && getAssignmentTargetKind(accessExpression) !== AssignmentKind.Definite ? getFlowTypeOfReference(accessExpression, propType) :
                     accessNode && isIndexedAccessTypeNode(accessNode) && containsMissingType(propType) ? getUnionType([propType, undefinedType]) :
                     propType;
+                })();
+                if (xrt) {
+                    ({
+                        finalType: xrt ,
+                    } = (
+                        gpttOnHasResolveddPropType({
+                            leftHandType: objectType ,
+                            indexType ,
+                            accessFlags ,
+                            resolvedPropValueType: xrt ,
+                        })
+                    )) ;
+                }
+                return xrt ;
             }
             if (everyType(objectType, isTupleType) && isNumericLiteralName(propName)) {
                 const index = +propName;
@@ -17303,7 +17319,17 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 if (index >= 0) {
                     errorIfWritingToReadonlyIndex(getIndexInfoOfType(objectType, numberType));
                     return mapType(objectType, t => {
-                        const restType = getRestTypeOfTupleType(t as TupleTypeReference) || undefinedType;
+                        let restType = getRestTypeOfTupleType(t as TupleTypeReference) || undefinedType;
+                        ({
+                            finalType: restType ,
+                        } = (
+                            gpttOnHasResolveddPropType({
+                                leftHandType: t ,
+                                indexType ,
+                                accessFlags ,
+                                resolvedPropValueType: restType
+                            })
+                        ));
                         return accessFlags & AccessFlags.IncludeUndefined ? getUnionType([restType, missingType]) : restType;
                     });
                 }
@@ -17317,6 +17343,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             // index signature applies even when accessing with a symbol-like type.
             const indexInfo = getApplicableIndexInfo(objectType, indexType) || getIndexInfoOfType(objectType, stringType);
             if (indexInfo) {
+                let xrt: Type | undefined = (() => {
                 if (accessFlags & AccessFlags.NoIndexSignatures && indexInfo.keyType !== numberType) {
                     if (accessExpression) {
                         error(accessExpression, Diagnostics.Type_0_cannot_be_used_to_index_type_1, typeToString(indexType), typeToString(originalObjectType));
@@ -17341,6 +17368,20 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     return getUnionType([indexInfo.type, missingType]);
                 }
                 return indexInfo.type;
+                })() ;
+                if (xrt) {
+                    ({
+                        finalType: xrt ,
+                    } = (
+                        gpttOnHasResolveddPropType({
+                            leftHandType: objectType ,
+                            indexType ,
+                            accessFlags ,
+                            resolvedPropValueType: xrt
+                        })
+                    ));
+                }
+                return xrt ;
             }
             if (indexType.flags & TypeFlags.Never) {
                 return neverType;
@@ -17349,6 +17390,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return anyType;
             }
             if (accessExpression && !isConstEnumObjectType(objectType)) {
+                let xrt: Type | undefined = (() => {
                 if (isObjectLiteralType(objectType)) {
                     if (noImplicitAny && indexType.flags & (TypeFlags.StringLiteral | TypeFlags.NumberLiteral)) {
                         diagnostics.add(createDiagnosticForNode(accessExpression, Diagnostics.Property_0_does_not_exist_on_type_1, (indexType as StringLiteralType).value, typeToString(objectType)));
@@ -17414,6 +17456,20 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     }
                 }
                 return undefined;
+                })();
+                if (xrt) {
+                    ({
+                        finalType: xrt ,
+                    } = (
+                        gpttOnHasResolveddPropType({
+                            leftHandType: objectType ,
+                            indexType ,
+                            accessFlags ,
+                            resolvedPropValueType: xrt
+                        })
+                    ));
+                }
+                return xrt ;
             }
         }
         if (isJSLiteralType(objectType)) {
@@ -17441,6 +17497,78 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 error(accessExpression, Diagnostics.Index_signature_in_type_0_only_permits_reading, typeToString(objectType));
             }
         }
+    }
+
+    /**
+     * to make sure that
+     * - if `isConfigTellingAgainstWidening(WideningMode1.PreserveOriginalArithmeticExpressionOrInterpolation)`,
+     *   - if `accessFlags` contains `ExpressionPosition`,
+     *     - try return the `valueof` type, except if `resolvedPropValueType` is already a single-instance type
+     */
+    function gpttOnHasResolveddPropType({
+        leftHandType: objectType,
+        indexType,
+        accessFlags ,
+        resolvedPropValueType: xrt0 ,
+    }: {
+        leftHandType: Type ;
+        indexType: Type ;
+        resolvedPropValueType: Type;
+        accessFlags: AccessFlags ;
+    }): {
+        finalType: Type ;
+    } {
+        let xrt: Type = xrt0;
+        if ((
+            (accessFlags & AccessFlags.ExpressionPosition) &&
+            isConfigTellingAgainstWidening(WideningMode1.PreserveOriginalArithmeticExpressionOrInterpolation)
+        )) {
+            GpttFlow1: {
+                if (isCbTsValueofType(xrt)) {
+                    break GpttFlow1 ;
+                }
+                if (isGecwConstantType(xrt)) {
+                    break GpttFlow1 ;
+                }
+                if (0 < getCbTsValueofTypesFastImpreciseMode()) {
+                    break GpttFlow1 ;
+                }
+                // const lefthandTypePrinted = (
+                //     nodeBuilder.typeToTypeNode(objectType)
+                // ) ;
+                // if (!lefthandTypePrinted) {
+                //     break GpttFlow1 ;
+                // }
+                // // TODO
+                // // TODO
+                // if (lefthandTypePrinted.kind === SyntaxKind.TypeQuery) {
+                //     ; // TODO
+                // }
+                // if (0) {
+                // }
+                xrt = (
+                    // TODO
+                    gctvnt({
+                        lefthandType: objectType ,
+                        keyType: indexType ,
+                        accessFlags ,
+                        onResolutiveCommit: ({
+                            normalType ,
+                        }) => ({
+                            finalType: (
+                                // TODO
+                                // indexType
+                                // xrt
+                                normalType
+                            ) ,
+                        }) ,
+                    })
+                ) ;
+            }
+        }
+        return {
+            finalType: xrt ,
+        } ;
     }
 
     function getIndexNodeForAccessExpression(accessNode: ElementAccessExpression | IndexedAccessTypeNode | PropertyName | BindingName | SyntheticExpression) {
@@ -18371,7 +18499,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return (
             gecwInitAndGet([
                 [GecwNameType.GivenBySourceNode, node] ,
-                { mustCheckWhetherUniqueSymbol: 1, } ,
+                { mustCheckWhetherUniqueSymbol: 1, assumedParentValueofType: missingType, } ,
             ], experimentalOrInternalOptions)
         ) ;
     }
@@ -18382,83 +18510,24 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return (
             gecwInitAndGet([
                 [GecwNameType.GivenBySymbol, node] ,
-                { mustCheckWhetherUniqueSymbol: 1, } ,
+                { mustCheckWhetherUniqueSymbol: 1, assumedParentValueofType: missingType, } ,
             ], experimentalOrInternalOptions)
-        ) ;
-    }
-    function getCbTsValueofNestedType({
-        lefthandType ,
-        keyType ,
-    }: {
-        lefthandType: XCbTsValueofType ,
-        keyType: Type ,
-    }): Type {
-        switch (getCbTsValueofTypesFastImpreciseMode()) {
-            case 1:
-            case 2:
-                // return (
-                //     // plain indexed access type .
-                //     //
-                //     // in theory, `valueof` types shall only occur for `const` paths, not possibly-mutable paths.
-                //     // therefore, at this point,
-                //     //  - `accessFlags` should contain `ExpressionPosition`
-                //     //
-                //     createIndexedAccessType(lefthandType, keyType, (
-                //         0
-                //         | AccessFlags.ExpressionPosition
-                //     ), /* aliasSymbol */ undefined, /* aliasTypeArguments */ undefined)
-                // ) ;
-                break ;
-            default:
-                const lefthandTypeMemberTable = (
-                    lefthandType.xcbtMemberTypeCache || (
-                        lefthandType.xcbtMemberTypeCache = (
-                            new Map()
-                        )
-                        , lefthandType.xcbtMemberTypeCache
-                    )
-                ) ;
-                for (const _ of [1, 2]) {
-                    const c = lefthandTypeMemberTable.get(keyType) ;
-                    if (c) {
-                        return c ;
-                    }
-                    else {
-                        const cS = (
-                            (
-                                createSymbol(SymbolFlags.Transient, typeToString(keyType) as __String)
-                            ) satisfies Symbol
-                        ) ;
-                        cS.parent = (
-                            getCbTsValueofTypeInfo(lefthandType).referencedBinding satisfies Symbol
-                        ) ;
-                        const c = (
-                            (
-                                gecwInitAndGet([
-                                    [GecwNameType.GivenBySymbol, cS] ,
-                                    { mustCheckWhetherUniqueSymbol: 0.5, } ,
-                                ])
-                            ) satisfies Type
-                        );
-                        lefthandTypeMemberTable.set(keyType, c) ;
-                    }
-                }
-                return (
-                    Debug.fail("TODO")
-                ) ;
-        }
-        return (
-            getIndexedAccessType((
-                getCbTsValueofTypeInfo(lefthandType)
-                .referencedBindingFormal
-            ), keyType)
         ) ;
     }
     enum GecwNameType {
         GivenBySourceNode ,
         GivenBySymbol ,
     }
-    function gecwInitAndGet(...[[subject, { mustCheckWhetherUniqueSymbol, }], experimentalOrInternalOptions]: [
+    function gecwInitAndGet(...[
+        [
+            subject,
+            {
+                mustCheckWhetherUniqueSymbol,
+                assumedParentValueofType,
+            } ,
+        ],
+        experimentalOrInternalOptions ,
+    ]: [
         subject: [
             (
                 | [GecwNameType.GivenBySourceNode, Node, ]
@@ -18467,6 +18536,13 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             (
                 {}
                 & { mustCheckWhetherUniqueSymbol: 0 | 0.5 | 1 ; }
+                & {
+                    /**
+                     * - for top-level `valueof` type: {@link missingType}
+                     * - for nested    `valueof` type: regular non-null {@link Type} (does not have to be a `valueof` type)
+                     */
+                    assumedParentValueofType: Type ;
+                }
             ) ,
         ],
         experimentalOrInternalOptions?: GecwInitGetOptions ,
@@ -18580,9 +18656,15 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                                 //     return true ;
                                 // }
                             }
-                            return (
-                                createCbTsValueofType(symbol, { base: baseType, })
-                            ) ;
+                            return (() => {
+                                const tp = (
+                                    createCbTsValueofType(symbol, { base: baseType, })
+                                ) ;
+                                tp.cbTsParentValueofType = (
+                                    assumedParentValueofType
+                                ) ;
+                                return tp ;
+                            })() ;
                         })({
                             baseType: symbolAssignedType ,
                         })
@@ -18597,6 +18679,146 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             unifyTypesForAliases: boolean ;
         }
     );
+    function gecwInitAndGetLefthandMemberTable(...[lefthandType]: [
+        Type ,
+    ]) {
+        return (
+            lefthandType.xcbtMemberTypeCache || (
+                lefthandType.xcbtMemberTypeCache = (
+                    new Map()
+                )
+                , lefthandType.xcbtMemberTypeCache
+            )
+        ) ;
+    }
+    function gctvnt({
+        lefthandType ,
+        keyType ,
+        // accessFlags ,
+        onResolutiveCommit: mayAccept ,
+    }: {
+        lefthandType: Type ,
+        keyType: Type ,
+        accessFlags: AccessFlags ,
+        /**
+         * this function will be called with `normalType` being a (fresh) `valueof` type constructed using the given properties, and
+         * the returned struct's `finalType` will be the final *the resolved type* for the combination of `keyType` and, possibly, `accessFlags`.
+         * `finalType` can be `normalType` or instead a different type.
+         */
+        onResolutiveCommit: (
+            (ctx: {
+                /**
+                 * the default generated type
+                 */
+                normalType: Type ;
+            }) => {
+                /**
+                 * the desired type. can be `normalType`.
+                 */
+                finalType: Type ;
+            }
+        ) ,
+    }): Type {
+        if ((
+            !(isTypeAssignableTo(lefthandType, emptyObjectType))
+            || (lefthandType === neverType)
+        )) {
+            if (lefthandType === missingType) {
+                return (
+                    Debug.fail(`invalid left-hand object type 'missingType' - 'missingType' is reserved for top-level types`)
+                ) ;
+            }
+            return (
+                Debug.fail(`invalid left-hand object type ${typeToString(lefthandType)}`)
+            ) ;
+        }
+        const lefthandTypeMemberTable = (
+            gecwInitAndGetLefthandMemberTable(lefthandType)
+        ) ;
+        for (const _ of [1, 2]) {
+            const c = lefthandTypeMemberTable.get(keyType) ;
+            if (c) {
+                return c ;
+            }
+            else {
+                const cS = (
+                    (
+                        createSymbol(SymbolFlags.Transient, (
+                            ((): __String => {
+                                if (ts.CbTsSpecificType.isPrimitiveLiteralSingletonType(keyType)) {
+                                    return (
+                                        (
+                                            /** see the ES specification for translating arbitrary values to string kyes */
+                                            (keyType.value)
+                                            .toString()
+                                        ) as __String
+                                    ) ;
+                                }
+                                if (keyType.flags & TypeFlags.UniqueESSymbol) {
+                                    return `symbolic(${keyType.id })` as __String;
+                                }
+                                return typeToString(keyType) as __String ;
+                            })()
+                        ))
+                    ) satisfies Symbol
+                ) ;
+                cS.parent = (
+                    ((): Symbol | undefined => {
+                        if (isCbTsValueofType(lefthandType)) {
+                            return (
+                                getCbTsValueofTypeInfo(lefthandType).referencedBinding satisfies Symbol
+                            ) ;
+                        }
+                        /**
+                         * {@link getTypeOfFuncClassEnumModuleWorker}
+                         */
+                        if ((
+                            ts.CbTsSpecificType.isObjectType(lefthandType)
+                            &&
+                            (lefthandType.flags & ObjectFlags.Anonymous)
+                            // && (lefthandType.symbol)
+                        )) {
+                            // TODO
+                            return (
+                                lefthandType.symbol
+                            ) ;
+                        }
+                        return undefined ;
+                    })()
+                ) ;
+                const defaultValueType = (
+                    (
+                        gecwInitAndGet([
+                            [GecwNameType.GivenBySymbol, cS] ,
+                            {
+                                mustCheckWhetherUniqueSymbol: 0.5,
+                                assumedParentValueofType: lefthandType,
+                            } ,
+                        ])
+                    ) satisfies Type
+                ) ;
+                if (isCbTsValueofType(defaultValueType)) {
+                    defaultValueType.cbTsNameWithinParentValueofType ||= (
+                        keyType
+                    ) ;
+                }
+                const valueType = (
+                    (
+                        mayAccept({
+                            normalType: (
+                                defaultValueType
+                            ) ,
+                        })
+                        .finalType
+                    ) satisfies Type
+                );
+                lefthandTypeMemberTable.set(keyType, valueType) ;
+            }
+        }
+        return (
+            Debug.fail("TODO")
+        ) ;
+    }
     function isGecwConstantType(...[baseType]: [Type]): boolean {
         {
             const tp = baseType ;
@@ -18659,6 +18881,21 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         }
         // TODO
         return false ;
+    }
+    function isCbTsTopLevelValueofType(tp: XCbTsValueofType): boolean {
+        Debug.assert(tp.cbTsParentValueofType, `${() => tp.cbTsParentValueofType} not properly initialised`) ;
+        if (tp.cbTsParentValueofType === missingType) {
+            Debug.assert(!tp.cbTsNameWithinParentValueofType, `is top-level variant yet ${() => tp.cbTsNameWithinParentValueofType} is non-null`) ;
+            return true ;
+        }
+        else return false ;
+    }
+    function getCbTsNestedValueofTypeParentType(tp: XCbTsValueofType): Type | undefined {
+        Debug.assert(tp.cbTsParentValueofType, `${() => tp.cbTsParentValueofType} not properly initialised`) ;
+        return (
+            tp.cbTsParentValueofType !== missingType ?
+            tp.cbTsParentValueofType : undefined
+        ) ;
     }
     /**
      * ad-hoc opaque type.
