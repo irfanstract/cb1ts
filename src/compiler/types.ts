@@ -6053,6 +6053,11 @@ export const enum TypeFlags {
     NonPrimitive    = 1 << 26,  // intrinsic object type
     TemplateLiteral = 1 << 27,  // Template literal type
     StringMapping   = 1 << 28,  // Uppercase/Lowercase type
+    /**
+     * `valueof` type ; type which selects the value of a stably-valued expression (eg `const` or `namespace`).
+     * @internal
+     */
+    ActualValueOf   = 1 << 30,
 
     /** @internal */
     AnyOrUnknown = Any | Unknown,
@@ -6205,6 +6210,13 @@ export namespace CbTsSpecificType {
     }
     export function isIntersection(t: Type): t is IntersectionType {
         return !!(t.flags & TypeFlags.Intersection) ;
+    }
+
+    export function isValueofType(t: Type): boolean {
+        return (
+            false
+            || !!(t.flags & TypeFlags.ActualValueOf)
+        ) ;
     }
 
     /**
