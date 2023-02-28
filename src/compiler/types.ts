@@ -6141,6 +6141,91 @@ export interface Type {
     widened?: Type; // Cached widened form of the type
 }
 
+/**
+ * a handful of relevant utility methods for working with {@link Type}s.
+ */
+export namespace CbTsSpecificType {
+
+    export function isUndefinedTypeOrNullType(t: Type): t is (
+        | IntrinsicType
+    ) {
+        return (
+            false
+            || !!(t.flags & (TypeFlags.Undefined | TypeFlags.Null))
+        ) ;
+    }
+
+    /**
+     * {@link TypeFlags.Literal}.
+     */
+    export function isPrimitiveLiteralSingletonType(t: Type): t is (
+        | (LiteralType & (
+            | LiteralType
+            | StringLiteralType
+            | NumberLiteralType
+            | BigIntLiteralType
+        ))
+    ) {
+        return !!(t.flags & TypeFlags.Literal) ;
+    }
+
+    /**
+     * if it selects *exactly* *one* `unique symbol`.
+     */
+    export function isUniqueSymbolSelector(t: Type): t is (
+        | UniqueESSymbolType
+    ) {
+        // TODO
+        return (
+            false
+            || !!(t.flags & TypeFlags.UniqueESSymbol)
+        ) ;
+    }
+
+    /**
+     * {@link TypeFlags.Object}.
+     */
+    export function isObjectType(t: Type): t is ObjectType {
+        return !!(t.flags & TypeFlags.Object) ;
+    }
+
+    export function isTypeParameter(t: Type): t is TypeParameter {
+        return !!(t.flags & TypeFlags.TypeParameter) ;
+    }
+
+    /**
+     * {@link TypeFlags.IndexedAccess}.
+     */
+    export function isIndexedAccessType(t: Type): t is IndexedAccessType {
+        return !!(t.flags & TypeFlags.IndexedAccess) ;
+    }
+
+    export function isUnion(t: Type): t is UnionType {
+        return !!(t.flags & TypeFlags.Union) ;
+    }
+    export function isIntersection(t: Type): t is IntersectionType {
+        return !!(t.flags & TypeFlags.Intersection) ;
+    }
+
+    /**
+     * a single-instance type?
+     */
+    export function isMonomorphicType(t: Type): t is (
+        | Type
+        | LiteralType
+        | UniqueESSymbolType
+        | ObjectType
+    ) {
+        return (
+            false
+            || isUndefinedTypeOrNullType(t)
+            || isPrimitiveLiteralSingletonType(t)
+            || isUniqueSymbolSelector(t)
+        ) ;
+    }
+
+}
+
 /** @internal */
 // Intrinsic types (TypeFlags.Intrinsic)
 export interface IntrinsicType extends Type {
