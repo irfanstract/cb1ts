@@ -15501,12 +15501,18 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             // note:
             const type = ((): Type => {
                 const { exprName: referent, } = caller ;
+                const chkMode = (
+                    CheckMode.ForceCbTsValueofType
+                ) ;
                 /**
                  * `checkExpression` and `checkExpressionRelated` will in general widen the types, so
                  * there's need for special-casing for now
                  */
                 switch (referent.kind) {
                     default:
+                        return (
+                            checkExpression(referent, chkMode)
+                        ) ;
                 }
                 /**
                  * fall back to `checkExpression` and `checkExpressionRelated`
