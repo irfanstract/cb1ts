@@ -18346,11 +18346,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                             }
                             if (unifyTypesForAliases) {
                                 let tp = baseType;
-                                if ((tp.flags & TypeFlags.TypeParameter)) {
-                                    tp = tp as TypeParameter ;
-                                    if (isCbTsValueofType(tp as TypeParameter)) {
-                                        return tp ;
-                                    }
+                                if (isCbTsValueofType(tp)) {
+                                    tp = undefined ?? tp ;
+                                    return tp ;
                                 }
                                 // if (isTupleType(tp)) {
                                 //     return true ;
