@@ -28079,7 +28079,17 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             // to not be computed unless actually used; expensive.
             function GST() {
                 const sImpliedType = (
-                    getIntersectionType([type, ssType])
+                    ((
+                        Debug.assert((
+                            isTypeAssignableTo(ssType, type)
+                        ), (
+                            `'ssType' shall be assignable to 'type'`
+                        ), () => (
+                            `'ssType' (${typeToString(ssType) }) shall be assignable to 'type' (${typeToString(type) })`
+                        ))
+                    ), (
+                        ssType
+                    ))
                 ) ;
                 return {
                     ssType ,
