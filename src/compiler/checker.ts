@@ -18369,6 +18369,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     function isGecwConstantType(...[baseType]: [Type]): boolean {
         {
             const tp = baseType ;
+            if (isCbTsValueofType(tp)) {
+                return true ;
+            }
             if ((
                 false
                 || (tp === undefinedType)
