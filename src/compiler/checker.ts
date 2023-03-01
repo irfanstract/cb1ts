@@ -20287,7 +20287,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return true;
             }
         }
-        else if (!((source.flags | target.flags) & (TypeFlags.UnionOrIntersection | TypeFlags.IndexedAccess | TypeFlags.Conditional | TypeFlags.Substitution))) {
+        else if (!((source.flags | target.flags) & (TypeFlags.UnionOrIntersection | TypeFlags.IndexedAccess | TypeFlags.Conditional | TypeFlags.Substitution)) && (
+            !isCbTsValueofType(source) && !isCbTsValueofType(target)
+        )) {
             // We have excluded types that may simplify to other forms, so types must have identical flags
             if (source.flags !== target.flags) return false;
             if (source.flags & TypeFlags.Singleton) return true;
@@ -20298,7 +20300,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return !!(related & RelationComparisonResult.Succeeded);
             }
         }
-        if (source.flags & TypeFlags.StructuredOrInstantiable || target.flags & TypeFlags.StructuredOrInstantiable) {
+        if (source.flags & TypeFlags.StructuredOrInstantiable || target.flags & TypeFlags.StructuredOrInstantiable || (
+            isCbTsValueofType(source) || isCbTsValueofType(target)
+        )) {
             return checkTypeRelatedTo(source, target, relation, /*errorNode*/ undefined);
         }
         return false;
