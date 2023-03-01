@@ -13441,7 +13441,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
     function getConstraintOfType(type: InstantiableType | UnionOrIntersectionType): Type | undefined {
         return type.flags & TypeFlags.TypeParameter ? getConstraintOfTypeParameter(type as TypeParameter) :
-            isCbTsValueofType(type) ? getConstraintOfCbTsValueofType(type as CbTsValueofTypeOps) :
+            isCbTsValueofType(type) ? getConstraintOfCbTsValueofType(type) :
             type.flags & TypeFlags.IndexedAccess ? getConstraintOfIndexedAccess(type as IndexedAccessType) :
             type.flags & TypeFlags.Conditional ? getConstraintOfConditionalType(type as ConditionalType) :
             getBaseConstraintOfType(type);
