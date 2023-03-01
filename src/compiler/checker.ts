@@ -13447,7 +13447,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             getBaseConstraintOfType(type);
     }
 
-    function getConstraintOfCbTsValueofType(...[tp]: [CbTsValueofTypeOps]): Type {
+    function getConstraintOfCbTsValueofType(...[tp]: [XCbTsValueofType]): Type {
         const referent = tp.symbol ;
         const referentDeclaredForm = (
             getTypeOfSymbol(referent)
