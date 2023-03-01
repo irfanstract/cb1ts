@@ -20319,6 +20319,28 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 type.flags & TypeFlags.UnionOrIntersection ? getNormalizedUnionOrIntersectionType(type as UnionOrIntersectionType, writing) :
                 type.flags & TypeFlags.Substitution ? writing ? (type as SubstitutionType).baseType : getSubstitutionIntersection(type as SubstitutionType) :
                 type.flags & TypeFlags.Simplifiable ? getSimplifiedType(type, writing) :
+                isCbTsValueofType(type) ? (
+                    (function xUnfoldCbTsValueofType(...[type]: [XCbTsValueofType]): Type {
+                        const {
+                            symbol: typeTargetSymbol ,
+                        } = type ;
+                        const typeTargetSymbolIntrinsicType = (
+                            getTypeOfSymbol(typeTargetSymbol)
+                        ) ;
+                        if (isCbTsValueofType(typeTargetSymbolIntrinsicType)) {
+                            return (
+                                xUnfoldCbTsValueofType(typeTargetSymbolIntrinsicType)
+                            ) ;
+                        }
+                        if ((
+                            isGecwConstantType(typeTargetSymbolIntrinsicType)
+                            || (type.flags & (TypeFlags.Literal))
+                        )) {
+                            return typeTargetSymbolIntrinsicType ;
+                        }
+                        return type ;
+                    })(type)
+                ) :
                 type;
             if (t === type) return t;
             type = t;
