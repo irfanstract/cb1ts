@@ -20765,6 +20765,35 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return Ternary.True;
             }
 
+            if ((
+                relation === subtypeRelation || relation === assignableRelation
+            )) {
+                if (isCbTsValueofType(source)) {
+                    if (source === target) return Ternary.True;
+                    if (target.flags & TypeFlags.Union) {
+                        const {
+                            types : targetTypeAlts,
+                        } = target as UnionType ;
+                        if ((
+                            some(targetTypeAlts, (target: Type) => (
+                                isTypeRelatedTo(source, target, relation)
+                            ))
+                        )) {
+                            return Ternary.True ;
+                        }
+                        else {
+                            return Ternary.False ;
+                        }
+                    }
+                    const sourceSymbolFormalType = (
+                        getTypeOfSymbol(source.symbol)
+                    ) ;
+                    if (isTypeRelatedTo(sourceSymbolFormalType, target, relation)) {
+                        return Ternary.True ;
+                    }
+                }
+            }
+
             // See if we're relating a definitely non-nullable type to a union that includes null and/or undefined
             // plus a single non-nullable type. If so, remove null and/or undefined from the target type.
             if (source.flags & TypeFlags.DefinitelyNonNullable && target.flags & TypeFlags.Union) {
