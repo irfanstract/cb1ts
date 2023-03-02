@@ -34187,8 +34187,17 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         forEach(node.typeArguments, checkSourceElement);
         const exprType = node.kind === SyntaxKind.ExpressionWithTypeArguments ? checkExpression(node.expression) :
             isThisIdentifier(node.exprName) ? checkThisExpression(node.exprName) :
-            checkExpression(node.exprName);
+            checkCbTsTypeQueryNode(node);
         return getInstantiationExpressionType(exprType, node);
+    }
+
+    function checkCbTsTypeQueryNode(...[node]: [
+        TypeQueryNode,
+    ]): Type {
+        const formalType = (
+            checkExpression(node.exprName)
+        ) ;
+        return formalType ;
     }
 
     function getInstantiationExpressionType(exprType: Type, node: NodeWithTypeArguments) {
@@ -37409,6 +37418,58 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     cancellationToken.throwIfCancellationRequested();
             }
         }
+        const getCbTsWidenedType1 = (
+            (...[actualType]: [Type]) => {
+                /**
+                 * note that
+                 * automatic widening, if any, shall be restricted to statement ctxs and
+                 * automatic widening, if any, shall never occur in type ctxs
+                 *
+                 */
+                if (isInExpressionContext(node)) {
+                    for (const { actualTypeWidened, } of (
+                        cbTsCewGwtAtw({
+                            actualType,
+                            errorHighlightTargetNode: node ,
+                        })
+                    )) {
+                        const expectedType = (
+                            getContextualType(node as Expression, /* contextFlags */ undefined)
+                            ||
+                            (() => {
+                                const { parent, } = node ;
+                                if (isVariableDeclaration(parent)) {
+                                    const { type: typeNode, } = parent ;
+                                    return typeNode && getTypeFromTypeNode(typeNode) ;
+                                }
+                                return undefined ;
+                            })()
+                        ) ;
+                        if (expectedType) {
+                            /** {@link checkTypeAssignableToAndOptionallyElaborate} */
+                            if (isTypeAssignableTo(actualType, expectedType)) {
+                                if (isTypeAssignableTo(actualTypeWidened, expectedType)) {
+                                    // // TODO DISABLE THIS BLOCK
+                                    // if (1) {
+                                    //     return createTupleType([actualType, expectedType, expectedType,]) ;
+                                    // }
+                                    return actualTypeWidened ;
+                                }
+                                return expectedType ;
+                            }
+                            else {
+                                return errorType ;
+                            }
+                        }
+                        else {
+                            return actualTypeWidened ;
+                        }
+                    }
+                }
+                return actualType;
+            }
+        ) ;
+        const cbTsTp1 = (() => {
         switch (kind) {
             case SyntaxKind.Identifier:
                 return checkIdentifier(node as Identifier, checkMode);
@@ -37515,6 +37576,55 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 Debug.fail("Shouldn't ever directly check a JsxOpeningElement");
         }
         return errorType;
+        })() ;
+        const cbTsTp2 = getCbTsWidenedType1(cbTsTp1) ;
+        return cbTsTp2 ;
+    }
+
+    function cbTsCewGwtAtw({
+        actualType,
+        errorHighlightTargetNode,
+    }: {
+        actualType: Type ;
+        errorHighlightTargetNode: Node ;
+    }): [] | [{ actualTypeWidened: Type ; }] {
+        {
+            let t1: Type = actualType ;
+            if (doesTheConfigRequiresWideningForPrimitiveLiteralValuedInitialisers()) {
+                if (isFreshLiteralType(t1)) {
+                    t1 = getNecessarilyWidenedLiteralType(t1) ;
+                }
+            }
+            if (doesTheConfigRequiresWideningForPrimitiveValuedExtrnQueryInitialisers()) {
+                t1 = getNecessarilyWidenedLiteralType(t1) ;
+                if (isArrayOrTupleLikeType(t1)) {
+                    const elementTypeUnwidened = (
+                        getIndexedAccessType(t1, numberType)
+                    ) ;
+                    const elementTypeWidened = (
+                        cbTsCewGwtAtw({
+                            actualType: elementTypeUnwidened ,
+                            errorHighlightTargetNode ,
+                        })[0]?.actualTypeWidened
+                        ??
+                        getNecessarilyWidenedLiteralType(elementTypeUnwidened)
+                    ) ;
+                    t1 = (
+                        createArrayType((
+                            elementTypeWidened
+                        ), isReadonlyArrayType(t1))
+                    ) ;
+                }
+            }
+            if (t1 !== actualType) {
+                return [{
+                    actualTypeWidened: (
+                        t1
+                    ) ,
+                }] ;
+            }
+        }
+        return [] ;
     }
 
     // DECLARATION AND STATEMENT TYPE CHECKING
