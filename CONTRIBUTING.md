@@ -106,6 +106,35 @@ The TypeScript repository is relatively large. To save some time, you might want
 
 You might need to run `git config --global core.longpaths true` before cloning TypeScript on Windows.
 
+### Minimizing The `npm install` Duration And Effort
+
+consider
+*temporarily* keeping `devDependencies` in `package.json` as small as this
+(and restore the complete list(ing) after the `install` )
+:
+```json
+{
+    "devDependencies": {
+        "@esfx/canceltoken": "^1.0.0",
+        "@types/chai": "^4.3.12",
+        "@types/microsoft__typescript-etw": "^0.1.3",
+        "@types/minimist": "^1.2.5",
+        "@types/mocha": "^10.0.6",
+        "@types/ms": "^0.7.34",
+        "@types/node": "latest",
+        "@types/source-map-support": "^0.5.10",
+        "@types/which": "^3.0.3",
+        "chai": "^4.4.1",
+        "chalk": "^4.1.2",
+        "chokidar": "^3.6.0",
+        "fast-xml-parser": "^4.3.5",
+        "glob": "^10.3.10",
+        "hereby": "^1.8.9",
+        "jsonc-parser": "^3.2.1"
+    },
+}
+```
+
 ### Using local builds
 
 Run `hereby` to build a version of the compiler/language service that reflects changes you've made. You can then run `node <repo-root>/built/local/tsc.js` in place of `tsc` in your project. For example, to run `tsc --watch` from within the root of the repository on a file called `test.ts`, you can run `node ./built/local/tsc.js --watch test.ts`.
