@@ -19,7 +19,10 @@
         "strict": true,
         "strictBindCallApply": false,
         "useUnknownInCatchVariables": false,
-        "noImplicitOverride": true,
+        "noUncheckedIndexedAccess": true,
+        "exactOptionalPropertyTypes": true,
+        "noImplicitOverride": false,
+        // "noImplicitAny": false,
 
         "skipLibCheck": true,
 
@@ -27,6 +30,6 @@
         "preserveConstEnums": true,
         "newLine": "lf",
 
-        "types": []
+        "types": [],
     }
 }
