@@ -300,3 +300,320 @@ All strings the user may see are stored in [`diagnosticMessages.json`](./src/com
 If you make changes to it, run `hereby generate-diagnostics` to push them to the `Diagnostic` interface in `diagnosticInformationMap.generated.ts`.
 
 See [coding guidelines on diagnostic messages](https://github.com/Microsoft/TypeScript/wiki/Coding-guidelines#diagnostic-messages).
+
+## conventions to adhere in source files; the coding convention
+
+### indentation and linebreaking
+
+#### avoid re-indenting existing files merely to enforce newly-established stylistic guide
+
+avoid re-indenting existing files merely to enforce minor stylistic rules - eg the new 2-spaces-only convention.
+
+doing so may be seen as *lack of appreciation*
+
+#### on new files, indentations should be 2 spaces (char `0x20`, *SPACE*)
+
+ideal indentation is 2 spaces (char `0x20`, *SPACE*):
+```javascript
+for (const item of items )
+{//4567890123456789012  <<<<<<
+  propagate(item) ;
+}
+```
+
+...and __avoid using <code>Tab</code>s__
+
+#### avoid using <code>Tab</code>s
+
+avoid using <code>Tab</code>s ;
+<code>Tab</code>s usually don't display well.
+
+#### consider putting opening curly-bracket in separate line
+
+so you get:
+```javascript
+for (const item of items )
+{ /* this opening brace should be in this new line here */
+    propagate(item) ;
+}
+```
+
+```javascript
+LOOP:
+for (const stm of bArg.statements )
+{
+    /* if kind is "RETURN", break the loop  */
+    switch (stm.kind) {
+      case "RETURN" :
+        break LOOP ;
+      default:
+        continue LOOP ;
+    }
+}
+```
+
+this is
+necessary
+to allow Git revs to simply *checkout* *toggling methods abstract and concrete* 'in a breeze' without exiting with `you must resolve the conflict and then run git rebase --continue` inwhichcase requires unnecessary user intervention necessary to resolve merge-conflicts - see this *diff*
+:
+```diff
+@@ -364,11 +364,9 @@ abstract class EsClassEmitterImpl
+
+  /**
+   * terminates the statement list
+   * 
+   */
++ <<<<< mergend at MERGE_HEAD
++ abstract
+  terminateStatementList(...args: [returnSmtcs: ReturnSemantics, options ?: { preserveWorkingRegister ?: boolean, } ] )
+- >>>>> parent at HEAD~1
+- {
+-     return terminateStatementList0(StatementListMarking.SEMANTIC_ENDOFTHREAD, ...args ) ;
+- }
++ <<<<< mergend at MERGE_HEAD
++ : void ; /* the formely-there `abstract`-method `terminateStatementList0` is now this method */
+
+```
+
+notice that here in the *diff*, with the above advice adhered,
+the line specifying `terminateStatementList` together with the signature
+doesn't get touched at all, unlike the surrounding lines which does,
+saving us from any need to *being surprised with the rebase being incomplete* (since it suspended due to *merge-conflicts*), incase it happening without we ever anticipating.
+
+exactly the same reason we should avoid plain JSON and instead switch to JSON'__C__ or full JS/ES (since JSON's ban of trailing commas effectively make Git-checkout-ing of such files harder than necessary).
+
+### `tsconfig.json`
+
+are (./src/tsconfig.json), (./src/tsconfig-base.json), etc
+
+the need of `paths` in `tsconfig.json` is metioned in:
+
+-  https://stackoverflow.com/a/57273280
+
+-  *the tickets linked to* ticket at https://github.com/microsoft/TypeScript/pull/56946 .
+
+
+### consider using labels in control-flow
+
+#### `break` and `continue` should always be labelled
+
+```diff
++ LOOP :
+  for (const stm of bArg.statements )
+  {
+      if (isEndOfControlFlowMarkingStmt(stm) )
+-     { break ; }
++     { break LOOP ; }
+  }
+```
+
+an example involving a pitfall:
+
+```diff
++ LOOP:
+  for (const stm of bArg.statements )
+  {
+    /* if kind is "RETURN", break the loop  */
+    switch (stm.kind) {
+      case "RETURN" :
+-       break ;
++       break LOOP ;
+      default:
+-       continue ;
++       continue LOOP ;
+    }
+  }
++ /*
++  * `continue` would, as expected, relate to the (enclosing) `for`, but `break` wouldn't -
++  * it'd only end up at the `switch`, constituting a bug!
++  */
+```
+
+### Usage Of ESLint In This Project
+
+#### The ESLint Rules For This Project
+
+<!--
+see [the ESLint Config CJS File, `./.eslintrc.cjs`](./.eslintrc.cjs)
+-->
+[`./.eslintrc.json`](./.eslintrc.json) would likely be replaced with `.eslintrc.cjs` in future.
+
+<!--
+
+#### use `.eslintrc.cjs`, avoid `.eslintrc.json`
+
+(note: ESLint doesn't yet support `.mjs` ext!)
+
+-->
+
+##### issues with JSON
+
+JSON Specification disallows trailing comma, but
+omission of trailing comma doesn't play well Git
+(eg unexpected auto-merge corrupting your JSON files)
+
+```javascript
+{
+  "imports": {
+    // from current branch
+    "dest": "${project}/dist"
+    // from merged branch
+    "pipelining": true
+//  ^^^^^^^ [Syntax Error] Unexpected Identifier; Expected Comma Or Closing Brace
+  } ,
+}
+```
+
+JSONC and regular JS/TS would avoid the above problem:
+
+```javascript
+module.exports = {
+    // from current branch
+    "dest": "${project}/dist" , // we can freely use trailing comma here, avoiding the above issues
+    // from merged branch
+    "pipelining": true , // we can freely use trailing comma here, avoiding the above issues
+} ;
+```
+
+#### DO NOT use `eslint:recommended`!
+
+__`eslint:recommended`
+tries to get rid of a large number of common, safe constructs,
+whose avoiding would require even worse constructs
+(eg forced to resort to more bug-prone, implicit label-less `break`s)!__
+__avoid enabling the whole set__ ;
+instead,
+*individually* enable the items, like this:
+
+```diff
+- "extends": "eslint:recommended",
+  "rules": {
++   "import/no-cycle": [
++     "error"
++   ],
++   "semi": [
++     "error",
++     "always"
++   ],
++   "array-callback-return": "error" ,
++   "getter-return": "error" ,
++   "no-constructor-return": "warn" ,
++   "no-unsafe-finally": "warn" ,
++   "no-case-declarations": "warn" ,
++   "require-yield": "error" ,
++   "no-param-reassign": "error" ,
++   "no-loop-func": "warn" ,
++   "no-plusplus": "warn" ,
++   "curly": "warn" ,
++   "default-case": "warn" ,
++   "default-case-last": "error" ,
++   "no-misleading-character-class": "error" ,
+  },
+```
+
+### avoid *non-trivial overloading and run-time checks*, if possible
+
+#### avoid `typeof x === "object"`
+
+`null` is very special unlike `undefined`, `boolean`s and `string`s ;
+`typeof`ing it will yield `"object"` !
+
+```javascript
+/** @type {number | number[] | null } */ const xArg ;
+
+if (typeof xArg === "object") {
+  /*
+   * `null` is very special unlike `undefined`, `boolean`s and `string`s as
+   * `typeof`ing it will yield `"object"` !
+   * 
+   */
+}
+
+```
+
+#### avoid potential pit-falls in null-checking of `number`
+```javascript
+({ height: heightArg, }) => {
+  ;
+  
+  /* avoid these */
+  if (!heightArg) { heightArg = 32 ; } /* wrong!! not only `undefined` and `null`; `0` would too coerce to `false` */
+  
+  /* OK */
+  if (!(typeof heightArg === "number" )) { heightArg = 32 ; }
+
+  ;
+}
+
+```
+
+#### avoid non-trivial overloading if possible
+
+JavaScript, as does Python, is not Java, Kotlin, Scala nor Rust ; JavaScript doesn't consider signatures when resolving methods.
+
+the first alternative is to give em different names:
+
+```diff
+  interface DispatchService
+  {
++   /* avoid overloading; give these each its own name */
+-   schedule
++   scheduleImmediately
+        (cb: NoArgCallback ) ;
+-   schedule
++   scheduleAfterMillis
+        (tMillis: number, cb: NoArgCallback ) ;
+-   schedule
++   scheduleCancellableAfterMillis
+        (s: AbortSignal, tMillis: number, cb: NoArgCallback ) ;
+
+  }
+
+```
+
+however, sometimes it's not applicable since the author intended them the same name (ie superclass version of the named method only support two signature(s), while subclass is more general and support 6 different sig(s)), so what abt alternative tweaks like parameter-reordering like this instead?
+
+```diff
+  interface DispatchService
+  {
++   /* reordered the parameters */
+    schedule
+        (callbk: NoArgCallback ) ;
++   schedule
++       (callbk: NoArgCallback, tMillis ?: number, cancelPt ?: AbortSignal,) ;
+    schedule
+-       (tMillis: number, cb: NoArgCallback ) ;
++       (cb: NoArgCallback, tMillis: number, ) ;
+    schedule
+-       (s: AbortSignal, tMillis: number, cb: NoArgCallback ) ;
++       (cb: NoArgCallback, tMillis: number, s: AbortSignal,) ;
+
+  }
+
+```
+
+
+### Relevant Considerations Affecting TypeScript And Type-Checked JavaScript
+
+some ESLint rules are enforced here -
+see [the ESLint Config CJS File, `./.eslintrc.cjs`](./.eslintrc.cjs)
+
+relevant open issues with `tsc`:
+
+- `Named property 'parent' of types 'Statement' and 'FunctionallyGeneratedNode' are not identical.ts(2320)` https://github.com/microsoft/TypeScript/issues/16936 
+- Merging, Occurences, Highlighting, of same-named decl(s):
+  - https://github.com/microsoft/TypeScript/issues/36626  (missing *merging* for between same-named `const =` and `type =` )
+- Dependent-Typing, Type-Guard(s), Aliased Boolean Expr(s) :
+  - https://github.com/microsoft/TypeScript/issues/17588 (missing support for Scala-style inner-class(es) ) 
+  - https://github.com/microsoft/TypeScript/issues/27808 (missing support for `extends oneof`) 
+  - https://github.com/microsoft/TypeScript/pull/47190 (CFA/narrowing involving destructured property from -   discriminant-union-typed structs )
+  - https://github.com/microsoft/TypeScript/pull/44730 (transparency, of boolean expr aliases (ie `const` without type-ascription ) )
+  - https://github.com/microsoft/TypeScript/pull/57465 (missing inferring of `x is T` signatures )
+
+
+
+
+
+
+
+
