@@ -17,10 +17,10 @@
         "emitDeclarationOnly": true,
 
         "strict": true,
-        "strictBindCallApply": false,
+        "strictBindCallApply": true,
         "useUnknownInCatchVariables": false,
         "noUncheckedIndexedAccess": true,
-        "exactOptionalPropertyTypes": true,
+        // "exactOptionalPropertyTypes": true,
         "noImplicitOverride": false,
         // "noImplicitAny": false,
 
