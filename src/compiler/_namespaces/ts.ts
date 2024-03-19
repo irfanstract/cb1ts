@@ -1,15 +1,16 @@
 /* Generated file to emulate the ts namespace. */
 
 // export * from "../corePublic";
-// export * from "../core";
-// export * from "../debug";
+export * from "../maplike";
+export * from "../core";
+export * from "../debug";
 // export * from "../semver";
 // export * from "../performanceCore";
 // export * from "../perfLogger";
 // export * from "../tracing";
-// export * from "../types";
+export * from "../types";
 // export * from "../sys";
-// export * from "../path";
+export * from "../path";
 // export * from "../diagnosticInformationMap.generated";
 // export * from "../scanner";
 // export * from "../utilitiesPublic";
@@ -26,7 +27,6 @@
 // export * from "../parser";
 // export * from "../commandLineParser";
 // export * from "../moduleNameResolver";
-export * from "../filePaths";
 // export * from "../binder";
 // export * from "../symbolWalker";
 // export * from "../checker";
