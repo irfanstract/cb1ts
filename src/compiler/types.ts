@@ -3,7 +3,7 @@ import {
     // CreateSourceFileOptions,
     // EmitHelperFactory,
     // GetCanonicalFileName,
-    MapLike, SymbolFlags,
+    MapLike, OrganizeImportsTypeOrder, SupportedCompilerOptions, SymbolFlags, UserPreferences,
     // ModeAwareCache,
     // ModeAwareCacheKey,
     // ModuleResolutionCache,
@@ -275,6 +275,7 @@ export const enum SyntaxKind {
     IndexSignature,
     // Type
     TypePredicate,
+    AssertsPredicateType,
     TypeReference,
     FunctionType,
     ConstructorType,
@@ -282,6 +283,8 @@ export const enum SyntaxKind {
     TypeLiteral,
     ArrayType,
     TupleType,
+    /** type-level, uses semicolon rather than comma. */
+    CommaBinaryType,
     OptionalType,
     RestType,
     UnionType,
@@ -702,6 +705,7 @@ export type ModifierSyntaxKind =
     | SyntaxKind.DefaultKeyword
     | SyntaxKind.ExportKeyword
     | SyntaxKind.InKeyword
+    | SyntaxKind.InstanceOfKeyword
     | SyntaxKind.PrivateKeyword
     | SyntaxKind.ProtectedKeyword
     | SyntaxKind.PublicKeyword
@@ -728,6 +732,7 @@ export type KeywordTypeSyntaxKind =
 export type TypeNodeSyntaxKind =
     | KeywordTypeSyntaxKind
     | SyntaxKind.TypePredicate
+    | SyntaxKind.AssertsPredicateType
     | SyntaxKind.TypeReference
     | SyntaxKind.FunctionType
     | SyntaxKind.ConstructorType
@@ -735,6 +740,7 @@ export type TypeNodeSyntaxKind =
     | SyntaxKind.TypeLiteral
     | SyntaxKind.ArrayType
     | SyntaxKind.TupleType
+    | SyntaxKind.CommaBinaryType
     | SyntaxKind.NamedTupleMember
     | SyntaxKind.OptionalType
     | SyntaxKind.RestType
@@ -1281,6 +1287,7 @@ export type Modifier =
     | DefaultKeyword
     | ExportKeyword
     | InKeyword
+    | ModifierToken<SyntaxKind.InstanceOfKeyword>
     | PrivateKeyword
     | ProtectedKeyword
     | PublicKeyword
@@ -1334,6 +1341,11 @@ export interface Identifier extends PrimaryExpression, Declaration, JSDocContain
     readonly escapedText: __String;
 }
 
+// Transient identifier node (marked by id === -1)
+export interface TransientIdentifier extends Identifier {
+    resolvedSymbol: Symbol;
+}
+
 // dprint-ignore
 /** @internal */
 export interface AutoGenerateInfo {
@@ -1341,6 +1353,11 @@ export interface AutoGenerateInfo {
     readonly id: number;                        // Ensures unique generated identifiers get unique names, but clones get the same name.
     readonly prefix?: string | GeneratedNamePart;
     readonly suffix?: string;
+}
+
+/** @internal */
+export interface GeneratedIdentifier extends Identifier {
+    readonly emitNode: EmitNode & { autoGenerate: AutoGenerateInfo; };
 }
 
 export interface QualifiedName extends Node, FlowContainer {
@@ -1443,40 +1460,36 @@ export interface Decorator extends Node {
     readonly expression: LeftHandSideExpression;
 }
 
+/**
+ * 
+ * @see {@link TypeParameter}
+ */
 export interface TypeParameterDeclaration extends NamedDeclaration, JSDocContainer {
     readonly kind: SyntaxKind.TypeParameter;
     readonly parent: DeclarationWithTypeParameterChildren | InferTypeNode;
     readonly modifiers?: NodeArray<Modifier>;
     readonly name: Identifier;
-    readonly constraintMode: TypeParameterConstraintMode ;
-    /** Note: Consider calling `getEffectiveConstraintOfTypeParameter` */
-    readonly constraint?: TypeNode;
     readonly default?: TypeNode;
+    readonly variant ?: unknown ;
 
     // For error recovery purposes (see `isGrammarError` in utilities.ts).
     expression?: Expression;
 }
 
-export enum TypeParameterConstraintMode
+export interface UnconstrainedTypeParameterDeclaration extends TypeParameterDeclaration
 {
+    readonly kind: SyntaxKind.TypeParameter;
 
-    /** simply subtype it ; nothing else necessary */
-    EXTENDS_CONSTRAINT = 1 << 1 ,
+    readonly variant : 0 ;
+}
 
-    /*
-     * these two
-     * assumes that the constraint is {@link UnionTypeNode}
-     * and is the essence of https://github.com/microsoft/TypeScript/issues/27808 
-     * 
-     */
-    /** expects the constraint to be {@link UnionTypeNode alternated-type (`A | B | ...`)} and then enforces subtyping of any of {@link UnionTypeNode.types its constituents} */ EXTENDS_ONEOF_CONSTRAINING_UNIONTYPE_CONSTITUENT = 1 << 2 ,
-    /** expects the constraint to be {@link UnionTypeNode alternated-type (`A | B | ...`)} and then enforces exacting  to any of {@link UnionTypeNode.types its constituents} */ EXACTLY_ONEOF_CONSTRAINING_UNIONTYPE_CONSTITUENT = 1 << 3 ,
+export interface UpperBoundedTypeParameterDeclaration extends TypeParameterDeclaration
+{
+    readonly kind: SyntaxKind.TypeParameter;
 
-    /**
-     * in all cases
-     * the instantiation would (strictly) subtype the constraint
-     * 
-     */
+    readonly variant: TypeParameterUnaryConstrainingMode ;
+    /** Note: Consider calling `getEffectiveConstraintOfTypeParameter` */
+    readonly constraint: TypeNode;
 }
 
 export interface SignatureDeclarationBase extends NamedDeclaration, JSDocContainer {
@@ -1918,20 +1931,40 @@ export interface TypeReferenceNode extends NodeWithTypeArguments {
     readonly typeName: EntityName;
 }
 
+/**
+ * syntactic version of {@link TypePredicativeType}.
+ * not directly inspectible ; use {@link TypeChecker.typeFromTypeNode} for that .
+ * 
+ */
 export interface TypePredicateNode extends TypeNode {
-    readonly kind: SyntaxKind.TypePredicate;
-    readonly parent: SignatureDeclaration | JSDocTypeExpression;
-    readonly assertsModifier?: AssertsKeyword;
-    readonly parameterName: Identifier | ThisTypeNode;
+    readonly kind: SyntaxKind.TypePredicate | SyntaxKind.AssertsPredicateType;
+    // TODO
+    cachedResolvedRepr ?: TypePredicativeType ;
     readonly type?: TypeNode;
+}
+
+export interface TermInstanceofTypeNode extends TypePredicateNode
+{
+    readonly kind: SyntaxKind.TypePredicate;
+    readonly parameterName: Expression;
+    readonly type: TypeNode;
+    cachedResolvedRepr ?: TypeSelectiveType ;
+}
+
+export interface AssertsTypeNode extends TypePredicateNode
+{
+    //
+    readonly kind: SyntaxKind.AssertsPredicateType ;
+    readonly type: TypeNode;
+    cachedResolvedRepr ?: AssertingVoidKwdType ;
 }
 
 /**
  * type-query:
- * -    `valueof a.s.d` ({@link TypeReferenceIMode.VALUEOF}, the exact value of the term )
- * - `out typeof a.s.d` ({@link TypeReferenceIMode.READ_TYPE_OF }, usually (not always) the declared type)
- * - ` in typeof a.s.d` ({@link TypeReferenceIMode.WRITE_TYPE_OF}, usually (not always) the declared type)
- * -     `typeof a.s.d` ({@link TypeReferenceIMode.CONSTRAINT_OF}, usually (not always) the declared type) (behaves as either of the former two depending on occurence ; discourages)
+ * - `valueof a.s.d` ({@link TypeReferenceIMode.VALUEOF}, the exact value of the term )
+ * -  `typeof a.s.d` ({@link TypeReferenceIMode.CONSTRAINT_OF}, usually (not always) the declared type) (behaves as either of the former two depending on occurence ; discourages)
+ * 
+ * see also {@link TypeOperatorNode}.
  * 
  */
 export interface TypeQueryNode extends NodeWithTypeArguments {
@@ -1954,7 +1987,7 @@ export interface ArrayTypeNode extends TypeNode {
     readonly elementType: TypeNode;
 }
 
-export interface TupleTypeNode extends TypeNode {
+export interface TupleTypeNode extends CommaOrTupleTypeNode {
     readonly kind: SyntaxKind.TupleType;
     readonly elements: NodeArray<TypeNode | NamedTupleMember>;
 }
@@ -1975,6 +2008,17 @@ export interface OptionalTypeNode extends TypeNode {
 export interface RestTypeNode extends TypeNode {
     readonly kind: SyntaxKind.RestType;
     readonly type: TypeNode;
+}
+
+export interface CommaOrTupleTypeNode extends TypeNode {
+    readonly kind: SyntaxKind.TupleType | SyntaxKind.CommaBinaryType ;
+    readonly elements: NodeArray<TypeNode | NamedTupleMember>;
+}
+
+/** type-level, uses semicolon rather than comma. */
+export interface CommaBinaryTypeNode extends CommaOrTupleTypeNode {
+    readonly kind: SyntaxKind.CommaBinaryType;
+    readonly elements: NodeArray<TypeNode >;
 }
 
 export type UnionOrIntersectionTypeNode = UnionTypeNode | IntersectionTypeNode;
@@ -2022,9 +2066,16 @@ export interface ParenthesizedTypeNode extends TypeNode {
 
 export interface TypeOperatorNode extends TypeNode {
     readonly kind: SyntaxKind.TypeOperator;
-    readonly operator: SyntaxKind.KeyOfKeyword | SyntaxKind.UniqueKeyword | SyntaxKind.ReadonlyKeyword;
+    readonly operator: TypeOperatorSyntaxKind ;
     readonly type: TypeNode;
 }
+
+export type TypeOperatorSyntaxKind = (
+    | SyntaxKind.KeyOfKeyword
+    | SyntaxKind.UniqueKeyword
+    | SyntaxKind.ReadonlyKeyword
+    | (SyntaxKind.InKeyword | SyntaxKind.OutKeyword )
+) ;
 
 /** @internal */
 export interface UniqueTypeOperatorNode extends TypeOperatorNode {
@@ -4459,11 +4510,80 @@ export interface CustomTransformer {
 }
 
 export interface TypeCheckerHost extends ModuleSpecifierResolutionHost {
+    getCompilerOptions(): CompilerOptions;
+
+    getSourceFiles(): readonly SourceFile[];
+
     //
 }
 
-export interface TypeChecker
+export interface TypeChecker {
+    // below
+}
+
+export interface TypeCheckerMappingOps
 {
+    //
+    
+    getTypeOfSymbol(symbol: Symbol): Type;
+    getDeclaredTypeOfSymbol(symbol: Symbol): Type;
+    getPropertiesOfType(type: Type): Symbol[];
+    getPropertyOfType(type: Type, propertyName: string): Symbol | undefined;
+    getPrivateIdentifierPropertyOfType(leftType: Type, name: string, location: Node): Symbol | undefined;
+    /** @internal */ getTypeOfPropertyOfType(type: Type, propertyName: string): Type | undefined;
+    getIndexInfoOfType(type: Type, kind: IndexKind): IndexInfo | undefined;
+    getIndexInfosOfType(type: Type): readonly IndexInfo[];
+    getIndexInfosOfIndexSymbol: (indexSymbol: Symbol) => IndexInfo[];
+    getSignaturesOfType(type: Type, kind: SignatureKind): readonly Signature[];
+    getIndexTypeOfType(type: Type, kind: IndexKind): Type | undefined;
+    /** @internal */ getIndexType(type: Type): Type;
+}
+
+export interface TypeCheckerMappingOps
+{
+    getBaseTypes(type: InterfaceType): BaseType[];
+    getBaseTypeOfLiteralType(type: Type): Type;
+    getWidenedType(type: Type): Type;
+}
+
+export interface TypeCheckerMappingOps
+{
+    /** @internal */
+    getPromisedTypeOfPromise(promise: Type, errorNode?: Node): Type | undefined;
+    /** @internal */
+    getAwaitedType(type: Type): Type | undefined;
+    /** @internal */
+    isEmptyAnonymousObjectType(type: Type): boolean;
+    getReturnTypeOfSignature(signature: Signature): Type;
+    /**
+     * Gets the type of a parameter at a given position in a signature.
+     * Returns `any` if the index is not valid.
+     *
+     * @internal
+     */
+    getParameterType(signature: Signature, parameterIndex: number): Type;
+    /** @internal */ getParameterIdentifierInfoAtPosition(signature: Signature, parameterIndex: number): { parameter: Identifier; parameterName: __String; isRestParameter: boolean; } | undefined;
+    getNullableType(type: Type, flags: TypeFlags): Type;
+    getNonNullableType(type: Type): Type;
+    /** @internal */ getNonOptionalType(type: Type): Type;
+    /** @internal */ isNullableType(type: Type): boolean;
+    getTypeArguments(type: TypeReference): readonly Type[];
+    
+    getRaiseExceptionType(c: Type): SubtypeManifest<never> ;
+    
+    getImplementativeNegatedType(c: Type): Type ;
+    getCoerceToBooleanType      (c: Type): BooleanValuedType ;
+    getCoerceNegatedType        (c: Type): BooleanValuedType ;
+    getCoerceNonNull<T>(c: TypeManifest<T>): SubtypeManifest<T & {}> ;
+    getArithmeticNegatedType(c: Type): SubtypeManifest<number | bigint> ;
+    getLinearRangeType<T>(...a: [SubtypeManifest<T>, SubtypeManifest<T>] ): Type ;
+
+}
+
+export interface TypeCheckedNodeBuilder
+extends TypeCheckerStringify
+{
+    //
 
     // TODO: GH#18217 `xToDeclaration` calls are frequently asserted as defined.
     /** Note that the resulting nodes cannot be checked. */
@@ -4492,11 +4612,215 @@ export interface TypeChecker
     /** Note that the resulting nodes cannot be checked. */
     typeParameterToDeclaration(parameter: TypeParameter, enclosingDeclaration: Node | undefined, flags: NodeBuilderFlags | undefined): TypeParameterDeclaration | undefined;
 
+}
+
+export interface TypeCheckingQueries extends TypeCheckerMappingOps
+{
+    getTypeOfSymbolAtLocation(symbol: Symbol, node: Node): Type;
+
+    getSymbolsInScope(location: Node, meaning: SymbolFlags): Symbol[];
+    getSymbolAtLocation(node: Node): Symbol | undefined;
+    /** @internal */ getIndexInfosAtLocation(node: Node): readonly IndexInfo[] | undefined;
+    getSymbolsOfParameterPropertyDeclaration(parameter: ParameterDeclaration, parameterName: string): Symbol[];
+    /**
+     * The function returns the value (local variable) symbol of an identifier in the short-hand property assignment.
+     * This is necessary as an identifier in short-hand property assignment can contains two meaning: property name and property value.
+     */
+    getShorthandAssignmentValueSymbol(location: Node | undefined): Symbol | undefined;
+
+}
+
+export interface TypeCheckerMappingOps
+{
+    //
+
+    getExportSpecifierLocalTargetSymbol(location: ExportSpecifier | Identifier): Symbol | undefined;
+    /**
+     * If a symbol is a local symbol with an associated exported symbol, returns the exported symbol.
+     * Otherwise returns its input.
+     * For example, at `export type T = number;`:
+     *     - `getSymbolAtLocation` at the location `T` will return the exported symbol for `T`.
+     *     - But the result of `getSymbolsInScope` will contain the *local* symbol for `T`, not the exported symbol.
+     *     - Calling `getExportSymbolOfSymbol` on that local symbol will return the exported symbol.
+     */
+    getExportSymbolOfSymbol(symbol: Symbol): Symbol;
+    getPropertySymbolOfDestructuringAssignment(location: Identifier): Symbol | undefined;
+}
+
+export interface TypeCheckingQueries extends TypeCheckerMappingOps
+{
+    //
+    
+    getTypeOfAssignmentPattern(pattern: AssignmentPattern): Type;
+    getTypeAtLocation(node: Node): Type;
+    getTypeFromTypeNode: TypeCheckingQueries["typeFromTypeNode"] ;
+
+    /**
+     * computes the {@link Type} expressed by the {@link TypeNode} {@link x}.
+     */
+    typeFromTypeNode(x: TypeNode): Type | undefined ;
+    /**
+     * computes the {@link TypePredicativeType} expressed by the {@link TypePredicateNode} {@link x}.
+     */
+    typeFromTypeNode(x: TypePredicateNode): TypePredicativeType | undefined ;
+    typeFromTypeNode(x: TypeReferenceNode): DeferredTypeReferenceBase | undefined ;
+
+    getTermQuantifyingType(c: Expression): DeferredTermQuantifyingType1 ;
+
+    //
+}
+
+export interface TypeCheckerStringify
+{
+
     signatureToString(signature: Signature, enclosingDeclaration?: Node, flags?: TypeFormatFlags, kind?: SignatureKind): string;
     typeToString(type: Type, enclosingDeclaration?: Node, flags?: TypeFormatFlags): string;
     symbolToString(symbol: Symbol, enclosingDeclaration?: Node, meaning?: SymbolFlags, flags?: SymbolFormatFlags): string;
     typePredicateToString(predicate: TypePredicate, enclosingDeclaration?: Node, flags?: TypeFormatFlags): string;
 
+    /** @internal */ writeSignature(signature: Signature, enclosingDeclaration?: Node, flags?: TypeFormatFlags, kind?: SignatureKind, writer?: EmitTextWriter): string;
+    /** @internal */ writeType(type: Type, enclosingDeclaration?: Node, flags?: TypeFormatFlags, writer?: EmitTextWriter): string;
+    /** @internal */ writeSymbol(symbol: Symbol, enclosingDeclaration?: Node, meaning?: SymbolFlags, flags?: SymbolFormatFlags, writer?: EmitTextWriter): string;
+    /** @internal */ writeTypePredicate(predicate: TypePredicate, enclosingDeclaration?: Node, flags?: TypeFormatFlags, writer?: EmitTextWriter): string;
+
+}
+
+export interface TypeCheckerMappingOps
+{
+    getFullyQualifiedName(symbol: Symbol): string;
+}
+
+export interface TypeCheckerMappingOps
+{
+    getAugmentedPropertiesOfType(type: Type): Symbol[];
+
+}
+
+export interface TypeCheckingQueries extends AllGetContextualSignature
+{
+}
+
+export interface AllGetContextualSignature
+{
+    //
+    
+    getRootSymbols(symbol: Symbol): readonly Symbol[];
+    getSymbolOfExpando(node: Node, allowDeclaration: boolean): Symbol | undefined;
+    getContextualType(node: Expression): Type | undefined;
+    /** @internal */ getContextualType(node: Expression, contextFlags?: ContextFlags): Type | undefined; // eslint-disable-line @typescript-eslint/unified-signatures
+    /** @internal */ getContextualTypeForObjectLiteralElement(element: ObjectLiteralElementLike): Type | undefined;
+    /** @internal */ getContextualTypeForArgumentAtIndex(call: CallLikeExpression, argIndex: number): Type | undefined;
+    /** @internal */ getContextualTypeForJsxAttribute(attribute: JsxAttribute | JsxSpreadAttribute): Type | undefined;
+    /** @internal */ isContextSensitive(node: Expression | MethodDeclaration | ObjectLiteralElementLike | JsxAttributeLike): boolean;
+    
+}
+
+export interface TypeCheckerMappingOps
+{
+    //
+    
+    /** @internal */ getTypeOfPropertyOfContextualType(type: Type, name: __String): Type | undefined;
+
+}
+
+export interface TypeCheckingQueries extends AllGetResolvedSignature
+{
+}
+
+export interface AllGetResolvedSignature
+{
+    /**
+     * returns unknownSignature in the case of an error.
+     * returns undefined if the node is not valid.
+     * @param argumentCount Apparent number of arguments, passed in case of a possibly incomplete call. This should come from an ArgumentListInfo. See `signatureHelp.ts`.
+     */
+    getResolvedSignature(node: CallLikeExpression, candidatesOutArray?: Signature[], argumentCount?: number): Signature | undefined;
+    /** @internal */ getResolvedSignatureForSignatureHelp(node: CallLikeExpression, candidatesOutArray?: Signature[], argumentCount?: number): Signature | undefined;
+    /** @internal */ getCandidateSignaturesForStringLiteralCompletions(call: CallLikeExpression, editingArgument: Node): Signature[];
+    
+}
+
+export interface TypeCheckerMappingOps
+{
+    //
+    /** @internal */ getExpandedParameters(sig: Signature): readonly (readonly Symbol[])[];
+    /** @internal */ hasEffectiveRestParameter(sig: Signature): boolean;
+    
+}
+
+export interface TypeCheckingQueries
+{
+    /** @internal */ containsArgumentsReference(declaration: SignatureDeclaration): boolean;
+
+    getSignatureFromDeclaration(declaration: SignatureDeclaration): Signature | undefined;
+    isImplementationOfOverload(node: SignatureDeclaration): boolean | undefined;
+    
+}
+
+export interface CommonTypeFactpry
+{
+    //
+    isUndefinedSymbol(symbol: Symbol): boolean;
+    isArgumentsSymbol(symbol: Symbol): boolean;
+    isUnknownSymbol(symbol: Symbol): boolean;
+}
+
+export interface TypeCheckerMappingOps
+{
+    getMergedSymbol(symbol: Symbol): Symbol;
+
+}
+
+export interface TypeCheckingQueries
+{
+    //
+    
+    getConstantValue(node: EnumMember | PropertyAccessExpression | ElementAccessExpression): string | number | undefined;
+    isValidPropertyAccess(node: PropertyAccessExpression | QualifiedName | ImportTypeNode, propertyName: string): boolean;
+    /**
+     * Exclude accesses to private properties.
+     *
+     * @internal
+     */
+    isValidPropertyAccessForCompletions(node: PropertyAccessExpression | ImportTypeNode | QualifiedName, type: Type, property: Symbol): boolean;
+}
+
+export interface TypeCheckedWidenedOrApparentBaseTypes
+{
+    //
+    
+    /** Follow all aliases to get the original symbol. */
+    getAliasedSymbol(symbol: Symbol): Symbol;
+    /** Follow a *single* alias to get the immediately aliased symbol. */
+    getImmediateAliasedSymbol(symbol: Symbol): Symbol | undefined;
+}
+
+export interface TypeCheckedWidenedOrApparentBaseTypes
+{
+    getExportsOfModule(moduleSymbol: Symbol): Symbol[];
+    /**
+     * Unlike `getExportsOfModule`, this includes properties of an `export =` value.
+     *
+     * @internal
+     */
+    getExportsAndPropertiesOfModule(moduleSymbol: Symbol): Symbol[];
+    /** @internal */ forEachExportAndPropertyOfModule(moduleSymbol: Symbol, cb: (symbol: Symbol, key: __String) => void): void;
+    getJsxIntrinsicTagNamesAt(location: Node): Symbol[];
+    isOptionalParameter(node: ParameterDeclaration): boolean;
+}
+
+export interface TypeCheckingQueries
+{
+    getAmbientModules(): Symbol[];
+
+}
+
+export interface TypeCheckerMappingOps extends TypeCheckedWidenedOrApparentBaseTypes
+{
+}
+
+export interface TypeCheckedWidenedOrApparentBaseTypes
+{
     tryGetMemberInModuleExports(memberName: string, moduleSymbol: Symbol): Symbol | undefined;
     /**
      * Unlike `tryGetMemberInModuleExports`, this includes properties of an `export =` value.
@@ -4517,15 +4841,16 @@ export interface TypeChecker
     getBaseConstraintOfType(type: Type): Type | undefined;
     getDefaultFromTypeParameter(type: Type): Type | undefined;
 
-    /**
-     * computes the {@link Type} expressed by the {@link TypeNode} {@link x}.
-     */
-    typeFromTypeNode(x: TypeNode): Type | undefined ;
+}
 
+
+export interface CommonTypeFactpry
+{
+    
     /**
      * Gets the intrinsic `any` type. There are multiple types that act as `any` used internally in the compiler,
      * so the type returned by this function should not be used in equality checks to determine if another type
-     * is `any`. Instead, use `type.flags & TypeFlags.Any`.
+     * is `any`. Instead, use {@link getProperAnyType}, or `type.flags & TypeFlags.Any`.
      * @deprecated see {@link getProperAnyType}
      */
     getAnyType(): Type;
@@ -4540,35 +4865,36 @@ export interface TypeChecker
     /* eslint-disable @typescript-eslint/unified-signatures */
     /** @internal */
     getFalseType(fresh?: boolean): Type;
-    getFalseType(): LiteralType<false>;
+    getFalseType(): LiteralType<false> & TypeManifest<false> ;
     /** @internal */
     getTrueType(fresh?: boolean): Type;
-    getTrueType(): LiteralType<true>;
+    getTrueType(): LiteralType<true> & TypeManifest<true> ;
     /* eslint-enable @typescript-eslint/unified-signatures */
-    getVoidType(): GeneralisedStaticLiteralType<void>;
+    getVoidType(): GeneralisedStaticLiteralType<void> & TypeManifest<void> ;
+    getImplicitVoidReturnType(): GeneralisedLiteralType<undefined>;
     getAssertsAnyIsAnyType(): GeneralisedLiteralType<void>;
     /**
      * Gets the intrinsic `undefined` type. There are multiple types that act as `undefined` used internally in the compiler
      * depending on compiler options, so the type returned by this function should not be used in equality checks to determine
-     * if another type is `undefined`. Instead, use `type.flags & TypeFlags.Undefined`.
+     * if another type is `undefined`. Instead, use {@link getProperUndefinedType}, or `type.flags & TypeFlags.Undefined`.
      * @deprecated see {@link getProperUndefinedType}
      */
     getUndefinedType(): GeneralisedLiteralType<undefined>;
-    getProperUndefinedType(): GeneralisedStaticLiteralType<undefined>;
+    getProperUndefinedType(): GeneralisedStaticLiteralType<undefined> & TypeManifest<undefined> ;
     /**
      * Gets the intrinsic `null` type. There are multiple types that act as `null` used internally in the compiler,
      * so the type returned by this function should not be used in equality checks to determine if another type
-     * is `null`. Instead, use `type.flags & TypeFlags.Null`.
+     * is `null`. Instead, use {@link getProperNullType}, or `type.flags & TypeFlags.Null`.
      * @deprecated see {@link getProperNullType}
      */
     getNullType      (): GeneralisedLiteralType<null>;
-    getProperNullType(): LiteralType<null>;
+    getProperNullType(): LiteralType<null> & TypeManifest<null> ;
     getESSymbolType(): Type;
     /**
      * Gets the intrinsic `never` type. There are multiple types that act as `never` used internally in the compiler,
      * so the type returned by this function should not be used in equality checks to determine if another type
-     * is `never`. Instead, use `type.flags & TypeFlags.Never`.
-     * @deprecated see {@link getNeverType}
+     * is `never`. Instead, use {@link getProperNeverType}, or `type.flags & TypeFlags.Never`.
+     * @deprecated see {@link getProperNeverType}
      */
     getNeverType(): SubtypeManifest<never>;
     getEffectiveNeverType(): SubtypeManifest<never>;
@@ -4584,6 +4910,10 @@ export interface TypeChecker
     /** @internal */ getPromiseLikeType(): Type;
     /** @internal */ getAsyncIterableType(): Type | undefined;
 
+}
+
+export interface TypeCheckerMappingOps
+{
     /**
      * Returns true if the "source" type is assignable to the "target" type.
      *
@@ -4598,6 +4928,10 @@ export interface TypeChecker
      * ```
      */
     isTypeAssignableTo(source: Type, target: Type): boolean;
+}
+
+export interface TypeCheckerMappingOps
+{
     /** @internal */ createAnonymousType(symbol: Symbol | undefined, members: SymbolTable, callSignatures: Signature[], constructSignatures: Signature[], indexInfos: IndexInfo[]): Type;
     /** @internal */ createSignature(
         declaration: SignatureDeclaration | undefined,
@@ -4611,9 +4945,143 @@ export interface TypeChecker
     ): Signature;
     /** @internal */ createSymbol(flags: SymbolFlags, name: __String): TransientSymbol;
     /** @internal */ createIndexInfo(keyType: Type, type: Type, isReadonly: boolean, declaration?: SignatureDeclaration): IndexInfo;
+}
+
+export interface TypeCheckerMappingOps
+{
     /** @internal */ isSymbolAccessible(symbol: Symbol, enclosingDeclaration: Node | undefined, meaning: SymbolFlags, shouldComputeAliasToMarkVisible: boolean): SymbolAccessibilityResult;
     /** @internal */ tryFindAmbientModule(moduleName: string): Symbol | undefined;
     /** @internal */ tryFindAmbientModuleWithoutAugmentations(moduleName: string): Symbol | undefined;
+
+    /** @internal */ getSymbolWalker(accept?: (symbol: Symbol) => boolean): SymbolWalker;
+
+}
+
+export interface CommonTypeFactpry
+{
+    /**
+     * True if this type is the `Array` or `ReadonlyArray` type from lib.d.ts.
+     * This function will _not_ return true if passed a type which
+     * extends `Array` (for example, the TypeScript AST's `NodeArray` type).
+     */
+    isArrayType(type: Type): boolean;
+    /**
+     * True if this type is a tuple type. This function will _not_ return true if
+     * passed a type which extends from a tuple.
+     */
+    isTupleType(type: Type): boolean;
+    /**
+     * True if this type is assignable to `ReadonlyArray<any>`.
+     */
+    isArrayLikeType(type: Type): boolean;
+
+}
+
+export interface TypeCheckingQueries
+{
+    /**
+     * True if `contextualType` should not be considered for completions because
+     * e.g. it specifies `kind: "a"` and obj has `kind: "b"`.
+     *
+     * @internal
+     */
+    isTypeInvalidDueToUnionDiscriminant(contextualType: Type, obj: ObjectLiteralExpression | JsxAttributes): boolean;
+    
+}
+
+export interface TypeCheckedWidenedOrApparentBaseTypes
+{
+        
+    /** @internal */ getExactOptionalProperties(type: Type): Symbol[];
+    /**
+     * For a union, will include a property if it's defined in *any* of the member types.
+     * So for `{ a } | { b }`, this will include both `a` and `b`.
+     * Does not include properties of primitive types.
+     *
+     * @internal
+     */
+    getAllPossiblePropertiesOfTypes(type: readonly Type[]): Symbol[];
+
+}
+
+export interface TypeCheckingQueries extends TypeCheckerMappingOps
+{
+    resolveName(name: string, location: Node | undefined, meaning: SymbolFlags, excludeGlobals: boolean): Symbol | undefined;
+    /** @internal */ getJsxNamespace(location?: Node): string;
+    /** @internal */ getJsxFragmentFactory(location: Node): string | undefined;
+
+}
+
+export interface TypeCheckerMappingOps
+{
+
+    /**
+     * Note that this will return undefined in the following case:
+     *     // a.ts
+     *     export namespace N { export class C { } }
+     *     // b.ts
+     *     <<enclosingDeclaration>>
+     * Where `C` is the symbol we're looking for.
+     * This should be called in a loop climbing parents of the symbol, so we'll get `N`.
+     *
+     * @internal
+     */
+    getAccessibleSymbolChain(symbol: Symbol, enclosingDeclaration: Node | undefined, meaning: SymbolFlags, useOnlyExternalAliasing: boolean): Symbol[] | undefined;
+    getTypePredicateOfSignature(signature: Signature): TypePredicate | undefined;
+    /** @internal */ resolveExternalModuleName(moduleSpecifier: Expression): Symbol | undefined;
+    /**
+     * An external module with an 'export =' declaration resolves to the target of the 'export =' declaration,
+     * and an external module with no 'export =' declaration resolves to the module itself.
+     *
+     * @internal
+     */
+    resolveExternalModuleSymbol(symbol: Symbol): Symbol;
+
+}
+
+export interface TypeCheckingQueries extends TypeCheckerMappingOps
+{
+    /**
+     * @param node A location where we might consider accessing `this`. Not necessarily a ThisExpression.
+     *
+     * @internal
+     */
+    tryGetThisTypeAt(node: Node, includeGlobalThis?: boolean, container?: ThisContainer): Type | undefined;
+    /** @internal */ getTypeArgumentConstraint(node: TypeNode): Type | undefined;
+
+    /**
+     * Does *not* get *all* suggestion diagnostics, just the ones that were convenient to report in the checker.
+     * Others are added in computeSuggestionDiagnostics.
+     *
+     * @internal
+     */
+    getSuggestionDiagnostics(file: SourceFile, cancellationToken?: CancellationToken): readonly DiagnosticWithLocation[];
+
+    /** @internal */ getLocalTypeParametersOfClassOrInterfaceOrTypeAlias(symbol: Symbol): readonly TypeParameter[] | undefined;
+    /** @internal */ isDeclarationVisible(node: Declaration | AnyImportSyntax): boolean;
+    /** @internal */ isPropertyAccessible(node: Node, isSuper: boolean, isWrite: boolean, containingType: Type, property: Symbol): boolean;
+    /** @internal */ getTypeOnlyAliasDeclaration(symbol: Symbol): TypeOnlyAliasDeclaration | undefined;
+    /** @internal */ getMemberOverrideModifierStatus(node: ClassLikeDeclaration, member: ClassElement, memberSymbol: Symbol): MemberOverrideStatus;
+    /** @internal */ isTypeParameterPossiblyReferenced(tp: TypeParameter, node: Node): boolean;
+    /** @internal */ typeHasCallOrConstructSignatures(type: Type): boolean;
+}
+
+/**
+ * methods resolving {@link Type}s and {@link Symbol}s by each others,
+ * excluding methods dealing with {@link Node}s
+ */
+export interface TypeCheckerMappingOps
+{}
+
+/**
+ * computes {@link Type}s or {@link Symbol}s, from {@link Node}s ,
+ */
+export interface TypeCheckingQueries
+{}
+
+export interface TypeChecker
+extends CommonTypeFactpry, TypeCheckedNodeBuilder, TypeCheckingQueries, TypeCheckerMappingOps
+{
 
     /** @internal */ getSymbolWalker(accept?: (symbol: Symbol) => boolean): SymbolWalker;
     
@@ -6307,6 +6775,32 @@ export interface InstantiableType extends Type {
     resolvedStringIndexType?: IndexType;
 }
 
+/**
+ * 
+ * @see {@link TypeParameter}
+ */
+export enum TypeParameterUnaryConstrainingMode
+{
+
+    /** `T extends Base` */
+    EXTENDS_CONSTRAINT = 1 << 1 ,
+
+    /*
+     * these two
+     * assumes that the constraint is {@link UnionTypeNode}
+     * and is the essence of https://github.com/microsoft/TypeScript/issues/27808 
+     * 
+     */
+    /** `T extends oneof B1 | B2 | ... ... ` ; enforces subtyping of any of {@link UnionTypeNode.types its constituents} */ EXTENDS_ONEOF_CONSTRAINING_UNIONTYPE_CONSTITUENT = 1 << 2 ,
+    /**         `T oneof B1 | B2 | ... ... ` ; enforces exacting  to any of {@link UnionTypeNode.types its constituents} */ EXACTLY_ONEOF_CONSTRAINING_UNIONTYPE_CONSTITUENT = 1 << 3 ,
+
+    /*
+     * in all cases
+     * the substituting type is guaranteed to subtype the constraint!
+     * 
+     */
+}
+
 // Type parameters (TypeFlags.TypeParameter)
 // dprint-ignore
 export interface TypeParameter extends InstantiableType {
@@ -6315,7 +6809,9 @@ export interface TypeParameter extends InstantiableType {
      *
      * @internal
      */
-    constraint?: Type;        // Constraint
+    constraint?: (
+        | [kind: TypeParameterUnaryConstrainingMode, reference: Type]
+    );        // Constraint
     /** @internal */
     default?: Type;
     /** @internal */
@@ -6482,14 +6978,14 @@ export interface TypePredicativeType extends Type, InstantiableType
  * ```
  * 
  */
-export interface TypeSelectiveType extends TypePredicativeType, GeneralisedLiteralType
+export interface TypeSelectiveType extends TypePredicativeType, GeneralisedLiteralType, BooleanValuedType
 {
     resolvedBaseConstraint: BooleanValuedType ;
     readonly subjectedPremise: TypeSelecte ;
 }
 
-export interface ParamTypePredicativeType extends TypePredicativeType { readonly subjectedPremise: TermTypePredicate ; }
-export interface ThisTypePredicativeType extends TypePredicativeType { readonly subjectedPremise: ThisTypePredicate ; }
+export interface ParamTypePredicativeType extends TypeSelectiveType { readonly subjectedPremise: TermTypePredicate ; }
+export interface ThisTypePredicativeType  extends TypeSelectiveType { readonly subjectedPremise: ThisTypePredicate ; }
 
 /**
  * a {@link TypeChecker sub-type} of {@link TypeChecker.getVoidType `void`} (see {@link PostConditioningNonvoidReturnType} for the non-`void` one!) with added post-cond.
@@ -6518,7 +7014,7 @@ export interface ThisTypePredicativeType extends TypePredicativeType { readonly 
  * also occur as {@link PostConditioningNonvoidReturnType.postcondT} and {@link Signature.resolvedPreCondition}.
  * 
  */
-export interface AssertingVoidKwdType extends TypePredicativeType, PostConditioningVoidKwdType, PostConditioningSgnedType, GeneralisedLiteralType
+export interface AssertingVoidKwdType extends TypePredicativeType, PostConditioningVoidKwdType, PostConditioningSgnedType, GeneralisedLiteralType, VoidSubtype
 {
     resolvedBaseConstraint: VoidType ;
     readonly subjectedPremise: AssertingTypePredicate ;
@@ -6554,7 +7050,7 @@ export interface EffectSignedVoidKwdType extends PostConditioningVoidKwdType
  * also occur as {@link PostConditioningNonvoidReturnType.postcondT} and {@link Signature.resolvedPreCondition}.
  * 
  */
-export interface PostConditioningVoidKwdType extends TypePredicativeType, PostConditioningSgnedType, GeneralisedLiteralType
+export interface PostConditioningVoidKwdType extends TypePredicativeType, PostConditioningSgnedType, GeneralisedLiteralType, VoidSubtype
 {
     resolvedBaseConstraint: VoidType ;
     readonly subjectedPremise: PostConditioningPredicate ;
@@ -6625,8 +7121,10 @@ export interface StatementRunType extends Type
  * 
  * may get *approximated* to `never`
  * 
+ * @see {@link TypeCheckerMappingOps.getRaiseExceptionType}
+ * 
  */
-export interface ThrowExceptionType extends TrivialUnaryType
+export interface ThrowExceptionType extends TrivialIntrinsicUnaryType
 {}
 
 export interface UnaryOnSubjectType extends Type
@@ -6635,62 +7133,77 @@ export interface UnaryOnSubjectType extends Type
     readonly operand: {} ;
 }
 
-export interface TrivialUnaryType extends UnaryOnSubjectType
+/**
+ * *intrinsic* unary type.
+ * 
+ * alternatives:
+ * - {@link TypeCheckingQueries.getTermQuantifyingType}
+ * - {@link TypeCheckerMappingOps.getRaiseExceptionType}
+ * - {@link TypeCheckerMappingOps.getImplementativeNegatedType}
+ * - {@link TypeCheckerMappingOps.getCoerceToBooleanType}
+ * - {@link TypeCheckerMappingOps.getCoerceNegatedType}
+ * 
+ */
+export interface TrivialIntrinsicUnaryType extends UnaryOnSubjectType
 {
     //
     readonly operand: Type ;
 }
 
-export interface TrivialCombnType extends Type
-{
-    //
-    subjects: Type[] ;
-}
+// export interface TrivialCombnType extends Type
+// {
+//     //
+//     subjects: Type[] ;
+// }
 
-/**
- * "not an instance of T", `NotBeing<T>` ;
- * 
- * TYPE_CHECKER NOTE --
- * for efficiency,
- * consider representing those, as combination of {@link IntersectionType `&`s} with this, like
- * `ImplementativeNegatedType(IntersectionType(T1, T2, T3) )`
- * 
- */
-export interface ImplementativeNegatedType extends TrivialUnaryType
-{}
+// /**
+//  * "not an instance of T", `NotBeing<T>` ;
+//  * 
+//  * TYPE_CHECKER NOTE --
+//  * for efficiency,
+//  * consider representing those, as combination of {@link IntersectionType `&`s} with this, like
+//  * `ImplementativeNegatedType(IntersectionType(T1, T2, T3) )`
+//  * 
+//  */
+// export interface ImplementativeNegatedType extends TrivialUnaryType
+// {}
 
-/**
- * `!expr`, whether boolean or bitwise ops
- */
-export interface CoerceNegatedType extends TrivialUnaryType
-{}
+// /**
+//  * `!expr`, whether boolean or bitwise ops
+//  */
+// export interface CoerceNegatedType extends TrivialUnaryType
+// {}
 
-/**
- * `expr!` (TS only)
- */
-export interface CoerceNonNullUnaryType extends TrivialUnaryType
-{}
+// /**
+//  * `expr!` (TS only)
+//  */
+// export interface CoerceNonNullUnaryType extends TrivialUnaryType
+// {}
 
-/**
- * `+expr
- */
-export interface CoerceUnaryPlusOperatedType extends TrivialUnaryType
-{}
+// /**
+//  * `+expr
+//  */
+// export interface CoerceUnaryPlusOperatedType extends TrivialUnaryType
+// {}
 
-/**
- * `-expr`
- */
-export interface AdditiveNegatedType extends TrivialUnaryType
-{}
+// /**
+//  * `-expr`
+//  */
+// export interface AdditiveNegatedType extends TrivialUnaryType
+// {}
 
 /** */
-export interface NumericRangeType extends Type
+export interface NumericRangeType extends OrderedValueRangeType<number> {}
+
+/** */
+export interface OrderedValueRangeType<T extends {} = {}>
+extends Type, SubtypeManifest<T>
 {
-    minBound: NumericRangePresentEndDesc | false ;
-    maxBound: NumericRangePresentEndDesc | false ;
+    readonly minBound: OrderedValueRangePresentEndDesc<T> | false ;
+    readonly maxBound: OrderedValueRangePresentEndDesc<T> | false ;
 }
 /** boundary desc unless `false` */
-export interface NumericRangePresentEndDesc { pos: Type, itselfToo: boolean, }
+export interface OrderedValueRangePresentEndDesc<T extends {}> { pos: TypeManifest<T>, itselfToo: boolean, }
 
 /** @internal */
 export const enum JsxReferenceKind {
@@ -7117,163 +7630,8 @@ export enum PollingWatchKind {
 
 export type CompilerOptionsValue = string | number | boolean | (string | number)[] | string[] | MapLike<string[]> | PluginImport[] | ProjectReference[] | null | undefined;
 
-export interface CompilerOptions {
-    /** @internal */ all?: boolean;
-    allowImportingTsExtensions?: boolean;
-    allowJs?: boolean;
-    /** @internal */ allowNonTsExtensions?: boolean;
-    allowArbitraryExtensions?: boolean;
-    allowSyntheticDefaultImports?: boolean;
-    allowUmdGlobalAccess?: boolean;
-    allowUnreachableCode?: boolean;
-    allowUnusedLabels?: boolean;
-    alwaysStrict?: boolean; // Always combine with strict property
-    baseUrl?: string;
-    /**
-     * An error if set - this should only go through the -b pipeline and not actually be observed
-     *
-     * @internal
-     */
-    build?: boolean;
-    /** @deprecated */
-    charset?: string;
-    checkJs?: boolean;
-    /** @internal */ configFilePath?: string;
-    /**
-     * configFile is set as non enumerable property so as to avoid checking of json source files
-     *
-     * @internal
-     */
-    readonly configFile?: TsConfigSourceFile;
-    customConditions?: string[];
-    declaration?: boolean;
-    declarationMap?: boolean;
-    emitDeclarationOnly?: boolean;
-    declarationDir?: string;
-    /** @internal */ diagnostics?: boolean;
-    /** @internal */ extendedDiagnostics?: boolean;
-    disableSizeLimit?: boolean;
-    disableSourceOfProjectReferenceRedirect?: boolean;
-    disableSolutionSearching?: boolean;
-    disableReferencedProjectLoad?: boolean;
-    downlevelIteration?: boolean;
-    emitBOM?: boolean;
-    emitDecoratorMetadata?: boolean;
-    exactOptionalPropertyTypes?: boolean;
-    experimentalDecorators?: boolean;
-    forceConsistentCasingInFileNames?: boolean;
-    /** @internal */ generateCpuProfile?: string;
-    /** @internal */ generateTrace?: string;
-    /** @internal */ help?: boolean;
-    ignoreDeprecations?: string;
-    importHelpers?: boolean;
-    /** @deprecated */
-    importsNotUsedAsValues?: ImportsNotUsedAsValues;
-    /** @internal */ init?: boolean;
-    inlineSourceMap?: boolean;
-    inlineSources?: boolean;
-    isolatedModules?: boolean;
-    jsx?: JsxEmit;
-    /** @deprecated */
-    keyofStringsOnly?: boolean;
-    lib?: string[];
-    /** @internal */ listEmittedFiles?: boolean;
-    /** @internal */ listFiles?: boolean;
-    /** @internal */ explainFiles?: boolean;
-    /** @internal */ listFilesOnly?: boolean;
-    locale?: string;
-    mapRoot?: string;
-    maxNodeModuleJsDepth?: number;
-    module?: ModuleKind;
-    moduleResolution?: ModuleResolutionKind;
-    moduleSuffixes?: string[];
-    moduleDetection?: ModuleDetectionKind;
-    newLine?: NewLineKind;
-    noEmit?: boolean;
-    /** @internal */ noEmitForJsFiles?: boolean;
-    noEmitHelpers?: boolean;
-    noEmitOnError?: boolean;
-    noErrorTruncation?: boolean;
-    noFallthroughCasesInSwitch?: boolean;
-    noImplicitAny?: boolean; // Always combine with strict property
-    noImplicitReturns?: boolean;
-    noImplicitThis?: boolean; // Always combine with strict property
-    /** @deprecated */
-    noStrictGenericChecks?: boolean;
-    noUnusedLocals?: boolean;
-    noUnusedParameters?: boolean;
-    /** @deprecated */
-    noImplicitUseStrict?: boolean;
-    noPropertyAccessFromIndexSignature?: boolean;
-    assumeChangesOnlyAffectDirectDependencies?: boolean;
-    noLib?: boolean;
-    noResolve?: boolean;
-    /** @internal */
-    noDtsResolution?: boolean;
-    noUncheckedIndexedAccess?: boolean;
-    /** @deprecated */
-    out?: string;
-    outDir?: string;
-    outFile?: string;
-    paths?: MapLike<string[]>;
-    /**
-     * The directory of the config file that specified 'paths'. Used to resolve relative paths when 'baseUrl' is absent.
-     *
-     * @internal
-     */
-    pathsBasePath?: string;
-    /** @internal */ plugins?: PluginImport[];
-    preserveConstEnums?: boolean;
-    noImplicitOverride?: boolean;
-    preserveSymlinks?: boolean;
-    /** @deprecated */
-    preserveValueImports?: boolean;
-    /** @internal */ preserveWatchOutput?: boolean;
-    project?: string;
-    /** @internal */ pretty?: boolean;
-    reactNamespace?: string;
-    jsxFactory?: string;
-    jsxFragmentFactory?: string;
-    jsxImportSource?: string;
-    composite?: boolean;
-    incremental?: boolean;
-    tsBuildInfoFile?: string;
-    removeComments?: boolean;
-    resolvePackageJsonExports?: boolean;
-    resolvePackageJsonImports?: boolean;
-    rootDir?: string;
-    rootDirs?: string[];
-    skipLibCheck?: boolean;
-    skipDefaultLibCheck?: boolean;
-    sourceMap?: boolean;
-    sourceRoot?: string;
-    strict?: boolean;
-    strictFunctionTypes?: boolean; // Always combine with strict property
-    strictBindCallApply?: boolean; // Always combine with strict property
-    strictNullChecks?: boolean; // Always combine with strict property
-    strictPropertyInitialization?: boolean; // Always combine with strict property
-    stripInternal?: boolean;
-    /** @deprecated */
-    suppressExcessPropertyErrors?: boolean;
-    /** @deprecated */
-    suppressImplicitAnyIndexErrors?: boolean;
-    /** @internal */ suppressOutputPathCheck?: boolean;
-    target?: ScriptTarget;
-    traceResolution?: boolean;
-    useUnknownInCatchVariables?: boolean;
-    resolveJsonModule?: boolean;
-    types?: string[];
-    /** Paths used to compute primary types search locations */
-    typeRoots?: string[];
-    verbatimModuleSyntax?: boolean;
-    /** @internal */ version?: boolean;
-    /** @internal */ watch?: boolean;
-    esModuleInterop?: boolean;
-    /** @internal */ showConfig?: boolean;
-    useDefineForClassFields?: boolean;
-
-    [option: string]: CompilerOptionsValue | TsConfigSourceFile | undefined;
-}
+export interface CompilerOptions extends SupportedCompilerOptions
+{}
 
 export interface WatchOptions {
     watchFile?: WatchFileKind;
@@ -7838,6 +8196,32 @@ export interface SourceMapSource {
 }
 
 /** @internal */
+// NOTE: Any new properties should be accounted for in `mergeEmitNode` in factory/nodeFactory.ts
+// dprint-ignore
+export interface EmitNode {
+    flags: EmitFlags;                        // Flags that customize emit
+    internalFlags: InternalEmitFlags;        // Internal flags that customize emit
+    annotatedNodes?: Node[];                 // Tracks Parse-tree nodes with EmitNodes for eventual cleanup.
+    leadingComments?: SynthesizedComment[];  // Synthesized leading comments
+    trailingComments?: SynthesizedComment[]; // Synthesized trailing comments
+    commentRange?: TextRange;                // The text range to use when emitting leading or trailing comments
+    sourceMapRange?: SourceMapRange;         // The text range to use when emitting leading or trailing source mappings
+    tokenSourceMapRanges?: (SourceMapRange | undefined)[]; // The text range to use when emitting source mappings for tokens
+    constantValue?: string | number;         // The constant value of an expression
+    externalHelpersModuleName?: Identifier;  // The local name for an imported helpers module
+    externalHelpers?: boolean;
+    helpers?: EmitHelper[];                  // Emit helpers for the node
+    startsOnNewLine?: boolean;               // If the node should begin on a new line
+    snippetElement?: SnippetElement;         // Snippet element of the node
+    typeNode?: TypeNode;                     // VariableDeclaration type
+    classThis?: Identifier;                  // Identifier that points to a captured static `this` for a class which may be updated after decorators are applied
+    assignedName?: Expression;               // Expression used as the assigned name of a class or function
+    identifierTypeArguments?: NodeArray<TypeNode | TypeParameterDeclaration>; // Only defined on synthesized identifiers. Though not syntactically valid, used in emitting diagnostics, quickinfo, and signature help.
+    autoGenerate: AutoGenerateInfo | undefined; // Used for auto-generated identifiers and private identifiers.
+    generatedImportReference?: ImportSpecifier; // Reference to the generated import specifier this identifier refers to
+}
+
+/** @internal */
 export type SnippetElement = TabStop | Placeholder;
 
 /** @internal */
@@ -8058,6 +8442,314 @@ export const enum EmitHint {
     EmbeddedStatement,       // Emitting an embedded statement
     JsxAttributeValue,       // Emitting a JSX attribute value
     ImportTypeNodeAttributes,// Emitting attributes as part of an ImportTypeNode
+}
+
+/** @internal */
+export interface SourceFileMayBeEmittedHost {
+    getCompilerOptions(): CompilerOptions;
+    isSourceFileFromExternalLibrary(file: SourceFile): boolean;
+    getResolvedProjectReferenceToRedirect(fileName: string): ResolvedProjectReference | undefined;
+    isSourceOfProjectReferenceRedirect(fileName: string): boolean;
+    getCurrentDirectory(): string;
+    getCanonicalFileName: GetCanonicalFileName;
+    useCaseSensitiveFileNames(): boolean;
+}
+
+/** @internal */
+export interface EmitHost extends ScriptReferenceHost, ModuleSpecifierResolutionHost, SourceFileMayBeEmittedHost {
+    getSourceFiles(): readonly SourceFile[];
+    useCaseSensitiveFileNames(): boolean;
+    getCurrentDirectory(): string;
+
+    getLibFileFromReference(ref: FileReference): SourceFile | undefined;
+
+    getCommonSourceDirectory(): string;
+    getCanonicalFileName(fileName: string): string;
+
+    isEmitBlocked(emitFileName: string): boolean;
+
+    writeFile: WriteFileCallback;
+    getBuildInfo(): BuildInfo | undefined;
+    getSourceFileFromReference: Program["getSourceFileFromReference"];
+    readonly redirectTargetsMap: RedirectTargetsMap;
+    createHash?(data: string): string;
+}
+
+/** @internal */
+export interface PropertyDescriptorAttributes {
+    enumerable?: boolean | Expression;
+    configurable?: boolean | Expression;
+    writable?: boolean | Expression;
+    value?: Expression;
+    get?: Expression;
+    set?: Expression;
+}
+
+export const enum OuterExpressionKinds {
+    Parentheses = 1 << 0,
+    TypeAssertions = 1 << 1,
+    NonNullAssertions = 1 << 2,
+    PartiallyEmittedExpressions = 1 << 3,
+
+    Assertions = TypeAssertions | NonNullAssertions,
+    All = Parentheses | Assertions | PartiallyEmittedExpressions,
+
+    ExcludeJSDocTypeAssertion = 1 << 4,
+}
+
+/** @internal */
+export type OuterExpression =
+    | ParenthesizedExpression
+    | TypeAssertion
+    | SatisfiesExpression
+    | AsExpression
+    | NonNullExpression
+    | PartiallyEmittedExpression;
+
+/** @internal */
+export type WrappedExpression<T extends Expression> =
+    | OuterExpression & { readonly expression: WrappedExpression<T>; }
+    | T;
+
+/** @internal */
+// @ts-ignore
+export type TypeOfTag = keyof { null, undefined, number, bigint, boolean, string, symbol, object, function };
+
+/** @internal */
+export interface CallBinding {
+    target: LeftHandSideExpression;
+    thisArg: Expression;
+}
+
+/** @internal */
+export interface NodeConverters {
+    convertToFunctionBlock(node: ConciseBody, multiLine?: boolean): Block;
+    convertToFunctionExpression(node: FunctionDeclaration): FunctionExpression;
+    convertToClassExpression(node: ClassDeclaration): ClassExpression;
+    convertToArrayAssignmentElement(element: ArrayBindingOrAssignmentElement): Expression;
+    convertToObjectAssignmentElement(element: ObjectBindingOrAssignmentElement): ObjectLiteralElementLike;
+    convertToAssignmentPattern(node: BindingOrAssignmentPattern): AssignmentPattern;
+    convertToObjectAssignmentPattern(node: ObjectBindingOrAssignmentPattern): ObjectLiteralExpression;
+    convertToArrayAssignmentPattern(node: ArrayBindingOrAssignmentPattern): ArrayLiteralExpression;
+    convertToAssignmentElementTarget(node: BindingOrAssignmentElementTarget): Expression;
+}
+
+/** @internal */
+export interface GeneratedNamePart {
+    /** an additional prefix to insert before the text sourced from `node` */
+    prefix?: string;
+    node: Identifier | PrivateIdentifier;
+    /** an additional suffix to insert after the text sourced from `node` */
+    suffix?: string;
+}
+
+export type ImmediatelyInvokedFunctionExpression = CallExpression & { readonly expression: FunctionExpression; };
+export type ImmediatelyInvokedArrowFunction = CallExpression & { readonly expression: ParenthesizedExpression & { readonly expression: ArrowFunction; }; };
+
+/** @internal */
+export const enum LexicalEnvironmentFlags {
+    None = 0,
+    InParameters = 1 << 0, // currently visiting a parameter list
+    VariablesHoistedInParameters = 1 << 1, // a temp variable was hoisted while visiting a parameter list
+}
+
+/**
+ * A function that transforms a node.
+ */
+export type Transformer<T extends Node> = (node: T) => T;
+
+/**
+ * A function that accepts and possibly transforms a node.
+ */
+export type Visitor<TIn extends Node = Node, TOut extends Node | undefined = TIn | undefined> = (node: TIn) => VisitResult<TOut>;
+
+/**
+ * A function that walks a node using the given visitor, lifting node arrays into single nodes,
+ * returning an node which satisfies the test.
+ *
+ * - If the input node is undefined, then the output is undefined.
+ * - If the visitor returns undefined, then the output is undefined.
+ * - If the output node is not undefined, then it will satisfy the test function.
+ * - In order to obtain a return type that is more specific than `Node`, a test
+ *   function _must_ be provided, and that function must be a type predicate.
+ *
+ * For the canonical implementation of this type, @see {visitNode}.
+ */
+export interface NodeVisitor {
+    <TIn extends Node | undefined, TVisited extends Node | undefined, TOut extends Node>(
+        node: TIn,
+        visitor: Visitor<NonNullable<TIn>, TVisited>,
+        test: (node: Node) => node is TOut,
+        lift?: (node: readonly Node[]) => Node,
+    ): TOut | (TIn & undefined) | (TVisited & undefined);
+    <TIn extends Node | undefined, TVisited extends Node | undefined>(
+        node: TIn,
+        visitor: Visitor<NonNullable<TIn>, TVisited>,
+        test?: (node: Node) => boolean,
+        lift?: (node: readonly Node[]) => Node,
+    ): Node | (TIn & undefined) | (TVisited & undefined);
+}
+
+/**
+ * A function that walks a node array using the given visitor, returning an array whose contents satisfy the test.
+ *
+ * - If the input node array is undefined, the output is undefined.
+ * - If the visitor can return undefined, the node it visits in the array will be reused.
+ * - If the output node array is not undefined, then its contents will satisfy the test.
+ * - In order to obtain a return type that is more specific than `NodeArray<Node>`, a test
+ *   function _must_ be provided, and that function must be a type predicate.
+ *
+ * For the canonical implementation of this type, @see {visitNodes}.
+ */
+export interface NodesVisitor {
+    <TIn extends Node, TInArray extends NodeArray<TIn> | undefined, TOut extends Node>(
+        nodes: TInArray,
+        visitor: Visitor<TIn, Node | undefined>,
+        test: (node: Node) => node is TOut,
+        start?: number,
+        count?: number,
+    ): NodeArray<TOut> | (TInArray & undefined);
+    <TIn extends Node, TInArray extends NodeArray<TIn> | undefined>(
+        nodes: TInArray,
+        visitor: Visitor<TIn, Node | undefined>,
+        test?: (node: Node) => boolean,
+        start?: number,
+        count?: number,
+    ): NodeArray<Node> | (TInArray & undefined);
+}
+
+export type VisitResult<T extends Node | undefined> = T | readonly Node[];
+
+export interface Printer {
+    /**
+     * Print a node and its subtree as-is, without any emit transformations.
+     * @param hint A value indicating the purpose of a node. This is primarily used to
+     * distinguish between an `Identifier` used in an expression position, versus an
+     * `Identifier` used as an `IdentifierName` as part of a declaration. For most nodes you
+     * should just pass `Unspecified`.
+     * @param node The node to print. The node and its subtree are printed as-is, without any
+     * emit transformations.
+     * @param sourceFile A source file that provides context for the node. The source text of
+     * the file is used to emit the original source content for literals and identifiers, while
+     * the identifiers of the source file are used when generating unique names to avoid
+     * collisions.
+     */
+    printNode(hint: EmitHint, node: Node, sourceFile: SourceFile): string;
+    /**
+     * Prints a list of nodes using the given format flags
+     */
+    printList<T extends Node>(format: ListFormat, list: NodeArray<T>, sourceFile: SourceFile): string;
+    /**
+     * Prints a source file as-is, without any emit transformations.
+     */
+    printFile(sourceFile: SourceFile): string;
+    /**
+     * Prints a bundle of source files as-is, without any emit transformations.
+     */
+    printBundle(bundle: Bundle): string;
+    /** @internal */ writeNode(hint: EmitHint, node: Node, sourceFile: SourceFile | undefined, writer: EmitTextWriter): void;
+    /** @internal */ writeList<T extends Node>(format: ListFormat, list: NodeArray<T> | undefined, sourceFile: SourceFile | undefined, writer: EmitTextWriter): void;
+    /** @internal */ writeFile(sourceFile: SourceFile, writer: EmitTextWriter, sourceMapGenerator: SourceMapGenerator | undefined): void;
+    /** @internal */ writeBundle(bundle: Bundle, writer: EmitTextWriter, sourceMapGenerator: SourceMapGenerator | undefined): void;
+}
+
+/** @internal */
+export interface BuildInfo {
+    program?: ProgramBuildInfo;
+    version: string;
+}
+
+/** @internal */
+export interface RawSourceMap {
+    version: 3;
+    file: string;
+    sourceRoot?: string | null;
+    sources: string[];
+    sourcesContent?: (string | null)[] | null;
+    mappings: string;
+    names?: string[] | null;
+}
+
+/**
+ * Generates a source map.
+ *
+ * @internal
+ */
+export interface SourceMapGenerator {
+    getSources(): readonly string[];
+    /**
+     * Adds a source to the source map.
+     */
+    addSource(fileName: string): number;
+    /**
+     * Set the content for a source.
+     */
+    setSourceContent(sourceIndex: number, content: string | null): void;
+    /**
+     * Adds a name.
+     */
+    addName(name: string): number;
+    /**
+     * Adds a mapping without source information.
+     */
+    addMapping(generatedLine: number, generatedCharacter: number): void;
+    /**
+     * Adds a mapping with source information.
+     */
+    addMapping(generatedLine: number, generatedCharacter: number, sourceIndex: number, sourceLine: number, sourceCharacter: number, nameIndex?: number): void;
+    /**
+     * Appends a source map.
+     */
+    appendSourceMap(generatedLine: number, generatedCharacter: number, sourceMap: RawSourceMap, sourceMapPath: string, start?: LineAndCharacter, end?: LineAndCharacter): void;
+    /**
+     * Gets the source map as a `RawSourceMap` object.
+     */
+    toJSON(): RawSourceMap;
+    /**
+     * Gets the string representation of the source map.
+     */
+    toString(): string;
+}
+
+/** @internal */
+export interface DocumentPositionMapperHost {
+    getSourceFileLike(fileName: string): SourceFileLike | undefined;
+    getCanonicalFileName(path: string): string;
+    log(text: string): void;
+}
+
+/**
+ * Maps positions between source and generated files.
+ *
+ * @internal
+ */
+export interface DocumentPositionMapper {
+    getSourcePosition(input: DocumentPosition): DocumentPosition;
+    getGeneratedPosition(input: DocumentPosition): DocumentPosition;
+}
+
+/** @internal */
+export interface DocumentPosition {
+    fileName: string;
+    pos: number;
+}
+
+/** @internal */
+export interface EmitTextWriter extends SymbolWriter {
+    write(s: string): void;
+    writeTrailingSemicolon(text: string): void;
+    writeComment(text: string): void;
+    getText(): string;
+    rawWrite(s: string): void;
+    writeLiteral(s: string): void;
+    getTextPos(): number;
+    getLine(): number;
+    getColumn(): number;
+    getIndent(): number;
+    isAtStartOfLine(): boolean;
+    hasTrailingComment(): boolean;
+    hasTrailingWhitespace(): boolean;
+    nonEscapingWrite?(text: string): void;
 }
 
 export interface GetEffectiveTypeRootsHost {
@@ -8436,146 +9128,6 @@ export interface CommentDirectivesMap {
 
 
 
-
-export interface UserPreferences {
-    readonly disableSuggestions?: boolean;
-    readonly quotePreference?: "auto" | "double" | "single";
-    /**
-     * If enabled, TypeScript will search through all external modules' exports and add them to the completions list.
-     * This affects lone identifier completions but not completions on the right hand side of `obj.`.
-     */
-    readonly includeCompletionsForModuleExports?: boolean;
-    /**
-     * Enables auto-import-style completions on partially-typed import statements. E.g., allows
-     * `import write|` to be completed to `import { writeFile } from "fs"`.
-     */
-    readonly includeCompletionsForImportStatements?: boolean;
-    /**
-     * Allows completions to be formatted with snippet text, indicated by `CompletionItem["isSnippet"]`.
-     */
-    readonly includeCompletionsWithSnippetText?: boolean;
-    /**
-     * Unless this option is `false`, or `includeCompletionsWithInsertText` is not enabled,
-     * member completion lists triggered with `.` will include entries on potentially-null and potentially-undefined
-     * values, with insertion text to replace preceding `.` tokens with `?.`.
-     */
-    readonly includeAutomaticOptionalChainCompletions?: boolean;
-    /**
-     * If enabled, the completion list will include completions with invalid identifier names.
-     * For those entries, The `insertText` and `replacementSpan` properties will be set to change from `.x` property access to `["x"]`.
-     */
-    readonly includeCompletionsWithInsertText?: boolean;
-    /**
-     * If enabled, completions for class members (e.g. methods and properties) will include
-     * a whole declaration for the member.
-     * E.g., `class A { f| }` could be completed to `class A { foo(): number {} }`, instead of
-     * `class A { foo }`.
-     */
-    readonly includeCompletionsWithClassMemberSnippets?: boolean;
-    /**
-     * If enabled, object literal methods will have a method declaration completion entry in addition
-     * to the regular completion entry containing just the method name.
-     * E.g., `const objectLiteral: T = { f| }` could be completed to `const objectLiteral: T = { foo(): void {} }`,
-     * in addition to `const objectLiteral: T = { foo }`.
-     */
-    readonly includeCompletionsWithObjectLiteralMethodSnippets?: boolean;
-    /**
-     * Indicates whether {@link CompletionEntry.labelDetails completion entry label details} are supported.
-     * If not, contents of `labelDetails` may be included in the {@link CompletionEntry.name} property.
-     */
-    readonly useLabelDetailsInCompletionEntries?: boolean;
-    readonly allowIncompleteCompletions?: boolean;
-    readonly importModuleSpecifierPreference?: "shortest" | "project-relative" | "relative" | "non-relative";
-    /** Determines whether we import `foo/index.ts` as "foo", "foo/index", or "foo/index.js" */
-    readonly importModuleSpecifierEnding?: "auto" | "minimal" | "index" | "js";
-    readonly allowTextChangesInNewFiles?: boolean;
-    readonly providePrefixAndSuffixTextForRename?: boolean;
-    readonly includePackageJsonAutoImports?: "auto" | "on" | "off";
-    readonly provideRefactorNotApplicableReason?: boolean;
-    readonly jsxAttributeCompletionStyle?: "auto" | "braces" | "none";
-    readonly includeInlayParameterNameHints?: "none" | "literals" | "all";
-    readonly includeInlayParameterNameHintsWhenArgumentMatchesName?: boolean;
-    readonly includeInlayFunctionParameterTypeHints?: boolean;
-    readonly includeInlayVariableTypeHints?: boolean;
-    readonly includeInlayVariableTypeHintsWhenTypeMatchesName?: boolean;
-    readonly includeInlayPropertyDeclarationTypeHints?: boolean;
-    readonly includeInlayFunctionLikeReturnTypeHints?: boolean;
-    readonly includeInlayEnumMemberValueHints?: boolean;
-    readonly interactiveInlayHints?: boolean;
-    readonly allowRenameOfImportPath?: boolean;
-    readonly autoImportFileExcludePatterns?: string[];
-    readonly preferTypeOnlyAutoImports?: boolean;
-    /**
-     * Indicates whether imports should be organized in a case-insensitive manner.
-     */
-    readonly organizeImportsIgnoreCase?: "auto" | boolean;
-    /**
-     * Indicates whether imports should be organized via an "ordinal" (binary) comparison using the numeric value
-     * of their code points, or via "unicode" collation (via the
-     * [Unicode Collation Algorithm](https://unicode.org/reports/tr10/#Scope)) using rules associated with the locale
-     * specified in {@link organizeImportsCollationLocale}.
-     *
-     * Default: `"ordinal"`.
-     */
-    readonly organizeImportsCollation?: "ordinal" | "unicode";
-    /**
-     * Indicates the locale to use for "unicode" collation. If not specified, the locale `"en"` is used as an invariant
-     * for the sake of consistent sorting. Use `"auto"` to use the detected UI locale.
-     *
-     * This preference is ignored if {@link organizeImportsCollation} is not `"unicode"`.
-     *
-     * Default: `"en"`
-     */
-    readonly organizeImportsLocale?: string;
-    /**
-     * Indicates whether numeric collation should be used for digit sequences in strings. When `true`, will collate
-     * strings such that `a1z < a2z < a100z`. When `false`, will collate strings such that `a1z < a100z < a2z`.
-     *
-     * This preference is ignored if {@link organizeImportsCollation} is not `"unicode"`.
-     *
-     * Default: `false`
-     */
-    readonly organizeImportsNumericCollation?: boolean;
-    /**
-     * Indicates whether accents and other diacritic marks are considered unequal for the purpose of collation. When
-     * `true`, characters with accents and other diacritics will be collated in the order defined by the locale specified
-     * in {@link organizeImportsCollationLocale}.
-     *
-     * This preference is ignored if {@link organizeImportsCollation} is not `"unicode"`.
-     *
-     * Default: `true`
-     */
-    readonly organizeImportsAccentCollation?: boolean;
-    /**
-     * Indicates whether upper case or lower case should sort first. When `false`, the default order for the locale
-     * specified in {@link organizeImportsCollationLocale} is used.
-     *
-     * This preference is ignored if {@link organizeImportsCollation} is not `"unicode"`. This preference is also
-     * ignored if we are using case-insensitive sorting, which occurs when {@link organizeImportsIgnoreCase} is `true`,
-     * or if {@link organizeImportsIgnoreCase} is `"auto"` and the auto-detected case sensitivity is determined to be
-     * case-insensitive.
-     *
-     * Default: `false`
-     */
-    readonly organizeImportsCaseFirst?: "upper" | "lower" | false;
-    /**
-     * Indicates where named type-only imports should sort. "inline" sorts named imports without regard to if the import is
-     * type-only.
-     *
-     * Default: `last`
-     */
-    readonly organizeImportsTypeOrder?: OrganizeImportsTypeOrder;
-    /**
-     * Indicates whether to exclude standard library and node_modules file symbols from navTo results.
-     */
-    readonly excludeLibrarySymbolsInNavTo?: boolean;
-    readonly lazyConfiguredProjectsFromExternalProject?: boolean;
-    readonly displayPartsForJSDoc?: boolean;
-    readonly generateReturnInDocTemplate?: boolean;
-    readonly disableLineTextInReferences?: boolean;
-}
-
-export type OrganizeImportsTypeOrder = "last" | "inline" | "first";
 
 /** Represents a bigint literal value without requiring bigint support */
 export interface PseudoBigInt {
