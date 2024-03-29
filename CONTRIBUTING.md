@@ -130,7 +130,8 @@ consider
         "fast-xml-parser": "^4.3.5",
         "glob": "^10.3.10",
         "hereby": "^1.8.9",
-        "jsonc-parser": "^3.2.1"
+        "jsonc-parser": "^3.2.1",
+        "esbuild": "^0.20.1"
     },
 }
 ```
