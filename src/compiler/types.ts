@@ -3,7 +3,7 @@ import {
     // CreateSourceFileOptions,
     // EmitHelperFactory,
     // GetCanonicalFileName,
-    MapLike, OrganizeImportsTypeOrder, PickAlt, RecordReturnValue, SupportedCompilerOptions, SymbolFlags, UserPreferences,
+    MapLike, OrganizeImportsTypeOrder, PickAlt, RecordReturnValue, ScriptTarget, SupportedCompilerOptions, SymbolFlags, UserPreferences,
     // ModeAwareCache,
     // ModeAwareCacheKey,
     // ModuleResolutionCache,
@@ -250,6 +250,8 @@ export const enum SyntaxKind {
     FromKeyword,
     GlobalKeyword,
     BigIntKeyword,
+    AllocKeyword,
+    AllocatedKeyword,
     VirtualKeyword,
     OverrideKeyword,
     OfKeyword, // LastKeyword and LastToken and LastContextualKeyword
@@ -624,22 +626,24 @@ export type KeywordSyntaxKind = RecordReturnValue<(
 )> ;
 
 export type ModifierSyntaxKind =
-    | SyntaxKind.AbstractKeyword
-    | SyntaxKind.AccessorKeyword
-    | SyntaxKind.AsyncKeyword
-    | SyntaxKind.ConstKeyword
-    | SyntaxKind.DeclareKeyword
-    | SyntaxKind.DefaultKeyword
-    | SyntaxKind.ExportKeyword
-    | SyntaxKind.InKeyword
-    | SyntaxKind.InstanceOfKeyword
-    | SyntaxKind.PrivateKeyword
-    | SyntaxKind.ProtectedKeyword
-    | SyntaxKind.PublicKeyword
-    | SyntaxKind.ReadonlyKeyword
-    | SyntaxKind.OutKeyword
-    | SyntaxKind.OverrideKeyword
-    | SyntaxKind.StaticKeyword;
+    // | SyntaxKind.AbstractKeyword
+    // | SyntaxKind.AccessorKeyword
+    // | SyntaxKind.AsyncKeyword
+    // | SyntaxKind.ConstKeyword
+    // | SyntaxKind.DeclareKeyword
+    // | SyntaxKind.DefaultKeyword
+    // | SyntaxKind.ExportKeyword
+    // | SyntaxKind.InKeyword
+    // | SyntaxKind.InstanceOfKeyword
+    // | SyntaxKind.PrivateKeyword
+    // | SyntaxKind.ProtectedKeyword
+    // | SyntaxKind.PublicKeyword
+    // | SyntaxKind.ReadonlyKeyword
+    // | SyntaxKind.OutKeyword
+    // | SyntaxKind.OverrideKeyword
+    // | SyntaxKind.StaticKeyword
+    | KeywordSyntaxKind
+;
 
 export type KeywordTypeSyntaxKind =
     | SyntaxKind.AnyKeyword
@@ -892,21 +896,25 @@ export const enum RelationComparisonResult {
 /** @internal */
 export type NodeId = number & { nodeIdObjBrand ?: any ; } ;
 
-export interface CompilableTree
+export interface TsNodeObjOps<out Node> extends ReadonlyTextRange
 {
-    //
     readonly kind: SyntaxKind;
     readonly flags: NodeFlags;
     /** @internal */ modifierFlagsCache: ModifierFlags;
     /** @internal */ readonly transformFlags: TransformFlags; // Flags for transforms
     /** @internal */ id?: NodeId; // Unique id (used to look up NodeLinks)
-    readonly parent?: CompilableTree; // Parent node (not available in functionally-generated nodes )
-    /** @internal */ original?: CompilableTree; // The original node if this is an updated node.
+    readonly parent?: Node; // parent node, in the AST repr (not available in functionally-generated nodes )
+    /** @internal */ original?: Node; // The original node if this is an updated node.
     /** @internal */ emitNode?: EmitNode; // Associated EmitNode (initialized by transforms)
+    /** in case of {@link TypeNode}(s) */ readonly ascriptiveReceiver?: Node;
     // NOTE: `symbol` and `localSymbol` have been moved to `Declaration`
     //       `locals` and `nextContainer` have been moved to `LocalsContainer`
     //       `flowNode` has been moved to `FlowContainer`
     //       see: https://github.com/microsoft/TypeScript/pull/51682
+}
+
+export interface CompilableTree extends TsNodeObjOps<CompilableTree>
+{
 }
 
 /**
@@ -920,37 +928,9 @@ export interface CompilableTree
 export interface Node extends ParsedNode
 {}
 
-export interface Node1 extends CompilableTree, ReadonlyTextRange
+export interface Node1 extends CompilableTree, TsNodeObjOps<Node1>, ReadonlyTextRange
 {
-    // readonly kind: SyntaxKind;
-    // readonly flags: NodeFlags;
-    // /** @internal */ modifierFlagsCache: ModifierFlags;
-    // /** @internal */ readonly transformFlags: TransformFlags; // Flags for transforms
-    // /** @internal */ id?: NodeId; // Unique id (used to look up NodeLinks)
-    readonly parent?: Node1; // Parent node (not available in functionally-generated nodes )
-    /** @internal */ original?: Node1; // The original node if this is an updated node.
-    // /** @internal */ emitNode?: EmitNode; // Associated EmitNode (initialized by transforms)
-    // // NOTE: `symbol` and `localSymbol` have been moved to `Declaration`
-    // //       `locals` and `nextContainer` have been moved to `LocalsContainer`
-    // //       `flowNode` has been moved to `FlowContainer`
-    // //       see: https://github.com/microsoft/TypeScript/pull/51682
 }
-
-// export interface Node extends CompilableTree, ReadonlyTextRange
-// {
-//     // readonly kind: SyntaxKind;
-//     // readonly flags: NodeFlags;
-//     // /** @internal */ modifierFlagsCache: ModifierFlags;
-//     // /** @internal */ readonly transformFlags: TransformFlags; // Flags for transforms
-//     // /** @internal */ id?: NodeId; // Unique id (used to look up NodeLinks)
-//     readonly parent?: Node; // Parent node (not available in functionally-generated nodes )
-//     /** @internal */ original?: Node; // The original node if this is an updated node.
-//     // /** @internal */ emitNode?: EmitNode; // Associated EmitNode (initialized by transforms)
-//     // // NOTE: `symbol` and `localSymbol` have been moved to `Declaration`
-//     // //       `locals` and `nextContainer` have been moved to `LocalsContainer`
-//     // //       `flowNode` has been moved to `FlowContainer`
-//     // //       see: https://github.com/microsoft/TypeScript/pull/51682
-// }
 
 // // TODO reomve this
 // export interface Node
@@ -1042,11 +1022,16 @@ export type MutableSyntacticNode = SyntacticNode & MutableOrParsedNode & Mutable
  */
 export type FunctionallyGeneratedSyntacticNode = SyntacticNode & MutableOrParsedNode & FunctionallyGeneratedNode ;
 
+export interface InTreeNode extends SyntacticNode, MutableOrParsedNode
+{
+    readonly parent: ParsedNode; // every InTreeNode is __guaranteed__ to reference a parent, except for the topmost one
+}
+
 /**
  * {@link SyntacticNode }s originating from Parser.
  * 
  */
-export interface ParsedNode extends SyntacticNode, MutableOrParsedNode
+export interface ParsedNode extends SyntacticNode, InTreeNode
 {
     readonly parent: ParsedNode; // every ParsedNode is __guaranteed__ to reference a parent, except for the topmost one
 }
@@ -1875,7 +1860,7 @@ export interface TermInstanceofTypeNode extends TypePredicateNode
     readonly kind: SyntaxKind.TypePredicate;
     readonly parameterName: Expression;
     readonly type: TypeNode;
-    cachedResolvedRepr ?: TypeSelectiveType ;
+    cachedResolvedRepr ?: TermPredicateBooleanType ;
 }
 
 export interface AssertsTypeNode extends TypePredicateNode
@@ -4441,11 +4426,19 @@ export interface TypeCheckerHost extends ModuleSpecifierResolutionHost {
 
     getSourceFiles(): readonly SourceFile[];
 
+    readonly redirectTargetsMap: RedirectTargetsMap;
+
     //
 }
 
 export interface TypeChecker {
     // below
+}
+
+export interface TypeCheckingQueries extends TypeCheckerMappingOps
+{
+    getTypeOfSymbolAtLocation(symbol: Symbol, node: Node): Type;
+
 }
 
 export interface TypeCheckerMappingOps
@@ -4475,6 +4468,11 @@ export interface TypeCheckerMappingOps
 
 export interface TypeCheckerMappingOps
 {
+}
+
+export interface CommonTypeFactpry
+{
+ 
     /** @internal */
     getPromisedTypeOfPromise(promise: Type, errorNode?: Node): Type | undefined;
     /** @internal */
@@ -4504,8 +4502,11 @@ export interface TypeCheckerMappingOps
     getCoerceNonNull<T>(c: TypeManifest<T>): SubtypeManifest<T & {}> ;
     getArithmeticNegatedType(c: Type): SubtypeManifest<number | bigint> ;
     getLinearRangeType<T>(...a: [SubtypeManifest<T>, SubtypeManifest<T>] ): Type ;
-
+   
 }
+
+export interface CommonTypeFactpry
+{}
 
 export interface TypeCheckedNodeBuilder
 extends TypeCheckerStringify
@@ -4543,8 +4544,6 @@ extends TypeCheckerStringify
 
 export interface TypeCheckingQueries extends TypeCheckerMappingOps
 {
-    getTypeOfSymbolAtLocation(symbol: Symbol, node: Node): Type;
-
     getSymbolsInScope(location: Node, meaning: SymbolFlags): Symbol[];
     getSymbolAtLocation(node: Node): Symbol | undefined;
     /** @internal */ getIndexInfosAtLocation(node: Node): readonly IndexInfo[] | undefined;
@@ -4580,19 +4579,24 @@ export interface TypeCheckingQueries extends TypeCheckerMappingOps
     
     getTypeOfAssignmentPattern(pattern: AssignmentPattern): Type;
     getTypeAtLocation(node: Node): Type;
-    getTypeFromTypeNode: TypeCheckingQueries["typeFromTypeNode"] ;
 
     /**
      * computes the {@link Type} expressed by the {@link TypeNode} {@link x}.
      */
-    typeFromTypeNode(x: TypeNode): Type | undefined ;
+    getTypeFromTypeNode(x: TypeNode): Type | undefined ;
     /**
      * computes the {@link TypePredicativeType} expressed by the {@link TypePredicateNode} {@link x}.
      */
-    typeFromTypeNode(x: TypePredicateNode): TypePredicativeType | undefined ;
-    typeFromTypeNode(x: TypeReferenceNode): DeferredTypeReferenceBase | undefined ;
+    getTypeFromTypeNode(x: TypePredicateNode): TypePredicativeType | undefined ;
+    getTypeFromTypeNode(x: TypeReferenceNode): DeferredTypeReferenceBase | undefined ;
 
-    getTermQuantifyingType(c: Expression): DeferredTermQuantifyingType1 ;
+    /**
+     * {@link TypeReferenceIMode.VALUEOF a `valueof`-type for the reference}
+     */
+    getTermQuantifyingType(c: InTreeNode & Expression): DeferredTermQuantifyingType1 ;
+    getTermQuantifyingType(c: Symbol, ctx: ParsedNode | FlowNode): DeferredTermQuantifyingType1 ;
+    
+    /** `x is T` */ getTermPredicateType(...args: [InTreeNode & Expression, Type]): TermPredicateBooleanType ;
 
     //
 }
@@ -4633,12 +4637,12 @@ export interface AllGetContextualSignature
     
     getRootSymbols(symbol: Symbol): readonly Symbol[];
     getSymbolOfExpando(node: Node, allowDeclaration: boolean): Symbol | undefined;
-    getContextualType(node: Expression): Type | undefined;
-    /** @internal */ getContextualType(node: Expression, contextFlags?: ContextFlags): Type | undefined; // eslint-disable-line @typescript-eslint/unified-signatures
+    getContextualType(node: InTreeNode & Expression): Type | undefined;
+    /** @internal */ getContextualType(node: InTreeNode & Expression, contextFlags?: ContextFlags): Type | undefined; // eslint-disable-line @typescript-eslint/unified-signatures
     /** @internal */ getContextualTypeForObjectLiteralElement(element: ObjectLiteralElementLike): Type | undefined;
     /** @internal */ getContextualTypeForArgumentAtIndex(call: CallLikeExpression, argIndex: number): Type | undefined;
     /** @internal */ getContextualTypeForJsxAttribute(attribute: JsxAttribute | JsxSpreadAttribute): Type | undefined;
-    /** @internal */ isContextSensitive(node: Expression | MethodDeclaration | ObjectLiteralElementLike | JsxAttributeLike): boolean;
+    /** @internal */ isContextSensitive(node: InTreeNode & (Expression | MethodDeclaration | ObjectLiteralElementLike | JsxAttributeLike)): boolean;
     
 }
 
@@ -4770,68 +4774,68 @@ export interface TypeCheckedWidenedOrApparentBaseTypes
 
 }
 
-
-export interface CommonTypeFactpry
+export interface IntrinsicTypeFactpry
 {
     
     /**
-     * Gets the intrinsic `any` type. There are multiple types that act as `any` used internally in the compiler,
+     * Gets the proper `any` type.
+     * There are multiple types that act as `any` used internally in the compiler,
      * so the type returned by this function should not be used in equality checks to determine if another type
-     * is `any`. Instead, use {@link getProperAnyType}, or `type.flags & TypeFlags.Any`.
-     * @deprecated see {@link getProperAnyType}
+     * is `any`. Instead, use `type.flags & TypeFlags.Any`.
      */
-    getAnyType(): Type;
-    getProperAnyType(): TypeManifest<any>;
-    getLiteralType<const T extends null | {}>(value: T): LiteralType<T>;
+    getAnyType(): IntrinsicType & TypeManifest<any>;
+    getLiteralType<const T extends {}>(value: T): LiteralType<T>;
     getStringLiteralType(value: string): StringLiteralType;
     getNumberLiteralType(value: number): NumberLiteralType;
-    getStringType(): TypeManifest<string>;
-    getNumberType(): TypeManifest<number>;
-    getBigIntType(): Type;
-    getBooleanType(): AnyBooleanType;
+    getStringType(): IntrinsicType & TypeManifest<string>;
+    getNumberType(): IntrinsicType & TypeManifest<number>;
+    getBigIntType(): IntrinsicType & Type;
+    getBooleanType(): IntrinsicType & AnyBooleanType;
     /* eslint-disable @typescript-eslint/unified-signatures */
     /** @internal */
     getFalseType(fresh?: boolean): Type;
-    getFalseType(): LiteralType<false> & TypeManifest<false> ;
+    getFalseType(): IntrinsicType & LiteralType<false> & TypeManifest<false> ;
     /** @internal */
     getTrueType(fresh?: boolean): Type;
-    getTrueType(): LiteralType<true> & TypeManifest<true> ;
+    getTrueType(): IntrinsicType & LiteralType<true> & TypeManifest<true> ;
     /* eslint-enable @typescript-eslint/unified-signatures */
-    getVoidType(): GeneralisedStaticLiteralType<void> & TypeManifest<void> ;
+    getVoidType(): IntrinsicType & GeneralisedStaticLiteralType<void> & TypeManifest<void> ;
     getImplicitVoidReturnType(): GeneralisedLiteralType<undefined>;
     getAssertsAnyIsAnyType(): GeneralisedLiteralType<void>;
     /**
      * Gets the intrinsic `undefined` type. There are multiple types that act as `undefined` used internally in the compiler
      * depending on compiler options, so the type returned by this function should not be used in equality checks to determine
-     * if another type is `undefined`. Instead, use {@link getProperUndefinedType}, or `type.flags & TypeFlags.Undefined`.
-     * @deprecated see {@link getProperUndefinedType}
+     * if another type is `undefined`. Instead, use `type.flags & TypeFlags.Undefined`.
      */
-    getUndefinedType(): GeneralisedLiteralType<undefined>;
-    getProperUndefinedType(): GeneralisedStaticLiteralType<undefined> & TypeManifest<undefined> ;
+    getUndefinedType(): IntrinsicType & GeneralisedStaticLiteralType<undefined> & TypeManifest<undefined> ;
     /**
      * Gets the intrinsic `null` type. There are multiple types that act as `null` used internally in the compiler,
      * so the type returned by this function should not be used in equality checks to determine if another type
-     * is `null`. Instead, use {@link getProperNullType}, or `type.flags & TypeFlags.Null`.
-     * @deprecated see {@link getProperNullType}
+     * is `null`. Instead, use `type.flags & TypeFlags.Null`.
      */
-    getNullType      (): GeneralisedLiteralType<null>;
-    getProperNullType(): LiteralType<null> & TypeManifest<null> ;
-    getESSymbolType(): Type;
+    getNullType      (): IntrinsicType & NullKwdType ;
+    getESSymbolType(): IntrinsicType & Type;
     /**
      * Gets the intrinsic `never` type. There are multiple types that act as `never` used internally in the compiler,
      * so the type returned by this function should not be used in equality checks to determine if another type
-     * is `never`. Instead, use {@link getProperNeverType}, or `type.flags & TypeFlags.Never`.
-     * @deprecated see {@link getProperNeverType}
+     * is `never`. Instead, use `type.flags & TypeFlags.Never`.
      */
-    getNeverType(): SubtypeManifest<never>;
-    getEffectiveNeverType(): SubtypeManifest<never>;
-    getProperNeverType   (): TypeManifest<never>;
+    getNeverType(): IntrinsicType & TypeManifest<never>;
     /** @internal */ getOptionalType(): Type;
     /** @internal */ getUnionType(types: Type[], subtypeReduction?: UnionReduction): Type;
+
     /** @internal */ createReadonlyArrayType<T>(elementType: SubtypeManifest<T>): SubtypeManifest<readonly T[]>;
     /** @internal */ createReadonlyArrayType<T>(elementType:    TypeManifest<T>):    TypeManifest<readonly T[]>;
+    /** @internal */ createArrayType(elementType: Type): Type;
     /** @internal */ createArrayType<T>(elementType: TypeManifest<T>): TypeManifest<T[] >;
     /** @internal */ getElementTypeOfArrayType(arrayType: Type): Type | undefined;
+    /** @internal */ getElementTypeOfArrayType<T>(arrayType: TypeManifest<readonly T[]>): TypeManifest<T> | undefined;
+
+}
+
+export interface CommonTypeFactpry extends IntrinsicTypeFactpry
+{
+    
     /** @internal */ createPromiseType(type: Type): Type;
     /** @internal */ getPromiseType(): Type;
     /** @internal */ getPromiseLikeType(): Type;
@@ -5177,7 +5181,7 @@ export const enum TypePredicateKind {
 export interface TypePredicateBase {
     kind: TypePredicateKind;
     type: Type | null;
-    parameterName ?: Expression | string;
+    parameterName ?: (InTreeNode & Expression) | string;
     parameterIndex?: (any[])["length"];
 }
 
@@ -5201,7 +5205,7 @@ export interface ThisTypePredicate extends TypePredicateBase {
 
 export interface TermTypePredicate extends TypePredicateBase {
     kind: TypePredicateKind.Identifier;
-    parameterName : Expression | string;
+    parameterName : (InTreeNode & Expression) | string;
     parameterIndex: (any[] )["length"] ;
     type: Type;
 }
@@ -5211,7 +5215,7 @@ export interface AssertingTypePredicate extends TypePredicateBase, FwdTypePredic
     kind: TypePredicateKind.Asserts;
     parameterName ?: never;
     parameterIndex?: never;
-    type: TypeSelectiveType ;
+    type: TermPredicateBooleanType ;
 }
 
 export interface AssertsThisTypePredicate       extends AssertingTypePredicate { type: ThisTypePredicativeType  ; }
@@ -6006,7 +6010,7 @@ export const enum TypeFlags {
      * {@link InterpolatingSubtype}:
      * - has CFA-catchy notation, and
      *    is a {@link FlowAnalyticsSpecificType }:
-     *    - {@link TypeSelectiveType `x.y.z is T`         (returning `boolean`) } 
+     *    - {@link TermPredicateBooleanType `x.y.z is T`         (returning `boolean`) } 
      *    - {@link AssertingVoidKwdType       `asserts x.y.z is T` (returning `void`   ) }
      *    - {@link EffectSignedVoidKwdType } (`void`)
      * - is {@link TemplateLiteralType (unreduced) interpolating string-literal type (a subtype of `string`) }
@@ -6114,8 +6118,11 @@ export interface AstTypeCheckerGeneratedTypeOps extends Type, DeclaredType, Type
   pattern?: DestructuringPattern;  // Destructuring pattern represented by type (if any)
 }
 
-/** @internal */
-// Intrinsic types (TypeFlags.Intrinsic)
+/**
+ * Type(s) __defined "as such" and is not an {@link InterfaceType}__
+ * 
+ * @internal
+ */
 export interface IntrinsicType extends Type {
     intrinsicName: string; // Name of intrinsic type
     debugIntrinsicName: string | undefined;
@@ -6187,6 +6194,9 @@ export interface VoidType    extends IntrinsicType, VoidSubtype, GeneralisedStat
 export interface UndefinedKwdSubtype extends                                            GeneralisedLiteralType<undefined>, SubtypeManifest<undefined> { iUndfTypeBrnd : any ; }
 export interface UndefinedKwdType    extends IntrinsicType , UndefinedKwdSubtype, GeneralisedStaticLiteralType<undefined>,    TypeManifest<undefined> { iUndfTypeBrnd : any ; }
 
+export interface NullKwdSubtype extends                                            GeneralisedLiteralType<null>, SubtypeManifest<null> { iNullTypeBrnd : any ; }
+export interface NullKwdType    extends IntrinsicType , UndefinedKwdSubtype, GeneralisedStaticLiteralType<null>,    TypeManifest<null> { iNullTypeBrnd : any ; }
+
 /**
  * a type which is subtype of `boolean`
  * 
@@ -6206,8 +6216,8 @@ export interface AnyBooleanType extends IntrinsicType, BooleanValuedType, TypeMa
  * constant-type for everything excluding the kwd `undefined`
  * 
  */
-export interface LiteralType<out T extends null | {} = null | {}>
-extends GeneralisedStaticLiteralType<T>, IntrinsicType, FlowNonNarrowableType, SubtypeManifest<T>
+export interface LiteralType<out T extends {} = {}>
+extends GeneralisedStaticLiteralType<T>, FlowNonNarrowableType, SubtypeManifest<T>
 {
     iLIteralTypeBrnd : any ;
     readonly value: T ; // Value of literal
@@ -6794,8 +6804,9 @@ export const enum IndexFlags {
 /**
  * `keyof T` types ({@link TypeFlags.Index})
  */
-export interface IndexType extends InstantiableType {
-    type: InstantiableType | UnionOrIntersectionType;
+export interface IndexType extends InstantiableType, TrivialIntrinsicUnaryType
+{
+    type: Type;
     /** @internal */
     indexFlags: IndexFlags;
 }
@@ -6862,7 +6873,7 @@ export interface SubstitutionType extends InstantiableType {
 
 /**
  * a base class for the different kinds of {@link FlowNode CFA-directing} types:
- * - {@link TypeSelectiveType } (`x.y.z is T` ; special sub-type(s) of `boolean` )
+ * - {@link TermPredicateBooleanType } (`x.y.z is T` ; special sub-type(s) of `boolean` )
  * - {@link PostConditioningPredicate } (special sub-type(s) of `void`)
  *   - {@link AssertingTypePredicate } (`asserts z.y.z is T`)
  *   - {@link EffectSignedVoidKwdType } (`done { x() ; y(z) ; }`)
@@ -6905,14 +6916,14 @@ export interface TypePredicativeType extends Type, InstantiableType
  * ```
  * 
  */
-export interface TypeSelectiveType extends TypePredicativeType, GeneralisedLiteralType, BooleanValuedType
+export interface TermPredicateBooleanType extends TypePredicativeType, GeneralisedLiteralType, BooleanValuedType
 {
     resolvedBaseConstraint: BooleanValuedType ;
     readonly subjectedPremise: TypeSelecte ;
 }
 
-export interface ParamTypePredicativeType extends TypeSelectiveType { readonly subjectedPremise: TermTypePredicate ; }
-export interface ThisTypePredicativeType  extends TypeSelectiveType { readonly subjectedPremise: ThisTypePredicate ; }
+export interface ParamTypePredicativeType extends TermPredicateBooleanType { readonly subjectedPremise: TermTypePredicate ; }
+export interface ThisTypePredicativeType  extends TermPredicateBooleanType { readonly subjectedPremise: ThisTypePredicate ; }
 
 /**
  * a {@link TypeChecker sub-type} of {@link TypeChecker.getVoidType `void`} (see {@link PostConditioningNonvoidReturnType} for the non-`void` one!) with added post-cond.
@@ -6945,7 +6956,7 @@ export interface AssertingVoidKwdType extends TypePredicativeType, PostCondition
 {
     resolvedBaseConstraint: VoidType ;
     readonly subjectedPremise: AssertingTypePredicate ;
-    readonly subjectedTyp: TypeSelectiveType ;
+    readonly subjectedTyp: TermPredicateBooleanType ;
 }
 
 /**
@@ -7054,12 +7065,6 @@ export interface StatementRunType extends Type
 export interface ThrowExceptionType extends TrivialIntrinsicUnaryType
 {}
 
-export interface UnaryOnSubjectType extends Type
-{
-    //
-    readonly operand: {} ;
-}
-
 /**
  * *intrinsic* unary type.
  * 
@@ -7071,10 +7076,10 @@ export interface UnaryOnSubjectType extends Type
  * - {@link TypeCheckerMappingOps.getCoerceNegatedType}
  * 
  */
-export interface TrivialIntrinsicUnaryType extends UnaryOnSubjectType
+export interface TrivialIntrinsicUnaryType extends Type
 {
     //
-    readonly operand: Type ;
+    readonly type: Type ;
 }
 
 // export interface TrivialCombnType extends Type
@@ -7611,7 +7616,6 @@ export const enum JsxEmit {
     ReactJSXDev = 5,
 }
 
-/** @deprecated */
 export const enum ImportsNotUsedAsValues {
     Remove,
     Preserve,
@@ -7645,26 +7649,6 @@ export const enum ScriptKind {
      * Deferred extensions are going to be included in all project contexts.
      */
     Deferred = 7,
-}
-
-// NOTE: We must reevaluate the target for upcoming features when each successive TC39 edition is ratified in
-//       June of each year. This includes changes to `LanguageFeatureMinimumTarget`, `ScriptTarget`,
-//       transformers/esnext.ts, commandLineParser.ts, and the contents of each lib/esnext.*.d.ts file.
-export const enum ScriptTarget {
-    /** @deprecated */
-    ES3 = 0,
-    ES5 = 1,
-    ES2015 = 2,
-    ES2016 = 3,
-    ES2017 = 4,
-    ES2018 = 5,
-    ES2019 = 6,
-    ES2020 = 7,
-    ES2021 = 8,
-    ES2022 = 9,
-    ESNext = 99,
-    JSON = 100,
-    Latest = ESNext,
 }
 
 export const enum LanguageVariant {

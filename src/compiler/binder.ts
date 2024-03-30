@@ -793,7 +793,8 @@ export const enum SymbolFlags
 
 function createDeclBinder(...[{
     createDiagnosticForNode ,
-    getFbd ,
+    // getFbd ,
+    appendAndGetFbd ,
     addClassifiableName ,
     symbolPool ,
 }] : [BinderInterComImpl] )
@@ -817,6 +818,13 @@ function createDeclBinder(...[{
         return isNamedDeclaration(node) ? declarationNameToString(node.name) : unescapeLeadingUnderscores(Debug.checkDefined(getDeclarationName(node)));
     }
 
+    function isDefaultExportNode(...[node] : [node: Declaration])
+    {
+        return (
+            hasSyntacticModifier(node, ModifierFlags.Default) || isExportSpecifier(node) && node.name.escapedText === "default"
+        ) ;
+    }
+
     /**
      * Declares a Symbol for the node and adds it to symbols. Reports errors for conflicting identifier names.
      * @param symbolTable - The symbol table which node will be added to.
@@ -828,7 +836,7 @@ function createDeclBinder(...[{
     function declareSymbol(symbolTable: SymbolTable, parent: Symbol | undefined, node: Declaration, includes: SymbolFlags, excludes: SymbolFlags, isReplaceableByMethod?: boolean, isComputedName?: boolean): Symbol {
         Debug.assert(isComputedName || !hasDynamicName(node));
 
-        const isDefaultExport = hasSyntacticModifier(node, ModifierFlags.Default) || isExportSpecifier(node) && node.name.escapedText === "default";
+        const isDefaultExport = isDefaultExportNode(node);
 
         // The exported symbol for an export default function/class node is always named "default"
         const name = isComputedName ? InternalSymbolName.Computed
@@ -891,9 +899,7 @@ function createDeclBinder(...[{
                     }
                     // Report errors every position with duplicate declaration
                     // Report errors on previous encountered declarations
-                    let message = symbol.flags & SymbolFlags.BlockScopedVariable
-                        ? Diagnostics.Cannot_redeclare_block_scoped_variable_0
-                        : Diagnostics.Duplicate_identifier_0;
+                    let message = Diagnostics.Identifier_0_bound_to_multiple_definitions_not_mutually_mergeable;
                     let messageNeedsName = true;
 
                     if (symbol.flags & SymbolFlags.Enum || includes & SymbolFlags.Enum) {
@@ -927,27 +933,27 @@ function createDeclBinder(...[{
                         }
                     }
 
-                    const relatedInformation: DiagnosticRelatedInformation[] = [];
+                    let relatedInformation: readonly DiagnosticRelatedInformation[] = [];
                     if (ExportTypeTDeclarationApparentTypo.isOne(node, symbol) )
                     {
                         // export type T; - may have meant export type { T }?
-                        relatedInformation.push(ExportTypeTDeclarationApparentTypo.createDiagnostic(node, symbol) );
+                        relatedInformation = relatedInformation.concat([ExportTypeTDeclarationApparentTypo.createDiagnostic(node, symbol) ]);
                     }
 
                     const declarationName = getNameOfDeclaration(node) || node;
                     forEach(symbol.declarations, (declaration, index) => {
                         const decl = getNameOfDeclaration(declaration) || declaration;
                         const diag = messageNeedsName ? createDiagnosticForNode(decl, message, getDisplayName(declaration)) : createDiagnosticForNode(decl, message);
-                        getFbd().push(
+                        appendAndGetFbd(
                             multipleDefaultExports ? addRelatedInfo(diag, createDiagnosticForNode(declarationName, index === 0 ? Diagnostics.Another_export_default_is_here : Diagnostics.and_here)) : diag,
                         );
                         if (multipleDefaultExports) {
-                            relatedInformation.push(createDiagnosticForNode(decl, Diagnostics.The_first_export_default_is_here));
+                            relatedInformation = relatedInformation.concat([createDiagnosticForNode(decl, Diagnostics.The_first_export_default_is_here)]);
                         }
                     });
 
                     const diag = messageNeedsName ? createDiagnosticForNode(declarationName, message, getDisplayName(node)) : createDiagnosticForNode(declarationName, message);
-                    getFbd().push(addRelatedInfo(diag, ...relatedInformation));
+                    appendAndGetFbd(addRelatedInfo(diag, ...relatedInformation));
 
                     symbol = createSymbol(SymbolFlags.None, name);
                 }
@@ -980,10 +986,12 @@ interface BinderInterComImpl
 
     createDiagnosticForNode(node: Node, message: DiagnosticMessage, ...args: DiagnosticArguments): DiagnosticWithLocation ;
 
-    /**
-     * returns {@link file.bindDiagnostics}.
-     */
-    getFbd() : SourceFile["bindDiagnostics"] ;
+    // /**
+    //  * returns {@link file.bindDiagnostics}.
+    //  */
+    // getFbd() : SourceFile["bindDiagnostics"] ;
+
+    appendAndGetFbd: Readonly<SourceFile["bindDiagnostics"]> extends readonly [...(infer Ls)] ? ((...args: ([Ls[number], ...Ls ] ) ) => Ls ) : never ;
 
     symbolPool: ReturnType<typeof createSymbolPool> ;
 
@@ -1086,13 +1094,6 @@ function createSourceFileBinder(): BinderOps {
         return createDiagnosticForNodeInSourceFile(getSourceFileOfNode(node) || file, node, message, ...args);
     }
 
-    /**
-     * returns {@link file.bindDiagnostics}.
-     */
-    function getFbd() {
-        return file.bindDiagnostics ;
-    }
-
     function bindSourceFile(f: SourceFile, opts: CompilerOptions) {
         file = f;
         options = opts;
@@ -1103,7 +1104,11 @@ function createSourceFileBinder(): BinderOps {
 
         const bdIntercom = {
             createDiagnosticForNode: createDiagnosticForNode ,
-            getFbd: getFbd ,
+            appendAndGetFbd: (c0, ...c2) => {
+                const returnv = f.bindDiagnostics.concat([c0]) ;
+                f.bindDiagnostics = returnv.concat(c2) ;
+                return returnv ;
+            } ,
             addClassifiableName: addClassifiableName ,
             symbolPool: symbolPool ,
         } satisfies BinderInterComImpl ;

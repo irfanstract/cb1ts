@@ -239,6 +239,31 @@ export function memoize(fn) {
 }
 
 /**
+ * string, by lines from given generator-func,
+ * concatenated with infix CRLF.
+ * 
+ * @type {(g: () => Iterable<string> ) => string }
+ */
+export function stringByLinesItr(gF) {
+    return [...gF() ].join("\r\n") ;
+}
+
+/**
+ * @type {(x: string | (number | bigint) | boolean | RegExp ) => string }
+ */
+export function asBackticked(s) {
+    return `${"`"}${s }${"`"}` ;
+}
+
+/**
+ * @type {(x: string ) => string }
+ */
+export function asJsDoc(s) {
+    // TODO
+    return `/** ${ s.replace(/\*\//g , () => "[...]") } */` ;
+}
+
+/**
  * @param {fs.PathLike} p
  */
 export function rimraf(p) {

@@ -11,7 +11,7 @@ export * from "../debug";
 export * from "../types";
 // export * from "../sys";
 export * from "../path";
-// export * from "../diagnosticInformationMap.generated";
+export * from "../diagnosticInformationMap.generated";
 export * from "../scanner";
 export * from "../utilitiesPublic";
 export * from "../utilities";
