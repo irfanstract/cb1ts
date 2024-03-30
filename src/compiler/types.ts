@@ -3,7 +3,7 @@ import {
     // CreateSourceFileOptions,
     // EmitHelperFactory,
     // GetCanonicalFileName,
-    MapLike, OrganizeImportsTypeOrder, SupportedCompilerOptions, SymbolFlags, UserPreferences,
+    MapLike, OrganizeImportsTypeOrder, PickAlt, RecordReturnValue, SupportedCompilerOptions, SymbolFlags, UserPreferences,
     // ModeAwareCache,
     // ModeAwareCacheKey,
     // ModuleResolutionCache,
@@ -244,6 +244,8 @@ export const enum SyntaxKind {
     SoKeyword,
     ThatKeyword,
     TheyKeyword,
+    FirStKeyword,
+    LaStKeyword ,
     WhoKeyword,
     FromKeyword,
     GlobalKeyword,
@@ -523,6 +525,10 @@ export const enum SyntaxKind {
     /** @internal */ LastContextualKeyword = OfKeyword,
 }
 
+export type ValidSyntaxKindName = (
+    Exclude<keyof typeof SyntaxKind, "Count" | `${"First" | "Last" }${string}` >
+) ;
+
 export type TriviaSyntaxKind =
     | SyntaxKind.SingleLineCommentTrivia
     | SyntaxKind.MultiLineCommentTrivia
@@ -611,90 +617,11 @@ export type PunctuationSyntaxKind =
 /** @internal */
 export type PunctuationOrKeywordSyntaxKind = PunctuationSyntaxKind | KeywordSyntaxKind;
 
-export type KeywordSyntaxKind =
-    | SyntaxKind.AbstractKeyword
-    | SyntaxKind.AccessorKeyword
-    | SyntaxKind.AnyKeyword
-    | SyntaxKind.AsKeyword
-    | SyntaxKind.AssertsKeyword
-    | SyntaxKind.AssertKeyword
-    | SyntaxKind.AsyncKeyword
-    | SyntaxKind.AwaitKeyword
-    | SyntaxKind.BigIntKeyword
-    | SyntaxKind.BooleanKeyword
-    | SyntaxKind.BreakKeyword
-    | SyntaxKind.CaseKeyword
-    | SyntaxKind.CatchKeyword
-    | SyntaxKind.ClassKeyword
-    | SyntaxKind.ConstKeyword
-    | SyntaxKind.ConstructorKeyword
-    | SyntaxKind.ContinueKeyword
-    | SyntaxKind.DebuggerKeyword
-    | SyntaxKind.DeclareKeyword
-    | SyntaxKind.DefaultKeyword
-    | SyntaxKind.DeleteKeyword
-    | SyntaxKind.DoKeyword
-    | SyntaxKind.ElseKeyword
-    | SyntaxKind.EnumKeyword
-    | SyntaxKind.ExportKeyword
-    | SyntaxKind.ExtendsKeyword
-    | SyntaxKind.FalseKeyword
-    | SyntaxKind.FinallyKeyword
-    | SyntaxKind.ForKeyword
-    | SyntaxKind.FromKeyword
-    | SyntaxKind.FunctionKeyword
-    | SyntaxKind.GetKeyword
-    | SyntaxKind.GlobalKeyword
-    | SyntaxKind.IfKeyword
-    | SyntaxKind.ImplementsKeyword
-    | SyntaxKind.ImportKeyword
-    | SyntaxKind.InferKeyword
-    | SyntaxKind.InKeyword
-    | SyntaxKind.InstanceOfKeyword
-    | SyntaxKind.InterfaceKeyword
-    | SyntaxKind.IntrinsicKeyword
-    | SyntaxKind.IsKeyword
-    | SyntaxKind.KeyOfKeyword
-    | SyntaxKind.LetKeyword
-    | SyntaxKind.ModuleKeyword
-    | SyntaxKind.NamespaceKeyword
-    | SyntaxKind.NeverKeyword
-    | SyntaxKind.NewKeyword
-    | SyntaxKind.NullKeyword
-    | SyntaxKind.NumberKeyword
-    | SyntaxKind.ObjectKeyword
-    | SyntaxKind.OfKeyword
-    | SyntaxKind.PackageKeyword
-    | SyntaxKind.PrivateKeyword
-    | SyntaxKind.ProtectedKeyword
-    | SyntaxKind.PublicKeyword
-    | SyntaxKind.ReadonlyKeyword
-    | SyntaxKind.OutKeyword
-    | SyntaxKind.OverrideKeyword
-    | SyntaxKind.RequireKeyword
-    | SyntaxKind.ReturnKeyword
-    | SyntaxKind.SatisfiesKeyword
-    | SyntaxKind.SetKeyword
-    | SyntaxKind.StaticKeyword
-    | SyntaxKind.StringKeyword
-    | SyntaxKind.SuperKeyword
-    | SyntaxKind.SwitchKeyword
-    | SyntaxKind.SymbolKeyword
-    | SyntaxKind.ThisKeyword
-    | SyntaxKind.ThrowKeyword
-    | SyntaxKind.TrueKeyword
-    | SyntaxKind.TryKeyword
-    | SyntaxKind.TypeKeyword
-    | SyntaxKind.TypeOfKeyword
-    | SyntaxKind.UndefinedKeyword
-    | SyntaxKind.UniqueKeyword
-    | SyntaxKind.UnknownKeyword
-    | SyntaxKind.UsingKeyword
-    | SyntaxKind.VarKeyword
-    | SyntaxKind.VoidKeyword
-    | SyntaxKind.WhileKeyword
-    | SyntaxKind.WithKeyword
-    | SyntaxKind.YieldKeyword;
+export type KeywordSyntaxKind = RecordReturnValue<(
+    PickAlt<typeof SyntaxKind, (
+        Extract<ValidSyntaxKindName, `${string}Keyword` >
+    )  >
+)> ;
 
 export type ModifierSyntaxKind =
     | SyntaxKind.AbstractKeyword

@@ -61,9 +61,9 @@ export type Extend<Base extends {}, refnm extends Partial<Base> > = (
     Base & refnm
 ) ;
 
-export type RecordEntry<D extends {}> = RecordValues<{ [k in keyof D] : [k, D[k]] ; }> ;
+export type RecordEntry<D extends {}> = RecordReturnValue<{ [k in keyof D] : [k, D[k]] ; }> ;
 
-export type RecordValues<D extends {}> = D[keyof D] ;
+export type RecordReturnValue<D extends {}> = D[keyof D] ;
 
 export type RequiredValuedKeyof<D extends {}> = (
     (keyof D ) extends infer T ? (
@@ -73,6 +73,10 @@ export type RequiredValuedKeyof<D extends {}> = (
             T1 : never
         ) : never
     ) : never
+) ;
+
+export type PickAlt<D extends {}, K extends {}> = (
+    Pick<D, K & (keyof D) >
 ) ;
 
 export type PickRequired<D extends {}> = (

@@ -130,7 +130,47 @@ consider
         "fast-xml-parser": "^4.3.5",
         "glob": "^10.3.10",
         "hereby": "^1.8.9",
-        "jsonc-parser": "^3.2.1"
+        "jsonc-parser": "^3.2.1",
+        "esbuild": "^0.20.1"
+    },
+}
+```
+
+later on, expand this to:
+```json
+{
+    "devDependencies": {
+        "@types/chai": "^4.3.12",
+        "@types/microsoft__typescript-etw": "^0.1.3",
+        "@types/minimist": "^1.2.5",
+        "@types/mocha": "^10.0.6",
+        "@types/ms": "^0.7.34",
+        "@types/node": "latest",
+        "@types/source-map-support": "^0.5.10",
+        "@types/which": "^3.0.3",
+        "@esfx/canceltoken": "^1.0.0",
+        "@octokit/rest": "^20.0.2",
+        "c8": "^9.1.0",
+        "chai": "^4.4.1",
+        "chalk": "^4.1.2",
+        "chokidar": "^3.6.0",
+        "diff": "^5.2.0",
+        "dprint": "^0.45.0",
+        "esbuild": "^0.20.1",
+        "fast-xml-parser": "^4.3.5",
+        "glob": "^10.3.10",
+        "hereby": "^1.8.9",
+        "jsonc-parser": "^3.2.1",
+        "minimist": "^1.2.8",
+        "mocha": "^10.3.0",
+        "mocha-fivemat-progress-reporter": "^0.1.0",
+        "ms": "^2.1.3",
+        "node-fetch": "^3.3.2",
+        "playwright": "^1.42.1",
+        "source-map-support": "^0.5.21",
+        "tslib": "^2.6.2",
+        "which": "^3.0.1",
+        "typescript": "^5.4.2"
     },
 }
 ```

@@ -121,91 +121,59 @@ export interface Scanner {
     tryScan<T>(callback: () => T): T;
 }
 
+// matchKeywdSyntaxKindConstName
+export function getKeywdFromSyntaxKindConstName(name: string)
+{
+    C:
+    {
+        if (isSyntaxKindConstMarkerName(name) ) {
+            break C ;
+        }
+        {
+            const m = name.match(/^(.*?)(Keyword)$/) ;
+            if ((
+                m
+            ) )
+            {
+                const [ , kwdPre = Debug.fail() ,] = m ;
+                return kwdPre ;
+            }
+        }
+    }
+}
+
+export function isSyntaxKindConstMarkerName(name: string)
+{
+    return (
+        name.match(/^(First|Last)(?=[A-Z])|/g)
+    ) ;
+}
+
 /** @internal */
 export const textToKeywordObj: MapLike<KeywordSyntaxKind> = {
-    abstract: SyntaxKind.AbstractKeyword,
-    accessor: SyntaxKind.AccessorKeyword,
-    any: SyntaxKind.AnyKeyword,
-    as: SyntaxKind.AsKeyword,
-    asserts: SyntaxKind.AssertsKeyword,
-    assert: SyntaxKind.AssertKeyword,
-    bigint: SyntaxKind.BigIntKeyword,
-    boolean: SyntaxKind.BooleanKeyword,
-    break: SyntaxKind.BreakKeyword,
-    case: SyntaxKind.CaseKeyword,
-    catch: SyntaxKind.CatchKeyword,
-    class: SyntaxKind.ClassKeyword,
-    continue: SyntaxKind.ContinueKeyword,
-    const: SyntaxKind.ConstKeyword,
-    ["" + "constructor"]: SyntaxKind.ConstructorKeyword,
-    debugger: SyntaxKind.DebuggerKeyword,
-    declare: SyntaxKind.DeclareKeyword,
-    default: SyntaxKind.DefaultKeyword,
-    delete: SyntaxKind.DeleteKeyword,
-    do: SyntaxKind.DoKeyword,
-    else: SyntaxKind.ElseKeyword,
-    enum: SyntaxKind.EnumKeyword,
-    export: SyntaxKind.ExportKeyword,
-    extends: SyntaxKind.ExtendsKeyword,
-    false: SyntaxKind.FalseKeyword,
-    finally: SyntaxKind.FinallyKeyword,
-    for: SyntaxKind.ForKeyword,
-    from: SyntaxKind.FromKeyword,
-    function: SyntaxKind.FunctionKeyword,
-    get: SyntaxKind.GetKeyword,
-    if: SyntaxKind.IfKeyword,
-    implements: SyntaxKind.ImplementsKeyword,
-    import: SyntaxKind.ImportKeyword,
-    in: SyntaxKind.InKeyword,
-    infer: SyntaxKind.InferKeyword,
-    instanceof: SyntaxKind.InstanceOfKeyword,
-    interface: SyntaxKind.InterfaceKeyword,
-    intrinsic: SyntaxKind.IntrinsicKeyword,
-    is: SyntaxKind.IsKeyword,
-    keyof: SyntaxKind.KeyOfKeyword,
-    let: SyntaxKind.LetKeyword,
-    module: SyntaxKind.ModuleKeyword,
-    namespace: SyntaxKind.NamespaceKeyword,
-    never: SyntaxKind.NeverKeyword,
-    new: SyntaxKind.NewKeyword,
-    null: SyntaxKind.NullKeyword,
-    number: SyntaxKind.NumberKeyword,
-    object: SyntaxKind.ObjectKeyword,
-    package: SyntaxKind.PackageKeyword,
-    private: SyntaxKind.PrivateKeyword,
-    protected: SyntaxKind.ProtectedKeyword,
-    public: SyntaxKind.PublicKeyword,
-    override: SyntaxKind.OverrideKeyword,
-    out: SyntaxKind.OutKeyword,
-    readonly: SyntaxKind.ReadonlyKeyword,
-    require: SyntaxKind.RequireKeyword,
-    global: SyntaxKind.GlobalKeyword,
-    return: SyntaxKind.ReturnKeyword,
-    satisfies: SyntaxKind.SatisfiesKeyword,
-    set: SyntaxKind.SetKeyword,
-    static: SyntaxKind.StaticKeyword,
-    string: SyntaxKind.StringKeyword,
-    super: SyntaxKind.SuperKeyword,
-    switch: SyntaxKind.SwitchKeyword,
-    symbol: SyntaxKind.SymbolKeyword,
-    this: SyntaxKind.ThisKeyword,
-    throw: SyntaxKind.ThrowKeyword,
-    true: SyntaxKind.TrueKeyword,
-    try: SyntaxKind.TryKeyword,
-    type: SyntaxKind.TypeKeyword,
-    typeof: SyntaxKind.TypeOfKeyword,
-    undefined: SyntaxKind.UndefinedKeyword,
-    unique: SyntaxKind.UniqueKeyword,
-    unknown: SyntaxKind.UnknownKeyword,
-    using: SyntaxKind.UsingKeyword,
-    var: SyntaxKind.VarKeyword,
-    void: SyntaxKind.VoidKeyword,
-    while: SyntaxKind.WhileKeyword,
-    with: SyntaxKind.WithKeyword,
-    yield: SyntaxKind.YieldKeyword,
-    async: SyntaxKind.AsyncKeyword,
-    await: SyntaxKind.AwaitKeyword,
-    of: SyntaxKind.OfKeyword,
+    ...Object.fromEntries({
+        *[Symbol.iterator](): Generator<[string, KeywordSyntaxKind], void, void> {
+            LOOP :
+            for (const [name, value] of (
+                // @ts-ignore
+                Object.entries((
+                    // @ts-ignore
+                    SyntaxKind
+                ))
+            )) {
+                if (!isSyntaxKindConstMarkerName(name) )
+                {
+                    const kwdPre = getKeywdFromSyntaxKindConstName(name) ;
+                    if (kwdPre)
+                    {
+                        const kwd = kwdPre.toLowerCase() ;
+                        Debug.assert(typeof value === "number" ) ;
+                        yield [kwd, (value satisfies SyntaxKind) as KeywordSyntaxKind ] ;
+                    }
+                }
+            }
+        }
+    })
 };
 
 const textToKeyword = new Map(Object.entries(textToKeywordObj));
