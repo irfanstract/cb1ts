@@ -7402,7 +7402,7 @@ export interface FileExtensionInfo {
 export interface DiagnosticMessage {
     key: string;
     category: DiagnosticCategory;
-    code: number;
+    code: number | string;
     message: string;
     reportsUnnecessary?: {};
     reportsDeprecated?: {};

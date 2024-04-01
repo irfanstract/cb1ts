@@ -18,6 +18,8 @@ import path from "path";
 }} DiagnosticDetails */
 void 0;
 
+/** @typedef {import("../src/compiler/_namespaces/ts.js").DiagnosticMessage["code"]} DiagnosticCode */
+
 /** @typedef {Map<string, DiagnosticDetails>} InputDiagnosticMessageTable */
 
 async function main() {
@@ -98,7 +100,7 @@ function buildInfoFileOutput(messageTable, inputFilePathRel) {
         "",
         'import { DiagnosticCategory, DiagnosticMessage } from "./types";',
         "",
-        "function diag(code: number, category: DiagnosticCategory, key: string, message: string, reportsUnnecessary?: {}, elidedInCompatabilityPyramid?: boolean, reportsDeprecated?: {}): DiagnosticMessage {",
+        "function diag(code: DiagnosticMessage[\"code\"], category: DiagnosticCategory, key: string, message: string, reportsUnnecessary?: {}, elidedInCompatabilityPyramid?: boolean, reportsDeprecated?: {}): DiagnosticMessage {",
         "    return { code, category, key, message, reportsUnnecessary, elidedInCompatabilityPyramid, reportsDeprecated };",
         "}",
         "",
@@ -143,7 +145,7 @@ function buildDiagnosticMessageOutput(messageTable) {
 
 /**
  * @param {string} name
- * @param {number} code
+ * @param {DiagnosticCode} code
  * @returns {string}
  */
 function createKey(name, code) {

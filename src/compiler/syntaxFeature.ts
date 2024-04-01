@@ -130,7 +130,12 @@ export interface GrammaticalFeatFunctionalFactoryOps01<Nd extends TS.SyntacticNo
 extends Object
 {
   // TODO
-  astFac: { describe: (...args: ESF<Nd> ) => Node ; } ,
+  astFac: {
+    describe: (
+      // (...args: ESF<Nd> ) => Node
+      (...args: TS.TSNextNodeElementsTupleByNdObj<Nd & TS.Node > ) => (Nd & Node)
+    ) ;
+  } ,
 }
 
 /**

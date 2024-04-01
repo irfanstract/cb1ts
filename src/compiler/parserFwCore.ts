@@ -373,6 +373,9 @@ import {
     tracing,
     TransformFlags,
     TryStatement,
+    TSNextNodeBySyntaxKindEnum,
+    TSNextNodeBySyntaxKindName,
+    TSNextSyntaxKindNameByEnumValue,
     TupleTypeNode,
     TypeAliasDeclaration,
     TypeAssertion,
@@ -717,8 +720,8 @@ function createParser()
         return node;
     }
 
-    function getNodeClass(x: SyntaxKind): GrammaticalFeat01<Node> {}
-    function getDeclarationNodeClass(x: SyntaxKind) { return getNodeClass(x) ; }
+    function getNodeClass           <const K extends SyntaxKind>(x: K): { __nameWas : TSNextSyntaxKindNameByEnumValue<K> } & GrammaticalFeat01<TSNextNodeBySyntaxKindEnum<K> > {}
+    function getDeclarationNodeClass<const K extends SyntaxKind>(x: K) { return getNodeClass(x) ; }
     
     var {
         createNodeArray: factoryCreateNodeArray,
