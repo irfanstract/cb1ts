@@ -98,6 +98,7 @@ export { describeSyntacticPlugin , } ;
 
 export interface GrammaticalFeat01<Nd extends TS.Node1 & TS.SyntacticNode> extends
 GrammaticalFeatIdOps01
+, GrammaticalFeatFunctionalFactoryOps01 <TS.TypeNoInfer<Nd> >
 , GrammaticalFeatSmAllAnalysOps01       <TS.TypeNoInfer<Nd> >
 , GrammaticalFeatParsingAndPrintingOps01<TS.TypeNoInfer<Nd> >
 {
@@ -119,6 +120,17 @@ export interface GrammaticalFeatSmAllAnalysOps01<Nd extends TS.Node1>
 extends Object, GrammaticalFeatTypeAnalysOps01<Nd>
 {
   traverser: SyntacticTraverser01<TS.TypeNoInfer<Nd> > ;
+}
+
+/**
+ * {@link GrammaticalFeat01 }, for obtaining Node(s) in functional setting
+ * 
+ */
+export interface GrammaticalFeatFunctionalFactoryOps01<Nd extends TS.SyntacticNode>
+extends Object
+{
+  // TODO
+  astFac: { describe: (...args: ESF<Nd> ) => Node ; } ,
 }
 
 /**

@@ -629,27 +629,27 @@
     },
     "Type '{0}' must have accompanying {1}.": {
         "category": "Error",
-        "code": 854533
+        "code": 77730004533
     },
     "Type '{0}' must have accompanying {1}, under {2}.": {
         "category": "Error",
-        "code": 854534
+        "code": 77730004534
     },
     "This declaration shadows references to '{0}' in outer.": {
         "category": "Error",
-        "code": 854333
+        "code": 77730004333
     },
     "This declaration generates synthetic companion {1} thereby shadowing references to '{0}' in outer.": {
         "category": "Error",
-        "code": 854334
+        "code": 77730004334
     },
     "This declaration generates synthetic definition {1} thereby shadowing references to '{0}' in outer.": {
         "category": "Error",
-        "code": 854343
+        "code": 77730004343
     },
     "This declaration generates synthetic definition {1} thereby suppressing the generation of {0}.": {
         "category": "Error",
-        "code": 854351
+        "code": 77730004351
     },
     "Import assignment cannot be used when targeting ECMAScript modules. Consider using 'import * as ns from \"mod\"', 'import {a} from \"mod\"', 'import d from \"mod\"', or another module format instead.": {
         "category": "Error",
@@ -6471,7 +6471,15 @@
     },
     "Parameter '{0}' implicitly has an '{1}' type.": {
         "category": "Error",
-        "code": 7006
+        "code": 700502
+    },
+    "'{0}', whose type builds on missing type(s), implicitly has an '{1}' type.": {
+        "category": "Error",
+        "code": 700528
+    },
+    "Missing type '{0}' implicitly reduced to '{1}' type.": {
+        "category": "Error",
+        "code": 700609
     },
     "Member '{0}' implicitly has an '{1}' type.": {
         "category": "Error",
@@ -6508,6 +6516,18 @@
     "Could not find a declaration file for module '{0}'. '{1}' implicitly has an 'any' type.": {
         "category": "Error",
         "code": 7016
+    },
+    "Typechecking of module '{0}' encountered too many errors and is therefore discarded. '{1}' implicitly has an 'any' type.": {
+        "category": "Error",
+        "code": 701612
+    },
+    "Module '{0}' has too many syntax errors. '{1}' implicitly has an 'any' type.": {
+        "category": "Error",
+        "code": 70161203
+    },
+    "Module '{0}' has too many type-errors; '{1}' implicitly has an 'any' type.": {
+        "category": "Error",
+        "code": 70161206
     },
     "Element implicitly has an 'any' type because type '{0}' has no index signature.": {
         "category": "Error",
@@ -6562,6 +6582,42 @@
     "Not all code paths return a value.": {
         "category": "Error",
         "code": 7030
+    },
+    "This statement or expression will not terminate normally.": {
+        "category": "Error",
+        "code": 703014
+    },
+    "Illegal place for infinite-looping.": {
+        "category": "Error",
+        "code": 70301403
+    },
+    "Importing of module '{0}' will not terminate normally.": {
+        "category": "Error",
+        "code": 70301408
+    },
+    "Importing of module '{0}' will not terminate normally, due to errors in its dependencies or imports.": {
+        "category": "Error",
+        "code": 7030140801
+    },
+    "Importing module '{0}' would fail at runtime due to errors in its dependencies or imports.": {
+        "category": "Error",
+        "code": 7030140802
+    },
+    "Module initialisation may not evaluate expressions typed as 'never'.": {
+        "category": "Error",
+        "code": 7030140818
+    },
+    "Module initialisation may not call methods whose return-type is 'never'.": {
+        "category": "Error",
+        "code": 703014081801
+    },
+    "Module initialisation may not perform infinite-loops.": {
+        "category": "Error",
+        "code": 703014081803
+    },
+    "Ambient declaration must be accompanied with implementation.": {
+        "category": "Error",
+        "code": 70301462
     },
     "Binding element '{0}' implicitly has an '{1}' type.": {
         "category": "Error",
@@ -6665,7 +6721,7 @@
     },
     "Cannot use JSDoc type-annotations in TypeScript files.": {
         "category": "Error",
-        "code": 823025
+        "code": 773007025
     },
     "The inferred type of this node exceeds the maximum length the compiler will serialize. An explicit type annotation is needed.": {
         "category": "Error",

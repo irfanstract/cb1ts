@@ -347,12 +347,11 @@ See [coding guidelines on diagnostic messages](https://github.com/Microsoft/Type
 
 #### avoid re-indenting existing files merely to enforce newly-established stylistic guide
 
-avoid re-indenting existing files merely to enforce minor stylistic rules - eg the new 2-spaces-only convention.
+avoid re-indenting existing files merely to enforce the new 2-spaces-only convention or any other minor stylistic rules.
 
-doing so may be seen as *lack of appreciation*
+#### on *totally-new* source files, indentations should be 2 spaces (char `0x20`, *SPACE*)
 
-#### on new files, indentations should be 2 spaces (char `0x20`, *SPACE*)
-
+for *new source files totally written from scratch*
 ideal indentation is 2 spaces (char `0x20`, *SPACE*):
 ```javascript
 for (const item of items )
@@ -360,6 +359,9 @@ for (const item of items )
   propagate(item) ;
 }
 ```
+
+for new source files which is merely a copy or move (eg moving existing defs into new blank file)
+the existing indentation, spacing and styling should be left unchanged (eg leave 4-space indentation if it's).
 
 ...and __avoid using <code>Tab</code>s__
 
@@ -469,6 +471,10 @@ an example involving a pitfall:
 +  */
 ```
 
+### `--isolatedModules` Not Applicable Here
+
+`--isolatedModules` is not applicable here.
+
 ### Usage Of ESLint In This Project
 
 #### The ESLint Rules For This Project
@@ -515,7 +521,7 @@ module.exports = {
 } ;
 ```
 
-#### DO NOT use `eslint:recommended`!
+#### (ESLint Rules) Avoid Enabling Presets; Instead, Enable Items Individually
 
 __`eslint:recommended`
 tries to get rid of a large number of common, safe constructs,
