@@ -941,7 +941,7 @@ export interface Node1 extends CompilableTree, TsNodeObjOps<Node1>, ReadonlyText
 
 export interface ImmutableNode extends Node1
 {
-    iImmutableNodeObjBrand ?: any ;
+    iImmutableNodeObjBrand : any ;
 }
 
 export interface MutableNode extends Node1

@@ -133,9 +133,11 @@ extends Object
   astFac: {
     describe: (
       // (...args: ESF<Nd> ) => Node
-      (...args: TS.TSNextNodeElementsTupleByNdObj<Nd & TS.Node > ) => (Nd & Node)
+      (...args: TS.TSNextNodeElementsTupleByNdObj<Nd & TS.Node > ) => ((TS.ImmutableNode & Node) & Nd)
     ) ;
   } ,
+  resetToExample?: (...args: [TS.MutableNode & Nd , Nd ] ) => void
+  ,
 }
 
 /**

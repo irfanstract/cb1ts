@@ -3025,6 +3025,14 @@
         "category": "Error",
         "code": "IllegalUnionOrConjunctionType.003"
     },
+    "This excepting type is conjuncted with some nonexcepting types and therefore gets analytically cancelled out.": {
+        "category": "Error",
+        "code": "IllegalUnionOrConjunctionType.029"
+    },
+    "This excepting type '{0}' is conjuncted with some nonexcepting type '{1}' and therefore gets analytically cancelled out.": {
+        "category": "Error",
+        "code": "IllegalUnionOrConjunctionType.029Alt"
+    },
     "Type reduces to type '{0}'.": {
         "category": "Error",
         "code": "UnexpectedTypeReduction.004"
@@ -6765,6 +6773,10 @@
         "category": "Error",
         "code": 7026
     },
+    "'{0}' implicitly has '{1}' type due to being evaluated in unreachable code/branch.": {
+        "category": "Error",
+        "code": "UnreachableCodeImplicitAny.007"
+    },
     "Unreachable code detected.": {
         "category": "Error",
         "code": 7027,
@@ -6814,6 +6826,18 @@
     "This switch-type has uncovered cases: {0}.": {
         "category": "Error",
         "code": "SwitchlikeTypesThisHasUncoveredCasesGiven"
+    },
+    "Unhandled exception type '{0}'.": {
+        "category": "Error",
+        "code": "UnhandledException.001"
+    },
+    "Unhandled exception type '{0}'. Such exception(s) must either be caught in try-catch construct, or instead be declared (eg via '@throws' tag).": {
+        "category": "Error",
+        "code": "UnhandledException.002"
+    },
+    "Try putting the '@throws' tag into JSDoc/TSDoc immediately preceding the function-like literal.": {
+        "category": "Error",
+        "code": "UnhandledException.301"
     },
     "This statement or expression might not terminate normally.": {
         "category": "Error",
@@ -6990,6 +7014,39 @@
     "A mapped type may not declare properties or methods.": {
         "category": "Error",
         "code": 7061
+    },
+    
+    "The 'throws' signature does not conform.": {
+        "category": "Error",
+        "code": "TheDeclaredExceptionsDoesNotConform"
+    },
+    "The 'throws {0}' does not conform to super 'throws {1}'.": {
+        "category": "Error",
+        "code": "TheDeclaredExceptionsDoesNotConform.001"
+    },
+    "The deprecation does not conform to super.": {
+        "category": "Error",
+        "code": "TheDeprecationDoesNotConform"
+    },
+    "Cannot deprecate members overriding inherited, non-deprecated members.": {
+        "category": "Error",
+        "code": "CannotDeprecateInheritedNonDeprecatedItems.001"
+    },
+    "Cannot deprecate overloads overriding inherited, non-deprecated overloads.": {
+        "category": "Error",
+        "code": "CannotDeprecateInheritedNonDeprecatedItems.002"
+    },
+    "This overload overrides super incompatibly. This one is defined {0}, but the matching signature from supertype is defined {1}.": {
+        "category": "Error",
+        "code": "SpecificOverloadDoesNotConform.001"
+    },
+    "A subset of this signature overrides super signature incompatibly. This one is defined {0}, but the matching signature from supertype is defined {1}.": {
+        "category": "Error",
+        "code": "SpecificOverloadDoesNotConform.00105"
+    },
+    "This overload overrides super incompatibly. The overload {0} is defined {2}, but the matching signature from supertype is defined {3}.": {
+        "category": "Error",
+        "code": "SpecificOverloadDoesNotConform.002"
     },
 
     "You cannot rename this element.": {

@@ -29,7 +29,6 @@ import {
     DeleteExpression,
     ES2009NodeBuilder,
     ES2015NodeBuilder,
-    ES2017NodeBuilderI,
     ElementAccessChain,
     ElementAccessExpression,
     EntityName,
@@ -80,7 +79,6 @@ import {
     SpreadElement,
     Statement,
     SyntaxKind,
-    TSNextNodeBuilderI,
     TaggedTemplateExpression,
     TemplateExpression,
     TemplateHead,
@@ -93,8 +91,6 @@ import {
     TermInstanceofTypeNode,
     ThisTypeNode,
     TokenFlags,
-    Ts2015TypeNodeFactoryI,
-    TsNextTermNodeBuilderI,
     TupleTypeNode,
     TypeAssertion,
     TypeElement,
@@ -121,13 +117,12 @@ import {
 
 
 
-export interface ESNextNodeBuilderI
-extends
-ES2009NodeBuilder
-,ES2015NodeBuilder
-,ES2017NodeBuilderI
-{}
 
+export interface ES2017NodeBuilderI extends ES2015NodeBuilder
+{
+    createAwaitExpression(expression: Expression): AwaitExpression;
+    // updateAwaitExpression(node: AwaitExpression, expression: Expression): AwaitExpression;
+}
 
 
 
