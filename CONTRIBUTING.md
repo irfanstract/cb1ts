@@ -2,7 +2,7 @@
 
 ## 1. Read the FAQ
 
-Please [read the FAQ](https://github.com/Microsoft/TypeScript/wiki/FAQ) before logging new issues, even if you think you have found a bug.
+Please [read the FAQ](http://localhost) before logging new issues, even if you think you have found a bug.
 
 Issues that ask questions answered in the FAQ will be closed without elaboration.
 
@@ -51,7 +51,7 @@ In general, things we find useful when reviewing suggestions are:
 
 0. [A bug or feature you want to work on](https://github.com/microsoft/TypeScript/labels/help%20wanted)!
 1. [A GitHub account](https://github.com/join).
-2. A copy of the TypeScript code. See the next steps for instructions.
+2. A copy of code this codebase. See the next steps for instructions.
 3. [Node](https://nodejs.org), which runs JavaScript locally. Current or LTS will both work.
 4. An editor. [VS Code](https://code.visualstudio.com) is the best place to start for TypeScript.
 5. The hereby command line tool, for building and testing changes. See the next steps for how to install it.
@@ -65,7 +65,7 @@ In general, things we find useful when reviewing suggestions are:
 5. Change to the TypeScript folder you made: `cd TypeScript`
 6. Install dependencies: `npm ci`
 7. Make sure everything builds and tests pass: `hereby runtests-parallel`
-8. Open the TypeScript folder in your editor.
+8. Open the monorepo root-folder in your editor.
 9. Follow the directions below to add and debug a test.
 
 ## Helpful tasks
@@ -147,32 +147,6 @@ Your pull request should:
 
 Avoid force-pushing your changes, especially when updating your PR based on review feedback. Force-pushed changes are not easily viewable on GitHub, and not at all viewable if a force-push also rebases against main. TypeScript PRs are squash merged, so the specific commits on your PR branch do not matter, only the PR title itself. Don't worry about having a perfect commit history; instead focus on making your changes as easy to review and merge as possible.
 
-## Contributing `lib.d.ts` fixes
-
-There are three relevant locations to be aware of when it comes to TypeScript's library declaration files:
-
-* `src/lib`: the location of the sources themselves.
-* `lib`: the location of the last-known-good (LKG) versions of the files which are updated periodically.
-* `built/local`: the build output location, including where `src/lib` files will be copied to.
-
-Any changes should be made to [src/lib](https://github.com/Microsoft/TypeScript/tree/main/src/lib). **Most** of these files can be updated by hand, with the exception of any generated files (see below).
-
-Library files in `built/local/` are updated automatically by running the standard build task:
-
-```sh
-hereby
-```
-
-The files in `lib/` are used to bootstrap compilation and usually **should not** be updated unless publishing a new version or updating the LKG.
-
-### Modifying generated library files
-
-The files `src/lib/dom.generated.d.ts` and `src/lib/webworker.generated.d.ts` both represent type declarations for the DOM and are auto-generated. To make any modifications to them, you will have to direct changes to https://github.com/Microsoft/TSJS-lib-generator
-
-## Documentation on TypeScript Compiler
-
-If you need a head start understanding how the compiler works, or how the code in different parts of the compiler works, there is a separate repo: [TypeScript Compiler Notes](https://github.com/microsoft/TypeScript-Compiler-Notes). As the name implies, it contains notes understood by different engineers about different parts of the compiler.
-
 ## Running the Tests
 
 To run all tests, invoke the `runtests-parallel` target using hereby:
@@ -211,13 +185,7 @@ You can also use the [provided VS Code launch configuration](./.vscode/launch.te
 
 ## Adding a Test
 
-To add a new test case, add a `.ts` file in `tests\cases\compiler` with code that shows the bug is now fixed, or your new feature now works.
-
-These files support metadata tags in the format  `// @metaDataName: value`.
-The supported names and values are the same as those supported in the compiler itself, with the addition of the `fileName` flag.
-`fileName` tags delimit sections of a file to be used as separate compilation units.
-They are useful for testing modules.
-See below for examples.
+see package-specific details.
 
 **Note** that if you have a test corresponding to a specific area of spec compliance, you can put it in the appropriate subfolder of `tests\cases\conformance`.
 **Note** that test filenames must be distinct from all other test names, so you may have to work a bit to find a unique name if it's something common.
@@ -248,13 +216,10 @@ As an example, compiler tests usually emit one file each for
 - the symbols for each identifier (in a `.symbols` file), and
 - the source map outputs for files if a test opts into them (in a `.js.map` file).
 
-When a change in the baselines is detected, the test will fail. To inspect changes vs the expected baselines, use
+When a change in the baselines is detected, the test will fail.
 
-```Shell
-git diff --diff-filter=AM --no-index ./tests/baselines/reference ./tests/baselines/local
-```
-
-Alternatively, you can set the `DIFF` environment variable and run `hereby diff`, or manually run your favorite folder diffing tool between `tests/baselines/reference` and `tests/baselines/local`. Our team largely uses Beyond Compare and WinMerge.
+For details of the Baselining systems actually used,
+see the package-specific docs.
 
 After verifying that the changes in the baselines are correct, run
 
