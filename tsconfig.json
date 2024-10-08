@@ -16,7 +16,7 @@
     /* `esModuleInterop` and `jsx` */
     
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": false,
+    "allowSyntheticDefaultImports": true,
 
 
     /* 
@@ -154,8 +154,8 @@
     { "path": "./packages/studk-fwcore"         , } ,
     { "path": "./packages/studk-video-fwcore"   , } ,
     { "path": "./packages/studk-audio-fwcore"   , } ,
-    { "path": "./packages/studpresenters"       , } ,
-    { "path": "./packages/studk-dom-mediarecorder"   , } ,
+    // { "path": "./packages/studpresenters"       , } ,
+    // { "path": "./packages/studk-dom-mediarecorder"   , } ,
   ] ,
   "exclude": [
     "node_modules" ,
