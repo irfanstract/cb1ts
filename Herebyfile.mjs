@@ -73,6 +73,7 @@ class StTscHereby {
     return (
       execSync(`npx hereby ${w }`, {
         cwd: tscPkgDir ,
+        stdio: ["pipe", "inherit", "inherit"] ,
       } )
     ) ;
   } ;

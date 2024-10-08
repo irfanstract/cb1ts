@@ -10,6 +10,8 @@ import { glob } from "glob";
 import { task } from "hereby";
 import path from "path";
 
+import { findUpFile, findUpRoot, } from "./scripts/build/findUpDir.mjs";
+
 import { localizationDirectories } from "./scripts/build/localization.mjs";
 import cmdLineOptions from "./scripts/build/options.mjs";
 import {
@@ -127,6 +129,18 @@ const localize = task({
             await exec(process.execPath, ["scripts/generateLocalizedDiagnosticMessages.mjs", "src/loc/lcl", "built/local", diagnosticMessagesGeneratedJson], { ignoreExitCode: true });
         }
     },
+});
+
+export const cleanBuilt = task({
+    name: "clean-built",
+    hiddenFromTaskList: true,
+    run: () => fs.promises.rm("built", { recursive: true, force: true }),
+});
+
+export const clean = task({
+    name: "clean",
+    description: "Cleans build outputs",
+    dependencies: [cleanBuilt, cleanDiagnostics],
 });
 
 export const buildSrc = task({
@@ -308,9 +322,15 @@ let printedWatchWarning = false;
  * @param {BundlerTaskOptions} [options.bundlerOptions]
  */
 function entrypointBuildTask(options) {
+    const {
+        buildDeps = [] ,
+    } = options ;
+
     const build = task({
         name: `build-${options.name}`,
-        dependencies: options.buildDeps,
+        dependencies: (
+            buildDeps
+        ) ,
         run: () => buildProject(options.project),
     });
 
@@ -539,7 +559,7 @@ const { main: tests, watch: watchTests } = entrypointBuildTask({
     srcEntrypoint: "./src/testRunner/_namespaces/Harness.ts",
     builtEntrypoint: "./built/local/testRunner/runner.js",
     output: testRunner,
-    mainDeps: [generateLibs],
+    mainDeps: [generateLibs, tsc],
     bundlerOptions: {
         // Ensure we never drop any dead code, which might be helpful while debugging.
         treeShaking: false,
@@ -563,7 +583,7 @@ export const lint = task({
         const folder = ".";
         const formatter = cmdLineOptions.ci ? "stylish" : "autolinkable-stylish";
         const args = [
-            "node_modules/eslint/bin/eslint",
+            findUpFile("node_modules/eslint/bin/eslint"),
             "--cache",
             "--cache-location",
             `${folder}/.eslintcache`,
@@ -588,20 +608,20 @@ export const lint = task({
 export const format = task({
     name: "format",
     description: "Formats the codebase.",
-    run: () => exec(process.execPath, ["node_modules/dprint/bin.js", "fmt"]),
+    run: () => exec(process.execPath, [findUpFile("node_modules/dprint/bin.js"), "fmt"]),
 });
 
 export const checkFormat = task({
     name: "check-format",
     description: "Checks that the codebase is formatted.",
-    run: () => exec(process.execPath, ["node_modules/dprint/bin.js", "check"], { ignoreStdout: true }),
+    run: () => exec(process.execPath, [findUpFile("node_modules/dprint/bin.js"), "check"], { ignoreStdout: true }),
 });
 
 export const knip = task({
     name: "knip",
     description: "Runs knip.",
     dependencies: [generateDiagnostics],
-    run: () => exec(process.execPath, ["node_modules/knip/bin/knip.js", "--tags=+internal,-knipignore", "--exclude=duplicates,enumMembers", ...(cmdLineOptions.fix ? ["--fix"] : [])]),
+    run: () => exec(process.execPath, [findUpFile("node_modules/knip/bin/knip.js"), "--tags=+internal,-knipignore", "--exclude=duplicates,enumMembers", ...(cmdLineOptions.fix ? ["--fix"] : [])]),
 });
 
 const { main: cancellationToken, watch: watchCancellationToken } = entrypointBuildTask({
@@ -944,18 +964,6 @@ export const lkg = task({
     name: "lkg",
     hiddenFromTaskList: true,
     dependencies: [produceLKG],
-});
-
-export const cleanBuilt = task({
-    name: "clean-built",
-    hiddenFromTaskList: true,
-    run: () => fs.promises.rm("built", { recursive: true, force: true }),
-});
-
-export const clean = task({
-    name: "clean",
-    description: "Cleans build outputs",
-    dependencies: [cleanBuilt, cleanDiagnostics],
 });
 
 export const configureNightly = task({

@@ -1,11 +1,14 @@
 import { resolve } from "path";
+import { createRequire, } from "module";
 
-import { findUpRoot } from "./findUpDir.mjs";
+import { findUpFile, findUpRoot } from "./findUpDir.mjs";
 import cmdLineOptions from "./options.mjs";
 import {
     Debouncer,
     exec,
 } from "./utils.mjs";
+
+export { createRequire, } ;
 
 class ProjectQueue {
     /**
@@ -37,10 +40,13 @@ const tscPath = resolve(
     findUpRoot(),
     cmdLineOptions.lkg ? "./lib/tsc.js" :
         cmdLineOptions.built ? "./built/local/tsc.js" :
-        "./node_modules/typescript/lib/tsc.js",
+        (
+            // "./node_modules/typescript/lib/tsc.js"
+            findUpFile("./node_modules/typescript/lib/tsc.js")
+        ),
 );
 
-const execTsc = (/** @type {string[]} */ ...args) => exec(process.execPath, [tscPath, "-b", ...args], { hidePrompt: true });
+const execTsc = (/** @type {string[]} */ ...args) => exec(process.execPath, [tscPath, "-b", ...args], { hidePrompt: true, intendedWorkingDir: findUpRoot(), });
 
 const projectBuilder = new ProjectQueue(projects => execTsc(...(cmdLineOptions.bundle ? [] : ["--emitDeclarationOnly", "false"]), ...projects));
 
