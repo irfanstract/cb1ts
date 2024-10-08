@@ -55,12 +55,14 @@ internal/
 !tests/baselines/reference/project/nodeModules*/**/*
 .idea
 yarn.lock
+!/yarn.lock
 yarn-error.log
 .parallelperf.*
 tests/baselines/reference/dt
 .failed-tests
 TEST-results.xml
 package-lock.json
+!/package-lock.json
 .eslintcache
 *v8.log
 /lib/
