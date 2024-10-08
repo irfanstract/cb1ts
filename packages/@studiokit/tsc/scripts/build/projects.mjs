@@ -1,4 +1,5 @@
 import { resolve } from "path";
+import { createRequire, } from "module";
 
 import { findUpRoot } from "./findUpDir.mjs";
 import cmdLineOptions from "./options.mjs";
@@ -37,7 +38,10 @@ const tscPath = resolve(
     findUpRoot(),
     cmdLineOptions.lkg ? "./lib/tsc.js" :
         cmdLineOptions.built ? "./built/local/tsc.js" :
-        "./node_modules/typescript/lib/tsc.js",
+        (
+            // "./node_modules/typescript/lib/tsc.js"
+            createRequire(import.meta.url).resolve(("typescript/lib/tsc.js") )
+        ),
 );
 
 const execTsc = (/** @type {string[]} */ ...args) => exec(process.execPath, [tscPath, "-b", ...args], { hidePrompt: true });

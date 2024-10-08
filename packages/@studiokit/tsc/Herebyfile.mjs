@@ -129,6 +129,18 @@ const localize = task({
     },
 });
 
+export const cleanBuilt = task({
+    name: "clean-built",
+    hiddenFromTaskList: true,
+    run: () => fs.promises.rm("built", { recursive: true, force: true }),
+});
+
+export const clean = task({
+    name: "clean",
+    description: "Cleans build outputs",
+    dependencies: [cleanBuilt, cleanDiagnostics],
+});
+
 export const buildSrc = task({
     name: "build-src",
     description: "Builds the src project (all code)",
@@ -302,15 +314,22 @@ let printedWatchWarning = false;
  * @param {string} options.project
  * @param {string} options.srcEntrypoint
  * @param {string} options.builtEntrypoint
+ * @param {boolean=} options.clean
  * @param {string} options.output
  * @param {boolean} [options.enableCompileCache]
  * @param {Task[]} [options.mainDeps]
  * @param {BundlerTaskOptions} [options.bundlerOptions]
  */
 function entrypointBuildTask(options) {
+    const {
+        buildDeps = [] ,
+    } = options ;
+
     const build = task({
         name: `build-${options.name}`,
-        dependencies: options.buildDeps,
+        dependencies: (
+            buildDeps
+        ) ,
         run: () => buildProject(options.project),
     });
 
@@ -944,18 +963,6 @@ export const lkg = task({
     name: "lkg",
     hiddenFromTaskList: true,
     dependencies: [produceLKG],
-});
-
-export const cleanBuilt = task({
-    name: "clean-built",
-    hiddenFromTaskList: true,
-    run: () => fs.promises.rm("built", { recursive: true, force: true }),
-});
-
-export const clean = task({
-    name: "clean",
-    description: "Cleans build outputs",
-    dependencies: [cleanBuilt, cleanDiagnostics],
 });
 
 export const configureNightly = task({

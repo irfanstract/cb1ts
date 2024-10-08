@@ -17,6 +17,10 @@ import { glob } from "glob";
 import { task } from "hereby";
 import * as path from "path";
 
+import {
+  fileURLToPath,
+} from "studk-fwcore-setups/src/util-all.mjs";
+
 
 
 // import * as tscTasks from "@studiokit/tsc/Herebyfile.mjs" ;
@@ -29,21 +33,97 @@ import * as path from "path";
 //   generateDiagnostics ,
 // } = tscTasks ;
 
-const tscPkgDir = (
-  path.join(process.cwd() , "packages", "@studiokit", "tsc" )
+const rootDirAbsolPath = (
+  import.meta.dirname
+  ??
+  path.join(import.meta.filename ?? fileURLToPath(import.meta.url) , "..")
 ) ;
 
-export const generateDiagnostics = task({
+console["log"]({ rootDirAbsolPath, }) ;
+
+/**
+ * paths used in the child-pkg's Herebyfile
+ * are relative paths, implicitly assuming `CWD` being set to its root-dir .
+ * {@link execSync needs to explicitly set `cwd` in `options` in the following sec(s) to point to there }.
+ * 
+ */
+const tscPkgDir = (
+  path.join(rootDirAbsolPath , "packages", "@studiokit", "tsc" )
+) ;
+
+console["log"]({ tscPkgDir, }) ;
+
+class StTscHereby {
+
+  /**
+   * 
+   * @satisfies {(...args: [string]) => any }
+   * 
+   */
+  static runNamedDutySync = function (...[w] )
+  {
+    ;
+    /**
+     * paths used in the child-pkg's Herebyfile
+     * are relative paths, implicitly assuming `CWD` being set to its root-dir .
+     * {@link execSync needs to explicitly set `cwd` in the following `options` to point to there}.
+     * 
+     */
+    console["info"](`running '${w }' in '${tscPkgDir }' `) ;
+    return (
+      execSync(`npx hereby ${w }`, {
+        cwd: tscPkgDir ,
+      } )
+    ) ;
+  } ;
+
+}
+
+export const stTscGenerateDiagnostics = task({
   name: "st-tsc-generate-diagnostics",
-  description: "Generates a diagnostic file in TypeScript based on an input JSON file",
+  description: "TSC: Generates a diagnostic file in TypeScript based on an input JSON file",
   run: async () => {
-    console["info"](`running 'generate-diag' in '${tscPkgDir }' `) ;
     // await exec(process.execPath, ["scripts/processDiagnosticMessages.mjs", diagnosticMessagesJson]);
-    execSync(`npx hereby generate-diagnostics`, {
-      cwd: tscPkgDir ,
-    } ) ;
+    StTscHereby.runNamedDutySync("generate-diagnostics") ;
   },
 });
+
+export const stTscRunTests = task({
+  name: "st-tsc-test",
+  description: "TSC: Run All Tests",
+  run: async () => {
+    StTscHereby.runNamedDutySync("runtests") ;
+  },
+});
+
+export const stTscPrepareTest = task({
+  name: "st-tsc-prepare-test",
+  description: "TSC: Prepare All Tests",
+  run: async () => {
+    StTscHereby.runNamedDutySync("tests") ;
+  },
+});
+
+export const stTscCompilerCliBuild = task({
+  name: "st-tsc-compiler-cli-build",
+  description: "TSC: Build The Compiler CLI",
+  run: async () => {
+    StTscHereby.runNamedDutySync("tsc") ;
+  },
+});
+
+export const stTscClean = task({
+  name: "st-tsc-clean",
+  description: "TSC: Clean",
+  run: async () => {
+    StTscHereby.runNamedDutySync("clean") ;
+  },
+});
+
+
+
+
+
 
 
 
