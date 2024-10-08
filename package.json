@@ -3,6 +3,9 @@
   "private": true
   ,
   "scripts": {
+    "showAllHerebyTasks": "npx hereby --tasks"
+    ,
+    "tscCleanAndBuildCliCompilerOnly"      : "npx hereby st-tsc-clean && npx hereby st-tsc-compiler-cli-build"
   }
   ,
   "workspaces": [
