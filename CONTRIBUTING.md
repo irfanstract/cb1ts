@@ -70,7 +70,7 @@ In general, things we find useful when reviewing suggestions are:
 
 ## Helpful tasks
 
-Running `hereby --tasks` provides the full listing, but here are a few common tasks you might use.
+Running `npx hereby --tasks` provides the full listing, but here are a few common tasks you might use.
 
 ```
 hereby local             # Build the compiler into built/local.
