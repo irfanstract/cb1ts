@@ -20,14 +20,25 @@ void 0;
  * @property {boolean} [hidePrompt]
  * @property {boolean} [waitForExit=true]
  * @property {boolean} [ignoreStdout]
+ * @property {string | null} [intendedWorkingDir]
  * @property {CancelToken} [token]
  */
 export async function exec(cmd, args, options = {}) {
     return /**@type {Promise<{exitCode?: number}>}*/ (new Promise((resolve, reject) => {
-        const { ignoreExitCode, waitForExit = true, ignoreStdout } = options;
+        const {
+            ignoreExitCode,
+            waitForExit = true,
+            ignoreStdout,
+            intendedWorkingDir,
+        } = options;
+        const cwd = intendedWorkingDir ?? process.cwd() ;
 
         if (!options.hidePrompt) console.log(`> ${chalk.green(cmd)} ${args.join(" ")}`);
-        const proc = spawn(which.sync(cmd), args, { stdio: waitForExit ? ignoreStdout ? ["inherit", "ignore", "inherit"] : "inherit" : "ignore", detached: !waitForExit });
+        const proc = spawn(which.sync(cmd), args, {
+            stdio: waitForExit ? ignoreStdout ? ["inherit", "ignore", "inherit"] : "inherit" : "ignore", detached: !waitForExit
+            ,
+            cwd ,
+        });
         if (waitForExit) {
             const onCanceled = () => {
                 proc.kill();
