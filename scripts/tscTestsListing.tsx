@@ -99,9 +99,12 @@ const itemDescs = (
     ) ;
     const cnmCh = (
       "" + cat + "/" + (
-        lnmCat.match(/^([A-Za-z][a-z]+|[A-Z]+(?![a-z]))/g)?.[0]
-        ??
-        lnmCat.slice(0, 4)
+        (
+          lnmCat.match(/^([A-Za-z][a-z]+|[A-Z]+(?![a-z]))/g)?.[0]
+          ??
+          lnmCat.slice(0, 4)
+        )
+        .slice(0, 3)
       )
     ) ;
     return {

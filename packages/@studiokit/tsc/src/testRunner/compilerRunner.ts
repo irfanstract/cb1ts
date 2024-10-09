@@ -56,6 +56,13 @@ export class CompilerBaselineRunner extends RunnerBase {
         return this.testFiles ??= this.enumerateFiles(this.basePath, /\.tsx?$/, { recursive: true });
     }
 
+    public setTestFiles(nmes: Iterable<string> | null ): void
+    {
+        this.testFiles = (
+            nmes ? [...nmes] : undefined
+        ) ;
+    }
+
     public initializeTests(): void {
         describe(this.testSuiteName + " tests", () => {
             describe("Setup compiler for compiler baselines", () => {
@@ -66,6 +73,34 @@ export class CompilerBaselineRunner extends RunnerBase {
             const files = this.tests.length > 0 ? this.tests : IO.enumerateTestFiles(this);
             files.forEach(file => {
                 this.checkTestCodeOutput(vpath.normalizeSeparators(file), CompilerTest.getConfigurations(file));
+            });
+        });
+    }
+
+    public static initializeSoloTests(...[files, opts = {}] : (
+        Utils.ArgsWithOptions<[files: readonly string[]], {
+            //
+            suiteName?: string ,
+            emit ?: boolean ,
+        }>
+    ) ): void
+    {
+        const {
+            suiteName,
+            emit = true,
+        } = opts;
+        describe(suiteName ? (suiteName + " tests") : `TSC tests`, () => {
+            // describe("Setup compiler for compiler baselines", () => {
+            //     this.parseOptions();
+            // });
+
+            // this will set up a series of describe/it blocks to run between the setup and cleanup phases
+            files.forEach(file => {
+                this.checkSoloTestCodeOutput(vpath.normalizeSeparators(file), CompilerTest.getConfigurations(file) , {
+                    //
+                    emit ,
+                    suiteName ,
+                } );
             });
         });
     }
@@ -85,7 +120,36 @@ export class CompilerBaselineRunner extends RunnerBase {
         }
     }
 
+    public static checkSoloTestCodeOutput(...[fileName, test, { suiteName: testSuiteName, emit, } ] : (
+        Utils.ArgsWithOptions<[fileName: string, test?: CompilerFileBasedTest] , {
+            suiteName?: string ,
+            emit    : boolean ,
+        }>
+    )): void {
+        ;
+        describe(`${testSuiteName ? `${testSuiteName} tests` : `tests` } for ${fileName}`, () => {
+            this.staticRunSuite(fileName, test, undefined, {
+                emit ,
+            });
+        });
+    }
+
     private runSuite(fileName: string, test?: CompilerFileBasedTest, configuration?: FileBasedTestConfiguration) {
+        return (
+            CompilerBaselineRunner.staticRunSuite(fileName, test, configuration, { emit: this.emit, })
+        ) ;
+    }
+
+    public static staticRunSuite(...[fileName, test, configuration, { emit, }] : (
+        Utils.ArgsWithOptions<([
+            fileName: string,
+            test?: CompilerFileBasedTest,
+            configuration?: FileBasedTestConfiguration,
+        ]), {
+            emit : boolean,
+        }>
+    ) ) : void
+    {
         // Mocha holds onto the closure environment of the describe callback even after the test is done.
         // Everything declared here should be cleared out in the "after" callback.
         let compilerTest!: CompilerTest;
@@ -99,7 +163,7 @@ export class CompilerBaselineRunner extends RunnerBase {
         it(`Correct errors for ${fileName}`, () => compilerTest.verifyDiagnostics());
         it(`Correct module resolution tracing for ${fileName}`, () => compilerTest.verifyModuleResolution());
         it(`Correct sourcemap content for ${fileName}`, () => compilerTest.verifySourceMapRecord());
-        it(`Correct JS output for ${fileName}`, () => (this.emit && compilerTest.verifyJavaScriptOutput()));
+        it(`Correct JS output for ${fileName}`, () => (emit && compilerTest.verifyJavaScriptOutput()));
         it(`Correct Sourcemap output for ${fileName}`, () => compilerTest.verifySourceMapOutput());
         it(`Correct type/symbol baselines for ${fileName}`, () => compilerTest.verifyTypesAndSymbols());
         after(() => {
@@ -264,6 +328,14 @@ class CompilerTest {
         const settings = TestCaseParser.extractCompilerSettings(content);
         const configurations = getFileBasedTestConfigurations(settings, CompilerTest.varyBy);
         return { file, configurations, content };
+    }
+
+    public static getConfigurationsFromCode(...[content] : [code: string] ): Utils.PartializedSelectivelyW<CompilerFileBasedTest , "file" >
+    {
+        // also see `parseCompilerTestConfigurations` in tests/webTestServer.ts
+        const settings = TestCaseParser.extractCompilerSettings(content);
+        const configurations = getFileBasedTestConfigurations(settings, CompilerTest.varyBy);
+        return { configurations, content };
     }
 
     public verifyDiagnostics() {
