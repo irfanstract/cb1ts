@@ -188,6 +188,10 @@
     /* avoid issues associated with ESM fmt usage, as explained in https://typestrong.org/ts-node/docs/imports#native-ecmascript-modules */
     "esm": true,
 
+    "compilerOptions": {
+      "module": "node16",
+    },
+
   } ,
 
 }
