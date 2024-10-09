@@ -27,6 +27,8 @@
         "preserveConstEnums": true,
         "newLine": "lf",
 
+        "noCheck": true,
+
         "types": []
     }
 }

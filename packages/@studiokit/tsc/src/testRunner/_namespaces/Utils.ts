@@ -7,4 +7,5 @@ export type {
     ArgsWithOptions ,
     PartializedSelectivelyW ,
     OmitW ,
+    // @ts-ignore
 } from "studk-fwcore/src/util/C1.js" ;
