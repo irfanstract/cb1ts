@@ -76,3 +76,18 @@ import * as moduleSpecifiers from "./ts.moduleSpecifiers.js";
 export { moduleSpecifiers };
 import * as performance from "./ts.performance.js";
 export { performance };
+
+// @ts-ignore
+export type * from "studk-fwcore/src/util/C1.js" ;
+export type {
+  ArgsGetOptions ,
+  ArgsWithOptions ,
+  PartializedSelectivelyW ,
+  OmitW ,
+  // @ts-ignore
+} from "studk-fwcore/src/util/C1.js" ;
+export {
+  util ,
+  // @ts-ignore
+} from "studk-fwcore/src/util/C1.js" ;
+export { default as ImmutableJs } from "immutable" ;
