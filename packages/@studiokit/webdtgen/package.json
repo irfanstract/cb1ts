@@ -12,7 +12,8 @@
     "worklet"
   ],
   "scripts": {
-    "build": "tsc && node ./lib/build.js",
+    "build"            : "tsc.bat && node ./lib/build.js",
+    "build-without-run": "tsc.bat",
     "baseline-accept": "cpx \"generated\\**\" baselines\\",
     "lint": "eslint --max-warnings 0 src deploy/*.js && tsc -p deploy/jsconfig.json",
     "lint-fix": "eslint --max-warnings 0 src deploy/*.js --fix",
