@@ -4,6 +4,7 @@
         "module": "esnext",
         "moduleResolution": "node",
         "outDir": "./lib",
+        "noCheck": true,
         "strict": true,
         "esModuleInterop": true,
         "sourceMap": true,
