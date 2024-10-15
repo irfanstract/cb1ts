@@ -9,5 +9,9 @@
     "**/bin/**/*" ,
     "**/built/**/*" ,
     "**/tests/**/*" ,
+    "src/testRunner/**/*",
+    "src/harness/**/*",
+    "src/server/**/*",
+    "src/typescript/**/*",
   ] ,
 }
